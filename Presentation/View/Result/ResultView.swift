@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Presentation/Result/ResultView.swift
+// Presentation/View/Result/ResultView.swift
 // ゲーム終了画面（SwiftUI版）
 
 import SwiftUI
@@ -7,11 +7,8 @@ import SwiftUI
 /// ゲーム終了後のリザルト画面
 struct ResultView: View {
     
-    /// 今回のスコア
-    let score: ScoreEntry
-    
-    /// スコアリポジトリ
-    let scoreRepository: ScoreRepository
+    /// ViewModel
+    @State private var viewModel: ResultViewModel
     
     /// もう一度プレイ
     let onPlayAgain: () -> Void
@@ -19,11 +16,13 @@ struct ResultView: View {
     /// メニューに戻る
     let onReturnToMenu: () -> Void
     
-    /// ランキング順位
-    @State private var rank: Int?
+    // MARK: - 初期化
     
-    /// トップスコア一覧
-    @State private var topScores: [ScoreEntry] = []
+    init(score: ScoreEntry, scoreRepository: ScoreRepository, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
+        self._viewModel = State(initialValue: ResultViewModel(score: score, scoreRepository: scoreRepository))
+        self.onPlayAgain = onPlayAgain
+        self.onReturnToMenu = onReturnToMenu
+    }
     
     var body: some View {
         ZStack {
@@ -48,20 +47,20 @@ struct ResultView: View {
                     .foregroundStyle(.white)
                 
                 // スコア（大きな数字）
-                Text("\(score.score)")
+                Text("\(viewModel.score.score)")
                     .font(.system(size: 64, weight: .bold))
                     .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 1.0))
                     .padding(.top, 16)
                 
                 // 統計情報
-                Text("Problems Solved: \(score.problemsSolved)\nBonus Points: \(score.bonusPoints)")
+                Text("Problems Solved: \(viewModel.score.problemsSolved)\nBonus Points: \(viewModel.score.bonusPoints)")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.top, 12)
                 
                 // ランキング順位
-                if let rank = rank {
+                if let rank = viewModel.rank {
                     Text("🏆 Rank #\(rank)")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(Color(red: 1.0, green: 0.8, blue: 0.2))
@@ -110,8 +109,8 @@ struct ResultView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.8))
                     
-                    ForEach(Array(topScores.prefix(5).enumerated()), id: \.element.id) { index, entry in
-                        let isCurrentScore = entry.id == score.id
+                    ForEach(Array(viewModel.topScores.prefix(5).enumerated()), id: \.element.id) { index, entry in
+                        let isCurrentScore = viewModel.isCurrentScore(entry)
                         Text("\(index + 1). \(entry.score) pts")
                             .font(.system(size: 14, weight: isCurrentScore ? .bold : .regular))
                             .foregroundStyle(
@@ -127,11 +126,7 @@ struct ResultView: View {
             }
         }
         .task {
-            // スコアを保存して順位を取得
-            rank = await scoreRepository.saveScore(score)
-            
-            // Top5を取得
-            topScores = await scoreRepository.fetchTopScores()
+            await viewModel.loadResults()
         }
     }
 }

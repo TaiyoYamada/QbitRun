@@ -8,7 +8,7 @@ import MetalKit
 import simd
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 論文風ブロッホ球
+// ブロッホ球
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 // 特徴:
@@ -45,8 +45,10 @@ public final class BlochSphereView: UIView {
     
     private var device: MTLDevice?
     private var commandQueue: MTLCommandQueue?
+    private var raycastPipeline: MTLRenderPipelineState?  // レイキャスト球体用
     private var linePipeline: MTLRenderPipelineState?
     private var depthState: MTLDepthStencilState?
+    private var depthStateNoWrite: MTLDepthStencilState?  // レイキャスト用（深度書き込みなし）
     private var metalView: MTKView?
     private var renderDelegate: BlochRenderDelegate?
     
@@ -68,11 +70,15 @@ public final class BlochSphereView: UIView {
     private var cameraYaw: Float = 0.5
     private var cameraPitch: Float = 0.35
     
+    /// ユーザーが回転できるかどうか
+    public var isInteractive: Bool = true
+    
     // MARK: - 初期化
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
         setupMetal()
+        setupGestures()
     }
     
     required init?(coder: NSCoder) {
@@ -114,6 +120,20 @@ public final class BlochSphereView: UIView {
     private func setupPipelines(device: MTLDevice) {
         guard let library = device.makeDefaultLibrary() else { return }
         
+        // レイキャスト球体用パイプライン
+        if let vertexFunc = library.makeFunction(name: "raycastSphereVertex"),
+           let fragmentFunc = library.makeFunction(name: "raycastSphereFragment") {
+            let desc = MTLRenderPipelineDescriptor()
+            desc.vertexFunction = vertexFunc
+            desc.fragmentFunction = fragmentFunc
+            desc.colorAttachments[0].pixelFormat = .bgra8Unorm
+            desc.depthAttachmentPixelFormat = .depth32Float
+            desc.colorAttachments[0].isBlendingEnabled = true
+            desc.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+            desc.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+            raycastPipeline = try? device.makeRenderPipelineState(descriptor: desc)
+        }
+        
         // ライン用パイプライン（グリッド、軸、ベクトル全て）
         if let vertexFunc = library.makeFunction(name: "lineVertexShader"),
            let fragmentFunc = library.makeFunction(name: "lineFragmentShader") {
@@ -130,10 +150,37 @@ public final class BlochSphereView: UIView {
     }
     
     private func setupDepthState(device: MTLDevice) {
+        // 通常の深度テスト
         let desc = MTLDepthStencilDescriptor()
         desc.depthCompareFunction = .less
         desc.isDepthWriteEnabled = true
         depthState = device.makeDepthStencilState(descriptor: desc)
+        
+        // レイキャスト用（深度書き込みなし）
+        let descNoWrite = MTLDepthStencilDescriptor()
+        descNoWrite.depthCompareFunction = .always
+        descNoWrite.isDepthWriteEnabled = false
+        depthStateNoWrite = device.makeDepthStencilState(descriptor: descNoWrite)
+    }
+    
+    private func setupGestures() {
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        addGestureRecognizer(panGesture)
+    }
+    
+    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+        guard isInteractive else { return }
+        
+        let translation = gesture.translation(in: self)
+        let sensitivity: Float = 0.01
+        
+        cameraYaw += Float(translation.x) * sensitivity
+        cameraPitch += Float(translation.y) * sensitivity
+        
+        // ピッチを制限（縦回転の上下限）
+        cameraPitch = max(-Float.pi / 2 + 0.1, min(Float.pi / 2 - 0.1, cameraPitch))
+        
+        gesture.setTranslation(.zero, in: self)
     }
     
     // MARK: - ジオメトリ作成
@@ -144,6 +191,9 @@ public final class BlochSphereView: UIView {
         updateStateVectorBuffer(vector: .zero)
     }
     
+    private func spherePoint(theta: Float, phi: Float, radius: Float) -> simd_float3 {
+        simd_float3(radius * sin(theta) * cos(phi), radius * sin(theta) * sin(phi), radius * cos(theta))
+    }
     /// グリッド（経緯線）を作成
     private func createGridGeometry(device: MTLDevice) {
         var vertices: [BlochVertex] = []
@@ -288,6 +338,14 @@ public final class BlochSphereView: UIView {
         encoder.setDepthStencilState(depthState)
         encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
         encoder.setFragmentBuffer(uniformBuffer, offset: 0, index: 0)
+        
+        // レイキャスト球体を描画（フルスクリーンQuad）
+        if let pipeline = raycastPipeline {
+            encoder.setDepthStencilState(depthStateNoWrite)
+            encoder.setRenderPipelineState(pipeline)
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
+            encoder.setDepthStencilState(depthState)
+        }
         
         // グリッドを描画
         if let pipeline = linePipeline, let buffer = gridVertexBuffer {

@@ -147,3 +147,92 @@ fragment float4 lineFragmentShader(
 ) {
     return in.color;
 }
+
+// MARK: - レイキャスト球体シェーダー
+
+/// レイキャスト用の頂点出力
+struct RaycastVertexOut {
+    float4 position [[position]];
+    float2 uv;  // -1 to 1
+};
+
+/// レイキャスト球体の頂点シェーダー
+/// フルスクリーンQuadを描画
+vertex RaycastVertexOut raycastSphereVertex(
+    uint vertexID [[vertex_id]]
+) {
+    // フルスクリーンQuad（2つの三角形）
+    float2 positions[6] = {
+        float2(-1, -1), float2(1, -1), float2(1, 1),
+        float2(-1, -1), float2(1, 1), float2(-1, 1)
+    };
+    
+    RaycastVertexOut out;
+    out.position = float4(positions[vertexID], 0, 1);
+    out.uv = positions[vertexID];
+    return out;
+}
+
+/// レイキャスト球体のフラグメントシェーダー
+/// 球の方程式 x² + y² + z² = r² を解く
+fragment float4 raycastSphereFragment(
+    RaycastVertexOut in [[stage_in]],
+    constant Uniforms& uniforms [[buffer(0)]]
+) {
+    // カメラからのレイを計算
+    float3 rayOrigin = uniforms.cameraPosition;
+    
+    // UVをビュー空間の方向に変換
+    float aspectRatio = 1.0;  // 正方形を仮定
+    float3 forward = normalize(-uniforms.cameraPosition);
+    float3 right = normalize(cross(float3(0, 0, 1), forward));
+    float3 up = cross(forward, right);
+    
+    float fov = 0.5;  // 視野角に相当
+    float3 rayDir = normalize(forward + right * in.uv.x * fov * aspectRatio + up * in.uv.y * fov);
+    
+    // 球の方程式を解く: |o + t*d|² = r²
+    // → (d·d)t² + 2(o·d)t + (o·o - r²) = 0
+    float radius = 1.0;
+    float a = dot(rayDir, rayDir);
+    float b = 2.0 * dot(rayOrigin, rayDir);
+    float c = dot(rayOrigin, rayOrigin) - radius * radius;
+    
+    float discriminant = b * b - 4.0 * a * c;
+    
+    if (discriminant < 0.0) {
+        discard_fragment();  // 球に当たらない
+    }
+    
+    // 近い方の交点を使用
+    float t = (-b - sqrt(discriminant)) / (2.0 * a);
+    
+    if (t < 0.0) {
+        // 裏面の交点
+        t = (-b + sqrt(discriminant)) / (2.0 * a);
+        if (t < 0.0) {
+            discard_fragment();
+        }
+    }
+    
+    // 交点と法線を計算
+    float3 hitPoint = rayOrigin + t * rayDir;
+    float3 normal = normalize(hitPoint);
+    
+    // ライティング
+    float3 lightDir = normalize(uniforms.lightDirection);
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    float ambient = 0.3;
+    
+    // フレネル効果
+    float3 viewDir = normalize(-rayDir);
+    float fresnel = pow(1.0 - max(dot(viewDir, normal), 0.0), 2.0);
+    
+    // 球の色（半透明灰色）
+    float brightness = ambient + diffuse * 0.4 + fresnel * 0.3;
+    float4 sphereColor = float4(0.85, 0.85, 0.88, 0.25);
+    sphereColor.rgb *= brightness;
+    
+    return sphereColor;
+}
+
