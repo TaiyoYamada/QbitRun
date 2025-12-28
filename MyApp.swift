@@ -1,64 +1,84 @@
 // SPDX-License-Identifier: MIT
 // MyApp.swift
-// アプリのエントリーポイント（純粋UIKit版）
+// アプリのエントリーポイント（SwiftUI版）
 
-import UIKit
+import SwiftUI
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// UIKit vs SwiftUI 基本概念の対応表:
+// SwiftUI App構造
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-// SwiftUI                    UIKit
-// ─────────────────────────────────────────────────────────────────
-// @main struct App           @main class AppDelegate
-// WindowGroup                UIWindow
-// View                       UIView / UIViewController
-// NavigationStack            UINavigationController
-// @State / @Observable       プロパティ + didSet / delegate
-// .onAppear                  viewDidAppear()
-// body: some View            loadView() / viewDidLoad()
+// @main: アプリのエントリーポイントを示すマクロ
+// App protocol: アプリ全体のライフサイクルを管理
+// WindowGroup: 1つ以上のウィンドウを提供するシーン
+//
+// 画面遷移は NavigationStack + NavigationDestination で宣言的に記述
 //
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// @main: SwiftUIの @main struct App と同じ役割
-/// このクラスがアプリの起動ポイントになる
+/// アプリのエントリーポイント
 @main
-final class AppDelegate: UIResponder, UIApplicationDelegate {
-    
-    // MARK: - プロパティ
-    
-    /// UIWindow: アプリの「窓」
-    /// SwiftUIのWindowGroupに相当する。全ての画面はこのwindow上に表示される
-    var window: UIWindow?
-    
-    /// Coordinator: 画面遷移を管理するオブジェクト
-    /// SwiftUIのNavigationPathに相当する役割
-    private var coordinator: AppCoordinator?
-    
-    // MARK: - アプリ起動時に呼ばれるメソッド
-    
-    /// SwiftUIでいう App.init() + body が呼ばれるタイミングに相当
-    /// アプリが起動したらこのメソッドが自動的に呼ばれる
-    func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-    ) -> Bool {
-        
-        // 1. UIWindowを作成（SwiftUIのWindowGroupに相当）
-        let window = UIWindow(frame: UIScreen.main.bounds)
-        self.window = window
-        
-        // 2. Coordinatorを作成して画面遷移の準備
-        coordinator = AppCoordinator()
-        coordinator?.start()  // 最初の画面（Menu）を表示
-        
-        // 3. NavigationControllerをwindowのrootに設定
-        //    SwiftUIでいう NavigationStack { ... } の最初のViewを設定するイメージ
-        window.rootViewController = coordinator?.navigationController
-        
-        // 4. 画面を表示
-        window.makeKeyAndVisible()
-        
-        return true
+struct QuantumGateGameApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
     }
+}
+
+/// ルートコンテンツビュー
+/// NavigationStackで画面遷移を管理
+struct ContentView: View {
+    /// ナビゲーションパス（画面遷移の状態）
+    @State private var navigationPath = NavigationPath()
+    
+    /// スコアリポジトリ
+    private let scoreRepository = ScoreRepository()
+    
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            MenuView(
+                onStartGame: { navigationPath.append(AppRoute.game) },
+                scoreRepository: scoreRepository
+            )
+            .navigationDestination(for: AppRoute.self) { route in
+                switch route {
+                case .game:
+                    GameView(
+                        onGameEnd: { score in
+                            navigationPath.append(AppRoute.result(score: score))
+                        }
+                    )
+                    .navigationBarBackButtonHidden(true)
+                    
+                case .result(let score):
+                    ResultView(
+                        score: score,
+                        scoreRepository: scoreRepository,
+                        onPlayAgain: {
+                            navigationPath.removeLast(navigationPath.count)
+                            navigationPath.append(AppRoute.game)
+                        },
+                        onReturnToMenu: {
+                            navigationPath.removeLast(navigationPath.count)
+                        }
+                    )
+                    .navigationBarBackButtonHidden(true)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+/// 画面遷移のルート定義
+enum AppRoute: Hashable {
+    case game
+    case result(score: ScoreEntry)
+}
+
+// MARK: - プレビュー
+
+#Preview("App") {
+    ContentView()
 }

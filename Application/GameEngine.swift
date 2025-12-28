@@ -17,36 +17,9 @@ import Foundation
 // - 回路（ゲートリスト）の管理
 // - ゲーム状態（ready/playing/paused/finished）の遷移
 //
-// Clean Architectureでの位置:
-// Application層 = ユースケース層
-// Domainを使ってゲームルールを実装する
+// @Observable を使用することで、SwiftUI Viewが自動的に状態変化を検知
 //
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-// MARK: - デリゲート
-
-/// ゲームエンジンのイベントを通知するデリゲート
-/// UIKitでは、オブジェクト間の通信にデリゲートパターンをよく使う
-@MainActor
-public protocol GameEngineDelegate: AnyObject {
-    /// ゲーム開始時に呼ばれる
-    func gameDidStart()
-    
-    /// タイマー更新時（毎秒）に呼ばれる
-    func gameDidUpdateTime(remaining: TimeInterval)
-    
-    /// 問題を正解した時に呼ばれる
-    func gameDidSolveProblem(score: Int, bonus: Int)
-    
-    /// 新しい問題が生成された時に呼ばれる
-    func gameDidGenerateNewProblem(_ problem: Problem)
-    
-    /// 回路の状態が変わった時に呼ばれる
-    func gameDidUpdateCurrentState(_ state: QuantumState, blochVector: BlochVector)
-    
-    /// ゲーム終了時に呼ばれる
-    func gameDidFinish(finalScore: ScoreEntry)
-}
 
 // MARK: - ゲーム状態
 
@@ -61,7 +34,9 @@ public enum GameState: Sendable {
 // MARK: - ゲームエンジン
 
 /// ゲームのコアロジックを管理
+/// @Observable: SwiftUIが自動的に状態変化を検知できる
 /// @MainActor: UIスレッドで動作することを保証
+@Observable
 @MainActor
 public final class GameEngine {
     
@@ -73,16 +48,13 @@ public final class GameEngine {
     /// 1問あたりの基本スコア
     private let baseScorePerProblem = 100
     
-    // MARK: - プロパティ
-    
-    /// デリゲート（イベント通知先）
-    public weak var delegate: GameEngineDelegate?
+    // MARK: - 公開プロパティ（SwiftUI Viewが監視）
     
     /// 現在のゲーム状態
     public private(set) var state: GameState = .ready
     
-    /// 残り時間
-    public private(set) var remainingTime: TimeInterval = 60
+    /// 残り時間（秒）
+    public private(set) var remainingTime: Int = 60
     
     /// 現在のスコア
     public private(set) var score: Int = 0
@@ -98,6 +70,31 @@ public final class GameEngine {
     
     /// 現在の回路
     public private(set) var currentCircuit = Circuit()
+    
+    /// 現在のブロッホベクトル
+    public private(set) var currentVector: BlochVector = .zero
+    
+    /// ターゲットのブロッホベクトル
+    public var targetVector: BlochVector {
+        guard let problem = currentProblem else { return .zero }
+        return BlochVector(from: problem.targetState)
+    }
+    
+    /// 現在とターゲットの距離（0.0〜1.0）
+    public var currentDistance: Double {
+        guard let problem = currentProblem else { return 1.0 }
+        let currentState = currentCircuit.apply(to: .zero)
+        let targetState = problem.targetState
+        return currentState.fidelity(with: targetState)
+    }
+    
+    /// 最後に正解したかどうか（アニメーション用）
+    public private(set) var didSolveLastProblem: Bool = false
+    
+    /// ゲーム終了時のスコアエントリ
+    public private(set) var finalScoreEntry: ScoreEntry?
+    
+    // MARK: - 内部プロパティ
     
     /// 問題生成器
     private let problemGenerator = ProblemGenerator()
@@ -116,17 +113,17 @@ public final class GameEngine {
         
         // 状態をリセット
         state = .playing
-        remainingTime = gameDuration
+        remainingTime = Int(gameDuration)
         score = 0
         problemsSolved = 0
         totalBonus = 0
         currentCircuit = Circuit()
+        currentVector = .zero
+        didSolveLastProblem = false
+        finalScoreEntry = nil
         
         // 最初の問題を生成
         generateNewProblem()
-        
-        // デリゲートに通知
-        delegate?.gameDidStart()
         
         // タイマーを開始
         startTimer()
@@ -146,19 +143,32 @@ public final class GameEngine {
         startTimer()
     }
     
+    /// ゲームをリセット（最初からやり直し）
+    public func reset() {
+        timerTask?.cancel()
+        state = .ready
+        remainingTime = Int(gameDuration)
+        score = 0
+        problemsSolved = 0
+        totalBonus = 0
+        currentCircuit = Circuit()
+        currentVector = .zero
+        currentProblem = nil
+        didSolveLastProblem = false
+        finalScoreEntry = nil
+    }
+    
     /// ゲームを終了
     private func endGame() {
         state = .finished
         timerTask?.cancel()
         
         // スコアエントリを作成
-        let entry = ScoreEntry(
+        finalScoreEntry = ScoreEntry(
             score: score,
             problemsSolved: problemsSolved,
             bonusPoints: totalBonus
         )
-        
-        delegate?.gameDidFinish(finalScore: entry)
     }
     
     // MARK: - タイマー
@@ -175,7 +185,6 @@ public final class GameEngine {
                 
                 // 残り時間を減らす
                 self.remainingTime -= 1
-                self.delegate?.gameDidUpdateTime(remaining: self.remainingTime)
                 
                 // 時間切れチェック
                 if self.remainingTime <= 0 {
@@ -191,10 +200,6 @@ public final class GameEngine {
     /// 新しい問題を生成
     private func generateNewProblem() {
         currentProblem = problemGenerator.generateProblem(difficulty: problemsSolved)
-        
-        if let problem = currentProblem {
-            delegate?.gameDidGenerateNewProblem(problem)
-        }
     }
     
     // MARK: - 回路操作
@@ -206,9 +211,7 @@ public final class GameEngine {
         
         // 現在の状態を計算
         let currentState = currentCircuit.apply(to: .zero)
-        let blochVector = BlochVector(from: currentState)
-        
-        delegate?.gameDidUpdateCurrentState(currentState, blochVector: blochVector)
+        currentVector = BlochVector(from: currentState)
         
         // 正解判定
         checkSolution(currentState: currentState)
@@ -221,17 +224,14 @@ public final class GameEngine {
         
         // 現在の状態を再計算
         let currentState = currentCircuit.apply(to: .zero)
-        let blochVector = BlochVector(from: currentState)
-        
-        delegate?.gameDidUpdateCurrentState(currentState, blochVector: blochVector)
+        currentVector = BlochVector(from: currentState)
     }
     
     /// 回路をクリア
     public func clearCircuit() {
         guard state == .playing else { return }
         currentCircuit.clear()
-        
-        delegate?.gameDidUpdateCurrentState(.zero, blochVector: .zero)
+        currentVector = .zero
     }
     
     // MARK: - 正解判定
@@ -252,11 +252,19 @@ public final class GameEngine {
             totalBonus += bonus
             problemsSolved += 1
             
-            delegate?.gameDidSolveProblem(score: score, bonus: bonus)
+            // 正解フラグを立てる（アニメーション用）
+            didSolveLastProblem = true
             
             // 回路をクリアして次の問題へ
             currentCircuit.clear()
+            currentVector = .zero
             generateNewProblem()
+            
+            // 少し後にフラグをリセット
+            Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                self.didSolveLastProblem = false
+            }
         }
     }
     
@@ -269,7 +277,7 @@ public final class GameEngine {
         let minGates = problem.minimumGates
         
         if gatesUsed <= minGates {
-            // 最適解または最適解より短い場合（理論上ない）
+            // 最適解または最適解より短い場合
             return 50
         } else if gatesUsed == minGates + 1 {
             return 25

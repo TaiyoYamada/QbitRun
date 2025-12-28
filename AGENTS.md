@@ -9,8 +9,8 @@
 # AGENTS.md — Quantum Gate Game (Swift Student Challenge)
 
 > AI coding assistants向けのプロジェクトガイドラインです。
-> 本プロジェクトは **UIKitベース**で **Swift 6** を積極採用し、**体験（UX）最優先**で開発します。
-> 低レイヤーAPI（Core Animation / Core Graphics / Metal など）は **歓迎**します。
+> 本プロジェクトは **SwiftUIベース**で **Swift 6** を積極採用し、**体験（UX）最優先**で開発します。
+> 低レイヤーAPI（Core Animation / Core Graphics / Metal など）は **歓迎**し、UIViewRepresentableで統合します。
 > ただし、すべての実装は **公式ドキュメントを根拠**にし、推測で仕様を決めないでください。
 
 
@@ -35,8 +35,9 @@
 ## 🧱 Architecture（指定：必ず従う）
 
 ### 採用方針
-- **Layered Architecture（DDD寄り）**
-- **Presentation層は UIKit MVC**
+- **Layered Architecture + MVVM**
+- **Presentation層は SwiftUI View + @Observable ViewModel**
+- **Rendering層は UIViewRepresentable**（Metal / Core Animation連携）
 - Clean Architecture という呼称は前面に出さない（思想として依存方向は守る）
 
 ### 依存方向（厳守）
@@ -99,19 +100,20 @@ Presentation  →  Application  →  Domain  →  Infrastructure
 
 ---
 
-## 🖼 Presentation Rules（UIKit MVC）
+## 🖼 Presentation Rules（SwiftUI + UIViewRepresentable）
 
-### Controller（UIViewController）
-- UIイベントの司会者（入力受付・画面更新）
+### View（SwiftUI View）
+- 宣言的UI・状態管理（@State / @Observable）
 - Application のAPIを呼び、結果を表示へ反映
-- Massive View Controller を避ける（UI制御に集中）
+- Viewは軽量に保ち、ロジックはApplication層へ委譲
 
-### View（UIView / CALayer）
-- 描画・レイアウト・アニメーション実行
+### UIViewRepresentable（低レベルAPI連携）
+- Metal / Core Animation / UIKit Drag & Drop 等をラップ
+- SwiftUIのプレビュー機能を活用
 - 受け取るのは「値」だけ（状態ベクトルやゲート列などの表示用データ）
 
 ### UI State（画面用の状態）
-- 画面表示に必要な最小の状態だけを保持
+- 画面表示に必要な最小の状態だけを保持（@State / @Binding）
 - Domainの型をそのままUIへ曝露しない（必要なら変換する）
 
 ---
@@ -219,7 +221,8 @@ AIは必ず以下を遵守すること：
 
 - 量子の真実（ゲート/状態/回路/変換） → **Domain**
 - ゲームのルール（時間制限/問題生成/判定/スコア） → **Application**
-- 入力と画面更新（ドラッグ&ドロップ/画面遷移） → **Presentation**
+- 入力と画面更新（SwiftUI View / NavigationStack） → **Presentation**
+- 低レベルUI（UIViewRepresentable / Drag & Drop） → **Presentation**（Rendering層をラップ）
 - 見た目（描画/アニメ/演出/Metal） → **Rendering**
 - 保存（Top5など） → **Infrastructure**
 ```

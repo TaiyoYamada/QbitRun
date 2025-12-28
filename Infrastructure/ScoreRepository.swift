@@ -26,7 +26,7 @@ import Foundation
 // MARK: - スコアエントリ
 
 /// 1回のゲーム結果を表す
-public struct ScoreEntry: Sendable, Codable, Identifiable {
+public struct ScoreEntry: Sendable, Codable, Identifiable, Hashable, Equatable {
     /// 一意の識別子
     public let id: UUID
     
