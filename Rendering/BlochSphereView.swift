@@ -46,6 +46,7 @@ public final class BlochSphereView: UIView {
     private var device: MTLDevice?
     private var commandQueue: MTLCommandQueue?
     private var raycastPipeline: MTLRenderPipelineState?  // レイキャスト球体用
+    private var solidPipeline: MTLRenderPipelineState?    // 3D形状用
     private var linePipeline: MTLRenderPipelineState?
     private var depthState: MTLDepthStencilState?
     private var depthStateNoWrite: MTLDepthStencilState?  // レイキャスト用（深度書き込みなし）
@@ -134,7 +135,21 @@ public final class BlochSphereView: UIView {
             raycastPipeline = try? device.makeRenderPipelineState(descriptor: desc)
         }
         
-        // ライン用パイプライン（グリッド、軸、ベクトル全て）
+        // 3D形状用パイプライン（状態ベクトル）
+        if let vertexFunc = library.makeFunction(name: "vertexShader"),
+           let fragmentFunc = library.makeFunction(name: "fragmentShader") {
+            let desc = MTLRenderPipelineDescriptor()
+            desc.vertexFunction = vertexFunc
+            desc.fragmentFunction = fragmentFunc
+            desc.colorAttachments[0].pixelFormat = .bgra8Unorm
+            desc.depthAttachmentPixelFormat = .depth32Float
+            desc.colorAttachments[0].isBlendingEnabled = true
+            desc.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+            desc.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+            solidPipeline = try? device.makeRenderPipelineState(descriptor: desc)
+        }
+        
+        // ライン用パイプライン（グリッド、軸）
         if let vertexFunc = library.makeFunction(name: "lineVertexShader"),
            let fragmentFunc = library.makeFunction(name: "lineFragmentShader") {
             let desc = MTLRenderPipelineDescriptor()
@@ -285,7 +300,7 @@ public final class BlochSphereView: UIView {
         guard let device = device else { return }
         
         var vertices: [BlochVertex] = []
-        let vectorColor = simd_float4(0.9, 0.2, 0.2, 1)  // 赤色
+        let vectorColor = simd_float4(0.9, 0.2, 0.2, 1.0)
         let target = vector.float3
         let length = simd_length(target)
         
@@ -296,52 +311,62 @@ public final class BlochSphereView: UIView {
         
         let direction = simd_normalize(target)
         
-        // 太い線を再現するため、複数の線を少しずらして描画
-        let offsets: [simd_float3] = [
-            simd_float3(0, 0, 0),
-            simd_float3(0.01, 0, 0),
-            simd_float3(-0.01, 0, 0),
-            simd_float3(0, 0.01, 0),
-            simd_float3(0, -0.01, 0),
-            simd_float3(0, 0, 0.01),
-            simd_float3(0, 0, -0.01)
-        ]
+        // 円柱と円錐のパラメータ
+        let cylinderRadius: Float = 0.03
+        let coneRadius: Float = 0.08
+        let coneLength: Float = 0.15
+        let segments = 12
         
-        for offset in offsets {
-            vertices.append(BlochVertex(position: offset, normal: direction, color: vectorColor))
-            vertices.append(BlochVertex(position: target + offset, normal: direction, color: vectorColor))
+        // 円柱の長さ（全体 - 円錐部分）
+        let cylinderEnd = target - direction * coneLength
+        
+        // 垂直ベクトルを計算
+        var perp1 = simd_cross(direction, simd_float3(0, 0, 1))
+        if simd_length(perp1) < 0.001 {
+            perp1 = simd_cross(direction, simd_float3(1, 0, 0))
+        }
+        perp1 = simd_normalize(perp1)
+        let perp2 = simd_normalize(simd_cross(direction, perp1))
+        
+        // 円柱を三角形で構築
+        for i in 0..<segments {
+            let angle1 = Float(i) * 2.0 * .pi / Float(segments)
+            let angle2 = Float(i + 1) * 2.0 * .pi / Float(segments)
+            
+            let offset1 = (perp1 * cos(angle1) + perp2 * sin(angle1)) * cylinderRadius
+            let offset2 = (perp1 * cos(angle2) + perp2 * sin(angle2)) * cylinderRadius
+            
+            let normal1 = simd_normalize(perp1 * cos(angle1) + perp2 * sin(angle1))
+            let normal2 = simd_normalize(perp1 * cos(angle2) + perp2 * sin(angle2))
+            
+            // 円柱側面（2つの三角形）
+            vertices.append(BlochVertex(position: offset1, normal: normal1, color: vectorColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset1, normal: normal1, color: vectorColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: normal2, color: vectorColor))
+            
+            vertices.append(BlochVertex(position: offset1, normal: normal1, color: vectorColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: normal2, color: vectorColor))
+            vertices.append(BlochVertex(position: offset2, normal: normal2, color: vectorColor))
         }
         
-        // 矢じり（先端から逆方向に広がる線）
-        let arrowLength: Float = 0.15
-        let arrowWidth: Float = 0.08
-        
-        // 矢じりの基点（先端から少し戻った位置）
-        let arrowBase = target - direction * arrowLength
-        
-        // 矢じりの横方向ベクトルを計算
-        var perpendicular = simd_cross(direction, simd_float3(0, 0, 1))
-        if simd_length(perpendicular) < 0.001 {
-            perpendicular = simd_cross(direction, simd_float3(1, 0, 0))
+        // 円錐（矢じり）を三角形で構築
+        for i in 0..<segments {
+            let angle1 = Float(i) * 2.0 * .pi / Float(segments)
+            let angle2 = Float(i + 1) * 2.0 * .pi / Float(segments)
+            
+            let offset1 = (perp1 * cos(angle1) + perp2 * sin(angle1)) * coneRadius
+            let offset2 = (perp1 * cos(angle2) + perp2 * sin(angle2)) * coneRadius
+            
+            // 円錐の法線（側面に垂直）
+            let coneNormal1 = simd_normalize(offset1 + direction * coneRadius)
+            let coneNormal2 = simd_normalize(offset2 + direction * coneRadius)
+            let tipNormal = simd_normalize(coneNormal1 + coneNormal2)
+            
+            // 円錐側面
+            vertices.append(BlochVertex(position: target, normal: tipNormal, color: vectorColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset1, normal: coneNormal1, color: vectorColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: coneNormal2, color: vectorColor))
         }
-        perpendicular = simd_normalize(perpendicular) * arrowWidth
-        
-        let perpendicular2 = simd_cross(direction, perpendicular)
-        let perp2Norm = simd_normalize(perpendicular2) * arrowWidth
-        
-        // 矢じりの4本の線
-        let arrowColor = simd_float4(0.9, 0.2, 0.2, 1)
-        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
-        vertices.append(BlochVertex(position: arrowBase + perpendicular, normal: direction, color: arrowColor))
-        
-        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
-        vertices.append(BlochVertex(position: arrowBase - perpendicular, normal: direction, color: arrowColor))
-        
-        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
-        vertices.append(BlochVertex(position: arrowBase + perp2Norm, normal: direction, color: arrowColor))
-        
-        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
-        vertices.append(BlochVertex(position: arrowBase - perp2Norm, normal: direction, color: arrowColor))
         
         stateVectorVertexCount = vertices.count
         stateVectorBuffer = device.makeBuffer(bytes: vertices, length: vertices.count * MemoryLayout<BlochVertex>.stride, options: .storageModeShared)
@@ -412,11 +437,11 @@ public final class BlochSphereView: UIView {
             encoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: axisVertexCount)
         }
         
-        // 状態ベクトルを描画
-        if let pipeline = linePipeline, let buffer = stateVectorBuffer {
+        // 状態ベクトルを描画（3D形状）
+        if let pipeline = solidPipeline, let buffer = stateVectorBuffer, stateVectorVertexCount > 0 {
             encoder.setRenderPipelineState(pipeline)
             encoder.setVertexBuffer(buffer, offset: 0, index: 0)
-            encoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: stateVectorVertexCount)
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: stateVectorVertexCount)
         }
         
         encoder.endEncoding()
