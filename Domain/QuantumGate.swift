@@ -3,6 +3,8 @@
 // 量子ゲート（1量子ビット操作）
 
 import Foundation
+import CoreTransferable
+import UniformTypeIdentifiers
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 量子ゲートとは？
@@ -30,7 +32,7 @@ import Foundation
 
 /// 1量子ビットに作用する量子ゲート
 /// 各ゲートは2×2のユニタリ行列で表現される
-public enum QuantumGate: String, CaseIterable, Sendable {
+public enum QuantumGate: String, CaseIterable, Sendable, Codable {
     case x  // パウリX（NOT）ゲート
     case y  // パウリYゲート
     case z  // パウリZゲート
@@ -41,92 +43,34 @@ public enum QuantumGate: String, CaseIterable, Sendable {
     // MARK: - ゲート行列
     
     /// ゲートの2×2ユニタリ行列を返す
-    /// [[u00, u01], [u10, u11]]
     public var matrix: [[Complex]] {
         switch self {
-        // ━━━━━━━━━━━━━━━━━━━
-        // パウリXゲート（NOT）
-        // ━━━━━━━━━━━━━━━━━━━
-        // [0 1]
-        // [1 0]
-        //
-        // |0⟩ → |1⟩
-        // |1⟩ → |0⟩
-        // ブロッホ球上: X軸周りに180°回転
         case .x:
             return [
                 [.zero, .one],
                 [.one, .zero]
             ]
-            
-        // ━━━━━━━━━━━━━━━━━━━
-        // パウリYゲート
-        // ━━━━━━━━━━━━━━━━━━━
-        // [0  -i]
-        // [i   0]
-        //
-        // ブロッホ球上: Y軸周りに180°回転
         case .y:
             return [
                 [.zero, Complex(real: 0, imaginary: -1)],
                 [.i, .zero]
             ]
-            
-        // ━━━━━━━━━━━━━━━━━━━
-        // パウリZゲート
-        // ━━━━━━━━━━━━━━━━━━━
-        // [1  0]
-        // [0 -1]
-        //
-        // |0⟩ → |0⟩
-        // |1⟩ → -|1⟩（位相反転）
-        // ブロッホ球上: Z軸周りに180°回転
         case .z:
             return [
                 [.one, .zero],
                 [.zero, Complex(real: -1, imaginary: 0)]
             ]
-            
-        // ━━━━━━━━━━━━━━━━━━━
-        // アダマールゲート
-        // ━━━━━━━━━━━━━━━━━━━
-        // 1/√2 [1  1]
-        //      [1 -1]
-        //
-        // |0⟩ → (|0⟩ + |1⟩)/√2 = |+⟩
-        // |1⟩ → (|0⟩ - |1⟩)/√2 = |-⟩
-        // 重ね合わせ状態を作る最も基本的なゲート
         case .h:
             let factor = 1.0 / 2.0.squareRoot()
             return [
                 [Complex(real: factor, imaginary: 0), Complex(real: factor, imaginary: 0)],
                 [Complex(real: factor, imaginary: 0), Complex(real: -factor, imaginary: 0)]
             ]
-            
-        // ━━━━━━━━━━━━━━━━━━━
-        // Sゲート（位相ゲート）
-        // ━━━━━━━━━━━━━━━━━━━
-        // [1 0]
-        // [0 i]
-        //
-        // |0⟩ → |0⟩
-        // |1⟩ → i|1⟩（π/2位相シフト）
-        // S² = Z
         case .s:
             return [
                 [.one, .zero],
                 [.zero, .i]
             ]
-            
-        // ━━━━━━━━━━━━━━━━━━━
-        // Tゲート（π/8ゲート）
-        // ━━━━━━━━━━━━━━━━━━━
-        // [1       0    ]
-        // [0  e^(iπ/4)  ]
-        //
-        // |0⟩ → |0⟩
-        // |1⟩ → e^(iπ/4)|1⟩（π/4位相シフト）
-        // T² = S, T⁸ = I
         case .t:
             let angle = Double.pi / 4
             let phase = Complex(real: cos(angle), imaginary: sin(angle))
@@ -140,22 +84,16 @@ public enum QuantumGate: String, CaseIterable, Sendable {
     // MARK: - ゲート適用
     
     /// 量子状態にゲートを適用する
-    /// |ψ'⟩ = U|ψ⟩ を計算
     public func apply(to state: QuantumState) -> QuantumState {
         let m = matrix
-        
-        // 行列とベクトルの積を計算
-        // [α']   [m00  m01] [α]   [m00*α + m01*β]
-        // [β'] = [m10  m11] [β] = [m10*α + m11*β]
         let newAlpha = m[0][0] * state.alpha + m[0][1] * state.beta
         let newBeta = m[1][0] * state.alpha + m[1][1] * state.beta
-        
         return QuantumState(alpha: newAlpha, beta: newBeta)
     }
     
     // MARK: - ゲート情報
     
-    /// ゲートの名前（フルネーム）
+    /// ゲートの名前
     public var name: String {
         switch self {
         case .x: return "パウリX（NOT）"
@@ -177,5 +115,19 @@ public enum QuantumGate: String, CaseIterable, Sendable {
         case .s: return "90°位相シフト"
         case .t: return "45°位相シフト"
         }
+    }
+}
+
+// MARK: - Transferable対応（SwiftUI D&D用）
+
+extension QuantumGate: Transferable {
+    public static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .quantumGate)
+    }
+}
+
+extension UTType {
+    static var quantumGate: UTType {
+        UTType(exportedAs: "com.quantumgate.gate")
     }
 }

@@ -1,62 +1,66 @@
 // SPDX-License-Identifier: MIT
-// Presentation/Game/CircuitView.swift
-// 量子回路ビュー（ゲートをドロップする場所）
+// Presentation/Component/CircuitView.swift
+// 量子回路ビュー（ワイヤーベースデザイン）
 
 import UIKit
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// UIDropInteraction とは？
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// iOS 11以降のドラッグ＆ドロップAPI：
-//
-// ドラッグ側: UIDragInteraction + UIDragInteractionDelegate
-// ドロップ側: UIDropInteraction + UIDropInteractionDelegate
-//
-// 処理の流れ：
-// 1. ユーザーがGatePaletteViewからドラッグ開始
-// 2. CircuitView上にドラッグしてくると canHandle が呼ばれる
-// 3. ドロップすると performDrop が呼ばれる
-// 4. デリゲートでGameViewControllerに通知
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import UniformTypeIdentifiers
 
 /// 回路ビューのイベントを通知するデリゲート
 @MainActor
 public protocol CircuitViewDelegate: AnyObject {
-    /// ゲートがドロップされた時
     func circuitView(_ view: CircuitView, didReceiveGate gate: QuantumGate)
-    /// ゲートが削除された時
     func circuitView(_ view: CircuitView, didRemoveGateAt index: Int)
 }
 
-/// 量子回路ビュー
-/// ゲートをドロップして回路を構築する
+/// 量子回路ビュー（ワイヤースタイル）
 @MainActor
 public final class CircuitView: UIView {
     
     // MARK: - 定数
     
-    /// 最大ゲート数
-    private let maxSlots = 6
+    private let maxSlots = 5
+    private let slotSize: CGFloat = 50
+    private let wireHeight: CGFloat = 3
     
     // MARK: - プロパティ
     
     public weak var delegate: CircuitViewDelegate?
-    
-    /// 現在配置されているゲート
     private var gates: [QuantumGate] = []
-    
-    /// 各スロットのビュー
     private var slotViews: [UIView] = []
     
-    /// ゲートスロットを横に並べるスタック
-    private lazy var stackView: UIStackView = {
+    /// ワイヤーレイヤー
+    private let wireLayer = CAShapeLayer()
+    
+    /// |0⟩ラベル
+    private let initialStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "|0⟩"
+        label.font = UIFont(name: "Menlo-Bold", size: 18) ?? UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
+        label.textColor = .white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    /// Runボタン
+    private lazy var runButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("▶ Run", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(red: 0.3, green: 0.7, blue: 0.4, alpha: 1)
+        button.layer.cornerRadius = 8
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(runTapped), for: .touchUpInside)
+        return button
+    }()
+    
+    /// スロットコンテナ
+    private lazy var slotsContainer: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.distribution = .equalSpacing
         stack.alignment = .center
-        stack.spacing = 8
+        stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -77,59 +81,91 @@ public final class CircuitView: UIView {
     private func setupView() {
         backgroundColor = UIColor.white.withAlphaComponent(0.05)
         layer.cornerRadius = 12
-        layer.borderWidth = 2
-        layer.borderColor = UIColor.white.withAlphaComponent(0.1).cgColor
         
-        addSubview(stackView)
+        // ワイヤーレイヤー追加
+        wireLayer.strokeColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        wireLayer.lineWidth = wireHeight
+        wireLayer.fillColor = nil
+        layer.addSublayer(wireLayer)
         
-        // 空のスロットを作成
+        // UIをセットアップ
+        addSubview(initialStateLabel)
+        addSubview(slotsContainer)
+        addSubview(runButton)
+        
+        // スロット作成
         for _ in 0..<maxSlots {
-            let slot = createEmptySlot()
+            let slot = createSlot()
             slotViews.append(slot)
-            stackView.addArrangedSubview(slot)
+            slotsContainer.addArrangedSubview(slot)
         }
         
         NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            stackView.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            // |0⟩ラベル
+            initialStateLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            initialStateLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            
+            // スロットコンテナ
+            slotsContainer.leadingAnchor.constraint(equalTo: initialStateLabel.trailingAnchor, constant: 20),
+            slotsContainer.centerYAnchor.constraint(equalTo: centerYAnchor),
+            
+            // Runボタン
+            runButton.leadingAnchor.constraint(equalTo: slotsContainer.trailingAnchor, constant: 20),
+            runButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            runButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            runButton.widthAnchor.constraint(equalToConstant: 80),
+            runButton.heightAnchor.constraint(equalToConstant: 40)
         ])
         
-        // ドロップ機能を追加
+        // ドロップ機能
         let dropInteraction = UIDropInteraction(delegate: self)
         addInteraction(dropInteraction)
     }
     
-    /// 空のスロットを作成（円形）
-    private func createEmptySlot() -> UIView {
+    private func createSlot() -> UIView {
         let slot = UIView()
-        slot.backgroundColor = UIColor.white.withAlphaComponent(0.03)
-        
-        // 円形にするための設定
-        slot.translatesAutoresizingMaskIntoConstraints = false
-        slot.widthAnchor.constraint(equalToConstant: 50).isActive = true
-        slot.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        slot.layer.cornerRadius = 25  // 正円
-        slot.clipsToBounds = true
+        slot.backgroundColor = UIColor.white.withAlphaComponent(0.08)
+        slot.layer.cornerRadius = 8
         slot.layer.borderWidth = 2
-        slot.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
+        slot.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+        slot.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            slot.widthAnchor.constraint(equalToConstant: slotSize),
+            slot.heightAnchor.constraint(equalToConstant: slotSize)
+        ])
+        
         return slot
+    }
+    
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        updateWire()
+    }
+    
+    /// ワイヤーを描画
+    private func updateWire() {
+        let path = UIBezierPath()
+        
+        let y = bounds.midY
+        let startX = initialStateLabel.frame.maxX + 8
+        let endX = runButton.frame.minX - 8
+        
+        path.move(to: CGPoint(x: startX, y: y))
+        path.addLine(to: CGPoint(x: endX, y: y))
+        
+        wireLayer.path = path.cgPath
     }
     
     // MARK: - 公開メソッド
     
-    /// 回路を更新（配置されたゲートを再描画）
     public func updateCircuit(_ gates: [QuantumGate]) {
         self.gates = gates
         
-        // 全スロットを更新
         for (index, slot) in slotViews.enumerated() {
-            // 既存のサブビューを削除
             slot.subviews.forEach { $0.removeFromSuperview() }
             
             if index < gates.count {
-                // ゲートを表示
                 let gate = gates[index]
                 let label = UILabel()
                 label.text = gate.symbol
@@ -139,28 +175,29 @@ public final class CircuitView: UIView {
                 label.translatesAutoresizingMaskIntoConstraints = false
                 
                 slot.addSubview(label)
-                slot.backgroundColor = gate.color.withAlphaComponent(0.8)
+                slot.backgroundColor = gate.color.withAlphaComponent(0.9)
+                slot.layer.borderColor = gate.color.cgColor
                 
                 NSLayoutConstraint.activate([
                     label.centerXAnchor.constraint(equalTo: slot.centerXAnchor),
                     label.centerYAnchor.constraint(equalTo: slot.centerYAnchor)
                 ])
                 
-                // タップで削除できるようにする
                 setupTapToRemove(for: slot, at: index)
             } else {
-                // 空のスロット
-                slot.backgroundColor = UIColor.white.withAlphaComponent(0.03)
+                slot.backgroundColor = UIColor.white.withAlphaComponent(0.08)
+                slot.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+                slot.gestureRecognizers?.forEach { slot.removeGestureRecognizer($0) }
             }
         }
+        
+        // Runボタンの状態更新
+        runButton.isEnabled = !gates.isEmpty
+        runButton.alpha = gates.isEmpty ? 0.5 : 1.0
     }
     
-    /// タップで削除する機能を追加
     private func setupTapToRemove(for slot: UIView, at index: Int) {
-        // 既存のジェスチャーを削除
         slot.gestureRecognizers?.forEach { slot.removeGestureRecognizer($0) }
-        
-        // タップジェスチャーを追加
         let tap = UITapGestureRecognizer(target: self, action: #selector(slotTapped(_:)))
         slot.addGestureRecognizer(tap)
         slot.tag = index
@@ -169,41 +206,52 @@ public final class CircuitView: UIView {
     
     @objc private func slotTapped(_ gesture: UITapGestureRecognizer) {
         guard let slot = gesture.view else { return }
-        let index = slot.tag
-        
-        // 触覚フィードバック
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
-        
-        // デリゲートに通知
-        delegate?.circuitView(self, didRemoveGateAt: index)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        delegate?.circuitView(self, didRemoveGateAt: slot.tag)
     }
     
-    /// ゲートをスライドアウトするアニメーション
-    public func animateGatesOut(completion: @escaping () -> Void) {
-        // 各ゲートを順番にスライドアウト
-        let animationDuration = 0.15
+    @objc private func runTapped() {
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        // Note: SwiftUICircuitViewを使用しているため、ここでは何もしない
+    }
+    
+    // MARK: - アニメーション
+    
+    /// ゲートを順番に光らせる
+    public func animateGateSequence(completion: @escaping () -> Void) {
+        guard !gates.isEmpty else {
+            completion()
+            return
+        }
+        
+        let duration: TimeInterval = 0.2
         
         for (index, slot) in slotViews.enumerated() {
             guard index < gates.count else { continue }
             
-            // 遅延付きでアニメーション
-            UIView.animate(
-                withDuration: animationDuration,
-                delay: Double(index) * 0.05,
-                options: .curveEaseIn,
-                animations: {
-                    slot.transform = CGAffineTransform(translationX: 50, y: 0)
-                    slot.alpha = 0
-                }
-            ) { _ in
-                slot.transform = .identity
-                slot.alpha = 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration * Double(index)) {
+                // 光るアニメーション
+                let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
+                pulseAnimation.fromValue = 1.0
+                pulseAnimation.toValue = 1.2
+                pulseAnimation.duration = duration / 2
+                pulseAnimation.autoreverses = true
+                pulseAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                slot.layer.add(pulseAnimation, forKey: "pulse")
+                
+                // グロー効果
+                let glowAnimation = CABasicAnimation(keyPath: "shadowOpacity")
+                glowAnimation.fromValue = 0
+                glowAnimation.toValue = 1
+                glowAnimation.duration = duration / 2
+                glowAnimation.autoreverses = true
+                slot.layer.shadowColor = UIColor.white.cgColor
+                slot.layer.shadowRadius = 10
+                slot.layer.add(glowAnimation, forKey: "glow")
             }
         }
         
-        // 全アニメーション完了後にコールバック
-        let totalDuration = animationDuration + Double(gates.count) * 0.05
+        let totalDuration = duration * Double(gates.count) + 0.1
         DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration) {
             completion()
         }
@@ -211,49 +259,25 @@ public final class CircuitView: UIView {
 }
 
 // MARK: - UIDropInteractionDelegate
-// ドロップ操作のデリゲート
 
 extension CircuitView: UIDropInteractionDelegate {
     
-    /// このViewがドロップを受け付けるか判定
-    public func dropInteraction(
-        _ interaction: UIDropInteraction,
-        canHandle session: UIDropSession
-    ) -> Bool {
-        // NSStringを含むアイテムを受け付ける
+    public func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
         return session.hasItemsConforming(toTypeIdentifiers: [UTType.plainText.identifier])
     }
     
-    /// ドロップ時の提案を返す
-    public func dropInteraction(
-        _ interaction: UIDropInteraction,
-        sessionDidUpdate session: UIDropSession
-    ) -> UIDropProposal {
-        // .copy: コピー操作として扱う
+    public func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
         return UIDropProposal(operation: .copy)
     }
     
-    /// 実際にドロップされた時の処理
-    public func dropInteraction(
-        _ interaction: UIDropInteraction,
-        performDrop session: UIDropSession
-    ) {
-        // ドラッグアイテムからゲートを取得
+    public func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
         for item in session.items {
             if let gate = item.localObject as? QuantumGate {
-                // 最大数チェック
                 if gates.count < maxSlots {
-                    // 触覚フィードバック
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
-                    
-                    // デリゲートに通知
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     delegate?.circuitView(self, didReceiveGate: gate)
                 }
             }
         }
     }
 }
-
-// UTType を使うために必要
-import UniformTypeIdentifiers

@@ -91,4 +91,15 @@ final class GameViewModel {
     func clearCircuit() {
         gameEngine.clearCircuit()
     }
+    
+    /// 回路を実行して判定
+    /// - Returns: 正解かどうか
+    func runCircuit() -> Bool {
+        // 現在の状態がターゲットに十分近いか判定
+        let isCorrect = gameEngine.checkCurrentState()
+        if isCorrect {
+            gameEngine.handleCorrectAnswer()
+        }
+        return isCorrect
+    }
 }

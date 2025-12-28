@@ -209,12 +209,9 @@ public final class GameEngine {
         guard state == .playing else { return }
         guard currentCircuit.addGate(gate) else { return }
         
-        // 現在の状態を計算
+        // 現在の状態を計算（表示用、Runボタンで判定）
         let currentState = currentCircuit.apply(to: .zero)
         currentVector = BlochVector(from: currentState)
-        
-        // 正解判定
-        checkSolution(currentState: currentState)
     }
     
     /// ゲートを削除
@@ -287,4 +284,41 @@ public final class GameEngine {
         
         return 0
     }
+    
+    // MARK: - Run判定用メソッド
+    
+    /// 現在の状態がターゲットと一致するか判定（Runボタン用）
+    public func checkCurrentState() -> Bool {
+        guard let problem = currentProblem else { return false }
+        
+        let result = judgeService.judge(
+            playerCircuit: currentCircuit,
+            targetState: problem.targetState
+        )
+        
+        return result.isCorrect
+    }
+    
+    /// 正解処理を実行（Runボタン用）
+    public func handleCorrectAnswer() {
+        guard currentProblem != nil else { return }
+        
+        let bonus = calculateBonus()
+        score += baseScorePerProblem + bonus
+        totalBonus += bonus
+        problemsSolved += 1
+        
+        didSolveLastProblem = true
+        
+        // 回路をクリアして次の問題へ
+        currentCircuit.clear()
+        currentVector = .zero
+        generateNewProblem()
+        
+        Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            self.didSolveLastProblem = false
+        }
+    }
 }
+

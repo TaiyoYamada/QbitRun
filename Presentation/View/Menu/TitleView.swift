@@ -63,12 +63,12 @@ struct TitleView: View {
                 
                 // タイトル
                 Text("Quantum Gate")
-                    .font(.system(size: 60, weight: .bold))
+                    .font(.custom("Optima-Bold", size: 70))
                     .foregroundStyle(.white)
                 
                 // サブタイトル
                 Text("Master the Bloch Sphere")
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.custom("Optima-Bold", size: 20))
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(.top, 8)
                 
@@ -103,9 +103,11 @@ struct TitleView: View {
     }
     
     private func startAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { _ in
-            for i in 0..<4 {
-                angles[i] += speeds[i]
+        Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [self] _ in
+            Task { @MainActor in
+                for i in 0..<4 {
+                    angles[i] += speeds[i]
+                }
             }
         }
     }

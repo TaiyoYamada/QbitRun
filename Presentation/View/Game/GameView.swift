@@ -4,7 +4,10 @@ import SwiftUI
 struct GameView: View {
 
     @State private var viewModel = GameViewModel()
-
+    @State private var showSuccessEffect = false
+    @State private var showFailureEffect = false
+    @State private var circuitGates: [QuantumGate] = []
+    
     let onGameEnd: (ScoreEntry) -> Void
     
     var body: some View {
@@ -32,14 +35,22 @@ struct GameView: View {
                 
                 Spacer()
                 
-                // ゲートパレット
-                GatePaletteViewRepresentable { gate in
-                    viewModel.addGate(gate)
+                // ゲートパレット（タップで追加）
+                SwiftUIGatePaletteView { gate in
+                    if circuitGates.count < 5 {
+                        circuitGates.append(gate)
+                        viewModel.addGate(gate)
+                    }
                 }
-                .frame(height: 76)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 16)
             }
+            
+            // 成功/失敗エフェクト用オーバーレイ
+            EffectOverlayView(
+                showSuccess: $showSuccessEffect,
+                showFailure: $showFailureEffect
+            )
         }
         .onAppear {
             viewModel.startGame()
@@ -49,22 +60,38 @@ struct GameView: View {
                 onGameEnd(score)
             }
         }
+        .onChange(of: circuitGates) { _, newGates in
+            // 回路ゲートが変更されたらViewModelを更新
+            syncCircuitToViewModel()
+        }
     }
     
-    // MARK: - ヘッダー（タイマー＆スコア）
+    // MARK: - ヘッダー
     
     private var headerSection: some View {
-        HStack(spacing: 1000) {
+        HStack {
+            Spacer()
+            
             // タイマー
             Text(String(format: "%02d", viewModel.remainingTime))
                 .font(.system(size: 60, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(viewModel.isTimeLow ? Color.red : .white)
             
+            Spacer()
+            
             // スコア
-            Text("\(viewModel.score) pts • \(viewModel.problemsSolved) solved")
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 1.0))
+            VStack(alignment: .trailing, spacing: 4) {
+                Text("\(viewModel.score) pts")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 1.0))
+                
+                Text("\(viewModel.problemsSolved) solved")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            
+            Spacer()
         }
         .padding(.top, 16)
     }
@@ -72,23 +99,23 @@ struct GameView: View {
     // MARK: - ブロッホ球表示
     
     private var spheresSection: some View {
-        HStack(spacing: 70) {
+        HStack(spacing: 50) {
             // 現在の状態
             VStack(spacing: 4) {
                 BlochSphereViewRepresentable(
                     vector: viewModel.currentVector,
                     animated: true
                 )
-                .frame(width: 380, height: 380)
+                .frame(width: 350, height: 350)
 
                 Text("Current")
-                    .font(.system(size: 50, weight: .medium))
+                    .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
             
             // 矢印
-            Text("→")
-                .font(.system(size: 200, weight: .bold))
+            Image(systemName: "arrow.right")
+                .font(.system(size: 60, weight: .bold))
                 .foregroundStyle(.white.opacity(0.5))
             
             // ターゲット状態
@@ -97,14 +124,14 @@ struct GameView: View {
                     vector: viewModel.targetVector,
                     animated: true
                 )
-                .frame(width: 380, height: 380)
+                .frame(width: 350, height: 350)
 
                 Text("Target")
-                    .font(.system(size: 50, weight: .medium))
+                    .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
         }
-        .padding(.top, 16)
+        .padding(.top, 8)
     }
     
     // MARK: - 回路表示
@@ -113,8 +140,8 @@ struct GameView: View {
         VStack(alignment: .trailing, spacing: 8) {
             // クリアボタン
             Button(action: {
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                circuitGates.removeAll()
                 viewModel.clearCircuit()
             }) {
                 Text("Clear")
@@ -126,96 +153,70 @@ struct GameView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             
-            // 回路ビュー
-            CircuitViewRepresentable(
-                gates: viewModel.circuit,
-                onGateReceived: { gate in
-                    viewModel.addGate(gate)
-                },
-                onGateRemoved: { index in
-                    viewModel.removeGate(at: index)
-                }
+            // 回路ビュー（SwiftUIネイティブD&D）
+            SwiftUICircuitView(
+                gates: $circuitGates,
+                onRun: { runCircuit() }
             )
-            .frame(height: 72)
         }
         .padding(.horizontal, 16)
-        .padding(.top, 24)
+        .padding(.top, 16)
+    }
+    
+    // MARK: - 回路実行
+    
+    private func runCircuit() {
+        guard !circuitGates.isEmpty else { return }
+        
+        // 判定実行
+        let isCorrect = viewModel.runCircuit()
+        
+        if isCorrect {
+            showSuccessEffect = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                showSuccessEffect = false
+                // 正解したら回路をクリア
+                circuitGates.removeAll()
+            }
+        } else {
+            showFailureEffect = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                showFailureEffect = false
+            }
+        }
+    }
+    
+    private func syncCircuitToViewModel() {
+        // ローカルの回路状態をViewModelに同期
+        viewModel.clearCircuit()
+        for gate in circuitGates {
+            viewModel.addGate(gate)
+        }
     }
 }
 
-// MARK: - UIViewRepresentable ラッパー
+// MARK: - Effect Overlay
 
-/// CircuitView の SwiftUI ラッパー
-struct CircuitViewRepresentable: UIViewRepresentable {
-    let gates: [QuantumGate]
-    let onGateReceived: (QuantumGate) -> Void
-    let onGateRemoved: (Int) -> Void
+struct EffectOverlayView: UIViewRepresentable {
+    @Binding var showSuccess: Bool
+    @Binding var showFailure: Bool
     
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onGateReceived: onGateReceived, onGateRemoved: onGateRemoved)
-    }
-    
-    func makeUIView(context: Context) -> CircuitView {
-        let view = CircuitView()
-        view.delegate = context.coordinator
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
         return view
     }
     
-    func updateUIView(_ uiView: CircuitView, context: Context) {
-        uiView.updateCircuit(gates)
-    }
-    
-    class Coordinator: NSObject, CircuitViewDelegate {
-        let onGateReceived: (QuantumGate) -> Void
-        let onGateRemoved: (Int) -> Void
-        
-        init(onGateReceived: @escaping (QuantumGate) -> Void, onGateRemoved: @escaping (Int) -> Void) {
-            self.onGateReceived = onGateReceived
-            self.onGateRemoved = onGateRemoved
+    func updateUIView(_ uiView: UIView, context: Context) {
+        if showSuccess {
+            CircuitAnimator.showSuccessEffect(on: uiView)
+            CircuitAnimator.showStarsEffect(on: uiView)
         }
-        
-        func circuitView(_ view: CircuitView, didReceiveGate gate: QuantumGate) {
-            onGateReceived(gate)
-        }
-        
-        func circuitView(_ view: CircuitView, didRemoveGateAt index: Int) {
-            onGateRemoved(index)
+        if showFailure {
+            CircuitAnimator.showFailureEffect(on: uiView)
         }
     }
 }
-
-/// GatePaletteView の SwiftUI ラッパー
-struct GatePaletteViewRepresentable: UIViewRepresentable {
-    let onGateSelected: (QuantumGate) -> Void
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onGateSelected: onGateSelected)
-    }
-    
-    func makeUIView(context: Context) -> GatePaletteView {
-        let view = GatePaletteView()
-        view.delegate = context.coordinator
-        return view
-    }
-    
-    func updateUIView(_ uiView: GatePaletteView, context: Context) {
-        // 更新処理は不要
-    }
-    
-    class Coordinator: NSObject, GatePaletteViewDelegate {
-        let onGateSelected: (QuantumGate) -> Void
-        
-        init(onGateSelected: @escaping (QuantumGate) -> Void) {
-            self.onGateSelected = onGateSelected
-        }
-        
-        func gatePalette(_ palette: GatePaletteView, didSelectGate gate: QuantumGate) {
-            onGateSelected(gate)
-        }
-    }
-}
-
-// MARK: - プレビュー
 
 #Preview("ゲーム画面", traits: .landscapeLeft) {
     GameView(onGameEnd: { _ in })

@@ -201,23 +201,10 @@ extension GatePaletteView: UIDragInteractionDelegate {
     }
 }
 
-// MARK: - QuantumGate拡張
-// ゲートの表示用プロパティ
+// MARK: - QuantumGate拡張（UIColor版）
 
 extension QuantumGate {
-    /// ゲートの記号
-    var symbol: String {
-        switch self {
-        case .x: return "X"
-        case .y: return "Y"
-        case .z: return "Z"
-        case .h: return "H"
-        case .s: return "S"
-        case .t: return "T"
-        }
-    }
-    
-    /// ゲートの色
+    /// ゲートの色（UIKit用）
     var color: UIColor {
         switch self {
         case .x: return UIColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 1)
@@ -229,3 +216,4 @@ extension QuantumGate {
         }
     }
 }
+
