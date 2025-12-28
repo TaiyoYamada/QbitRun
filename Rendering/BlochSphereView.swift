@@ -285,12 +285,63 @@ public final class BlochSphereView: UIView {
         guard let device = device else { return }
         
         var vertices: [BlochVertex] = []
-        let vectorColor = simd_float4(0.1, 0.6, 0.8, 1)  // 濃いシアン
+        let vectorColor = simd_float4(0.9, 0.2, 0.2, 1)  // 赤色
         let target = vector.float3
+        let length = simd_length(target)
         
-        // 原点から状態ベクトルへの線
-        vertices.append(BlochVertex(position: simd_float3(0, 0, 0), normal: target, color: vectorColor))
-        vertices.append(BlochVertex(position: target, normal: target, color: vectorColor))
+        guard length > 0.001 else {
+            stateVectorVertexCount = 0
+            return
+        }
+        
+        let direction = simd_normalize(target)
+        
+        // 太い線を再現するため、複数の線を少しずらして描画
+        let offsets: [simd_float3] = [
+            simd_float3(0, 0, 0),
+            simd_float3(0.01, 0, 0),
+            simd_float3(-0.01, 0, 0),
+            simd_float3(0, 0.01, 0),
+            simd_float3(0, -0.01, 0),
+            simd_float3(0, 0, 0.01),
+            simd_float3(0, 0, -0.01)
+        ]
+        
+        for offset in offsets {
+            vertices.append(BlochVertex(position: offset, normal: direction, color: vectorColor))
+            vertices.append(BlochVertex(position: target + offset, normal: direction, color: vectorColor))
+        }
+        
+        // 矢じり（先端から逆方向に広がる線）
+        let arrowLength: Float = 0.15
+        let arrowWidth: Float = 0.08
+        
+        // 矢じりの基点（先端から少し戻った位置）
+        let arrowBase = target - direction * arrowLength
+        
+        // 矢じりの横方向ベクトルを計算
+        var perpendicular = simd_cross(direction, simd_float3(0, 0, 1))
+        if simd_length(perpendicular) < 0.001 {
+            perpendicular = simd_cross(direction, simd_float3(1, 0, 0))
+        }
+        perpendicular = simd_normalize(perpendicular) * arrowWidth
+        
+        let perpendicular2 = simd_cross(direction, perpendicular)
+        let perp2Norm = simd_normalize(perpendicular2) * arrowWidth
+        
+        // 矢じりの4本の線
+        let arrowColor = simd_float4(0.9, 0.2, 0.2, 1)
+        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
+        vertices.append(BlochVertex(position: arrowBase + perpendicular, normal: direction, color: arrowColor))
+        
+        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
+        vertices.append(BlochVertex(position: arrowBase - perpendicular, normal: direction, color: arrowColor))
+        
+        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
+        vertices.append(BlochVertex(position: arrowBase + perp2Norm, normal: direction, color: arrowColor))
+        
+        vertices.append(BlochVertex(position: target, normal: direction, color: arrowColor))
+        vertices.append(BlochVertex(position: arrowBase - perp2Norm, normal: direction, color: arrowColor))
         
         stateVectorVertexCount = vertices.count
         stateVectorBuffer = device.makeBuffer(bytes: vertices, length: vertices.count * MemoryLayout<BlochVertex>.stride, options: .storageModeShared)
