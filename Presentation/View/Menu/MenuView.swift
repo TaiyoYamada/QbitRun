@@ -1,20 +1,6 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Menu/MenuView.swift
-// メニュー画面（SwiftUI版）
-
 import SwiftUI
+import simd
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SwiftUI View
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// SwiftUIではViewは値型（struct）で、状態が変わると自動的に再描画される
-// @State: ビュー内部の状態を管理
-// .task { }: 非同期処理をビューのライフサイクルに紐付ける
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-/// メニュー画面
 struct MenuView: View {
     
     /// ゲーム開始時のコールバック
@@ -23,8 +9,26 @@ struct MenuView: View {
     /// スコアリポジトリ
     let scoreRepository: ScoreRepository
     
-    /// ハイスコア
-    @State private var highScore: Int = 0
+    /// 4つの角のアニメーション角度（それぞれ異なる動き）
+    @State private var angles: [Double] = [0, 0.8, 1.6, 2.4]
+    
+    /// 各ブロッホ球の回転速度（ランダム）
+    private let speeds: [Double] = [0.018, 0.025, 0.022, 0.015]
+    
+    /// 各ブロッホ球の緯度変化係数
+    private let thetaFactors: [Double] = [0.3, 0.5, 0.2, 0.4]
+    
+    /// 指定インデックスの状態ベクトル
+    private func vectorFor(index: Int) -> BlochVector {
+        let theta = angles[index] * thetaFactors[index]
+        let phi = angles[index]
+        
+        let x = sin(theta) * cos(phi)
+        let y = sin(theta) * sin(phi)
+        let z = cos(theta)
+        
+        return BlochVector(simd_double3(x, y, z))
+    }
     
     var body: some View {
         ZStack {
@@ -40,12 +44,33 @@ struct MenuView: View {
             )
             .ignoresSafeArea()
             
+            // 四隅にブロッホ球を配置
+            VStack {
+                HStack {
+                    // 左上
+                    cornerBlochSphere(index: 0)
+                    Spacer()
+                    // 右上
+                    cornerBlochSphere(index: 1)
+                }
+                Spacer()
+                HStack {
+                    // 左下
+                    cornerBlochSphere(index: 2)
+                    Spacer()
+                    // 右下
+                    cornerBlochSphere(index: 3)
+                }
+            }
+            .padding(20)
+            
+            // メインコンテンツ
             VStack(spacing: 0) {
                 Spacer()
                 
                 // タイトル
                 Text("Quantum Gate")
-                    .font(.system(size: 42, weight: .bold))
+                    .font(.system(size: 60, weight: .bold))
                     .foregroundStyle(.white)
                 
                 // サブタイトル
@@ -56,10 +81,8 @@ struct MenuView: View {
                 
                 // スタートボタン
                 Button(action: {
-                    // 触覚フィードバック
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
-                    
                     onStartGame()
                 }) {
                     Text("Start Game")
@@ -72,26 +95,26 @@ struct MenuView: View {
                 .buttonStyle(ScaleButtonStyle())
                 .padding(.top, 48)
                 
-                // ハイスコア
-                Text(highScore > 0 ? "High Score: \(highScore)" : "No scores yet")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .padding(.top, 24)
-                
                 Spacer()
-                
-                // 説明テキスト
-                Text("Drag quantum gates to transform |0⟩\ninto the target state within 60 seconds")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 32)
             }
         }
-        .task {
-            // ハイスコアを非同期で読み込み
-            highScore = await scoreRepository.highScore()
+        .onAppear {
+            startAnimation()
+        }
+    }
+    
+    /// 角に表示するブロッホ球
+    @ViewBuilder
+    private func cornerBlochSphere(index: Int) -> some View {
+        BlochSphereViewRepresentable(vector: vectorFor(index: index), animated: false)
+            .frame(width: 250, height: 250)
+    }
+    
+    private func startAnimation() {
+        Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { _ in
+            for i in 0..<4 {
+                angles[i] += speeds[i]
+            }
         }
     }
 }
@@ -104,8 +127,6 @@ struct ScaleButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
-
-// MARK: - プレビュー
 
 #Preview("メニュー画面") {
     MenuView(

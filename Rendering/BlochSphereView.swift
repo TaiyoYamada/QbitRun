@@ -313,8 +313,8 @@ public final class BlochSphereView: UIView {
         
         // 円柱と円錐のパラメータ
         let cylinderRadius: Float = 0.03
-        let coneRadius: Float = 0.08
-        let coneLength: Float = 0.15
+        let coneRadius: Float = 0.05   // 尖った矢じり
+        let coneLength: Float = 0.18   // やや長め
         let segments = 12
         
         // 円柱の長さ（全体 - 円錐部分）
