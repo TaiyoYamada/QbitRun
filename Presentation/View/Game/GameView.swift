@@ -1,16 +1,10 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Game/GameView.swift
-// ゲーム画面（SwiftUI版）
-
 import SwiftUI
 
 /// ゲーム画面
 struct GameView: View {
-    
-    /// ViewModel
+
     @State private var viewModel = GameViewModel()
-    
-    /// ゲーム終了時のコールバック
+
     let onGameEnd: (ScoreEntry) -> Void
     
     var body: some View {
@@ -25,7 +19,7 @@ struct GameView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
                 // タイマーとスコア
                 headerSection
@@ -35,8 +29,7 @@ struct GameView: View {
                 
                 // 距離ゲージ
                 DistanceGaugeViewRepresentable(distance: viewModel.distance)
-                    .frame(width: 200, height: 24)
-                    .padding(.top, 16)
+                    .frame(width: 500, height: 60)
                 
                 // 回路表示エリア
                 circuitSection
@@ -65,16 +58,16 @@ struct GameView: View {
     // MARK: - ヘッダー（タイマー＆スコア）
     
     private var headerSection: some View {
-        VStack(spacing: 8) {
+        HStack(spacing: 1000) {
             // タイマー
             Text(String(format: "%02d", viewModel.remainingTime))
-                .font(.system(size: 32, weight: .bold))
+                .font(.system(size: 60, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(viewModel.isTimeLow ? Color.red : .white)
             
             // スコア
             Text("\(viewModel.score) pts • \(viewModel.problemsSolved) solved")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 1.0))
         }
         .padding(.top, 16)
@@ -83,23 +76,23 @@ struct GameView: View {
     // MARK: - ブロッホ球表示
     
     private var spheresSection: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 70) {
             // 現在の状態
             VStack(spacing: 4) {
                 BlochSphereViewRepresentable(
                     vector: viewModel.currentVector,
                     animated: true
                 )
-                .frame(width: 150, height: 150)
-                
+                .frame(width: 380, height: 380)
+
                 Text("Current")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 50, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
             
             // 矢印
             Text("→")
-                .font(.system(size: 24, weight: .bold))
+                .font(.system(size: 200, weight: .bold))
                 .foregroundStyle(.white.opacity(0.5))
             
             // ターゲット状態
@@ -108,10 +101,10 @@ struct GameView: View {
                     vector: viewModel.targetVector,
                     animated: true
                 )
-                .frame(width: 150, height: 150)
-                
+                .frame(width: 380, height: 380)
+
                 Text("Target")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 50, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
         }
@@ -241,6 +234,6 @@ struct DistanceGaugeViewRepresentable: UIViewRepresentable {
 
 // MARK: - プレビュー
 
-#Preview("ゲーム画面") {
+#Preview("ゲーム画面", traits: .landscapeLeft) {
     GameView(onGameEnd: { _ in })
 }
