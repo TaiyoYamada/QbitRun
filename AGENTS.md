@@ -13,16 +13,14 @@
 > 低レイヤーAPI（Core Animation / Core Graphics / Metal など）は **歓迎**します。
 > ただし、すべての実装は **公式ドキュメントを根拠**にし、推測で仕様を決めないでください。
 
----
 
-## 🎯 Purpose
+## Purpose
 
 - 量子ゲートによる状態変換（ブロッホ球）を、**触って理解できるゲーム体験**として提供する
 - Student Challenge向けに、**短時間で価値が伝わる（3分以内）**設計を徹底する
 - 実装は **Swift 6** の言語機能・並行性（Concurrency）を適切に活用する
 - アーキテクチャは既存の定番に乗せ、**読みやすく、拡張に耐える**構造にする
 
----
 
 ## ✅ 重要制約（Swift Student Challenge 想定）
 
@@ -32,7 +30,7 @@
 - リポジトリは軽量に保つ（重いアセット・巨大依存を避ける）
 - 端末性能差を考慮（描画更新頻度・メモリ・電力）
 
----
+
 
 ## 🧱 Architecture（指定：必ず従う）
 
@@ -133,7 +131,7 @@ Presentation  →  Application  →  Domain  →  Infrastructure
 - Domain の演算ロジックを Rendering に書かない
 - 描画更新頻度を制御（電力/熱/フレーム落ちを避ける）
 
----
+
 
 ## ⚡ Swift 6 / Concurrency（積極採用）
 
@@ -146,7 +144,7 @@ Presentation  →  Application  →  Domain  →  Infrastructure
 - 可能なら structured concurrency（`Task` / `Task.sleep` 等）を優先
 - フレーム同期が必要な場合のみ `CADisplayLink` を検討（最小限）
 
----
+
 
 ## 💾 Persistence（ローカルのみ）
 
@@ -156,18 +154,11 @@ Presentation  →  Application  →  Domain  →  Infrastructure
   - 直近スコア（任意）
 - 外部ランキング、共有、ネットワーク同期は行わない
 
----
 
-## 🧪 Testing（推奨）
 
-- Domain はユニットテストを優先（XCTest）
-  - ゲート適用
-  - 合成結果
-  - 状態の正規化・不変条件
-- Rendering のテストは必須ではない（負担が大きい）
-- Application はスコア計算など重要部のみ必要に応じて
+## 🧪 Testing
 
----
+- テストコードは不要
 
 ## 📚 Official Docs First（最重要）
 
@@ -205,7 +196,7 @@ AIは必ず以下を遵守すること：
 - “低レイヤー歓迎”だが、**無理に使って複雑化しない**
 - コードは読みやすさ優先（審査員が短時間で理解できる）
 
----
+
 
 ## 🔒 Absolute DO / DON'T
 
@@ -232,5 +223,3 @@ AIは必ず以下を遵守すること：
 - 見た目（描画/アニメ/演出/Metal） → **Rendering**
 - 保存（Top5など） → **Infrastructure**
 ```
-
-必要なら、このAGENTS.mdに「Notion貼り付け用の開発手順（チェックリスト形式）」も追加して、AIが迷わず順番通り実装できる形に整えられるよ。
