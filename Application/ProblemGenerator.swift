@@ -57,12 +57,7 @@ public struct ProblemGenerator: Sendable {
     /// 難易度に応じた問題を生成
     /// - Parameter difficulty: 解いた問題数（0から増加）
     public func generateProblem(difficulty: Int) -> Problem {
-        // 最初の数問は固定問題（チュートリアル的）
-        if difficulty < starterProblems.count {
-            return starterProblems[difficulty]
-        }
-        
-        // それ以降はランダム生成
+        // 最初から完全ランダム問題を生成
         return generateRandomProblem(difficulty: difficulty)
     }
     

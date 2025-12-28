@@ -74,8 +74,65 @@ public final class BlochSphereView: UIView {
     /// ユーザーが回転できるかどうか
     public var isInteractive: Bool = true
     
+    /// 白い背景を表示するかどうか
+    public var showBackground: Bool = true {
+        didSet {
+            updateBackgroundColor()
+        }
+    }
+    
+    /// 背景のパディング（内側余白）
+    public var backgroundPadding: CGFloat = 16 {
+        didSet {
+            updateBackgroundInsets()
+        }
+    }
+    
+    /// 軸と軸ラベルを表示するかどうか
+    public var showAxes: Bool = true {
+        didSet {
+            updateAxesVisibility()
+        }
+    }
+    
     /// 軸ラベル
     private var axisLabels: [UILabel] = []
+    
+    /// 背景色の更新
+    private func updateBackgroundColor() {
+        if showBackground {
+            metalView?.clearColor = MTLClearColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+            layer.cornerRadius = 16
+            layer.masksToBounds = true
+            backgroundColor = .white
+        } else {
+            // 透明背景
+            metalView?.clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
+            metalView?.layer.isOpaque = false
+            layer.cornerRadius = 0
+            layer.masksToBounds = false
+            backgroundColor = .clear
+        }
+    }
+    
+    /// 軸表示の更新
+    private func updateAxesVisibility() {
+        for label in axisLabels {
+            label.isHidden = !showAxes
+        }
+    }
+    
+    /// 背景インセットの更新
+    private func updateBackgroundInsets() {
+        guard let metalView = metalView else { return }
+        NSLayoutConstraint.deactivate(metalView.constraints)
+        NSLayoutConstraint.activate([
+            metalView.topAnchor.constraint(equalTo: topAnchor, constant: backgroundPadding),
+            metalView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -backgroundPadding),
+            metalView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: backgroundPadding),
+            metalView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -backgroundPadding)
+        ])
+    }
     
     // MARK: - 初期化
     
@@ -560,8 +617,8 @@ public final class BlochSphereView: UIView {
             encoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: gridVertexCount)
         }
         
-        // 軸を描画（3D円柱）
-        if let pipeline = solidPipeline, let buffer = axisVertexBuffer {
+        // 軸を描画（3D円柱）- showAxesがtrueの場合のみ
+        if showAxes, let pipeline = solidPipeline, let buffer = axisVertexBuffer {
             encoder.setRenderPipelineState(pipeline)
             encoder.setVertexBuffer(buffer, offset: 0, index: 0)
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: axisVertexCount)
@@ -662,12 +719,22 @@ private final class BlochRenderDelegate: NSObject, MTKViewDelegate {
 struct BlochSphereViewRepresentable: UIViewRepresentable {
     var vector: BlochVector
     var animated: Bool
+    var showBackground: Bool = true
+    var showAxes: Bool = true
+    var backgroundPadding: CGFloat = 24
     
     func makeUIView(context: Context) -> BlochSphereView {
-        BlochSphereView()
+        let view = BlochSphereView()
+        view.showBackground = showBackground
+        view.showAxes = showAxes
+        view.backgroundPadding = backgroundPadding
+        return view
     }
     
     func updateUIView(_ uiView: BlochSphereView, context: Context) {
+        uiView.showBackground = showBackground
+        uiView.showAxes = showAxes
+        uiView.backgroundPadding = backgroundPadding
         uiView.setVector(vector, animated: animated)
     }
 }

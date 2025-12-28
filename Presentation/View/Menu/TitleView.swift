@@ -9,6 +9,9 @@ struct TitleView: View {
     /// 4つの角のアニメーション角度（それぞれ異なる動き）
     @State private var angles: [Double] = [0, 0.8, 1.6, 2.4]
     
+    /// ボタンボーダーの回転角度
+    @State private var borderRotation: Double = 0
+    
     /// 各ブロッホ球の回転速度（ランダム）
     private let speeds: [Double] = [0.018, 0.025, 0.022, 0.015]
     
@@ -63,30 +66,61 @@ struct TitleView: View {
                 
                 // タイトル
                 Text("Quantum Gate")
-                    .font(.custom("Optima-Bold", size: 70))
+                    .font(.custom("Optima-Bold", size: 100))
                     .foregroundStyle(.white)
                 
                 // サブタイトル
                 Text("Master the Bloch Sphere")
-                    .font(.custom("Optima-Bold", size: 20))
+                    .font(.custom("Optima-Bold", size: 40))
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(.top, 8)
                 
-                // スタートボタン
+                // スタートボタン（回転するグラデーションボーダー）
                 Button(action: {
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
                     onStart()
                 }) {
                     Text("Start")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.custom("Optima-Bold", size: 50))
                         .foregroundStyle(.white)
-                        .frame(width: 200, height: 56)
-                        .background(Color(red: 0.4, green: 0.2, blue: 0.8))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .frame(width: 250, height: 80)
+                        .background(
+                            // グラスモーフィズム背景
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(.white.opacity(0.15))
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(.ultraThinMaterial)
+                                )
+                        )
+                        .overlay(
+                            // 回転するグラデーションボーダー
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(
+                                    AngularGradient(
+                                        gradient: Gradient(colors: [
+                                            .white.opacity(0.8),
+                                            .white.opacity(0.1),
+                                            .white.opacity(0.0),
+                                            .white.opacity(0.1),
+                                            .white.opacity(0.8)
+                                        ]),
+                                        center: .center,
+                                        angle: .degrees(borderRotation)
+                                    ),
+                                    lineWidth: 2
+                                )
+                        )
+                        .shadow(color: .white.opacity(0.15), radius: 15, x: 0, y: 5)
                 }
                 .buttonStyle(ScaleButtonStyle())
                 .padding(.top, 48)
+                .onAppear {
+                    withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
+                        borderRotation = 360
+                    }
+                }
                 
                 Spacer()
             }
@@ -98,8 +132,13 @@ struct TitleView: View {
     
     @ViewBuilder
     private func cornerBlochSphere(index: Int) -> some View {
-        BlochSphereViewRepresentable(vector: vectorFor(index: index), animated: false)
-            .frame(width: 250, height: 250)
+        BlochSphereViewRepresentable(
+            vector: vectorFor(index: index),
+            animated: false,
+            showBackground: false,
+            showAxes: false
+        )
+        .frame(width: 270, height: 270)
     }
     
     private func startAnimation() {
