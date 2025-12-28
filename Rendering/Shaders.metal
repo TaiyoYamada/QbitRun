@@ -183,13 +183,13 @@ fragment float4 raycastSphereFragment(
     float3 rayOrigin = uniforms.cameraPosition;
     
     // UVをビュー空間の方向に変換
-    float aspectRatio = 1.0;  // 正方形を仮定
     float3 forward = normalize(-uniforms.cameraPosition);
     float3 right = normalize(cross(float3(0, 0, 1), forward));
     float3 up = cross(forward, right);
     
-    float fov = 0.5;  // 視野角に相当
-    float3 rayDir = normalize(forward + right * in.uv.x * fov * aspectRatio + up * in.uv.y * fov);
+    // Swift側のFOV (π/4) に合わせる
+    float fov = tan(M_PI_F / 8.0);  // tan(22.5°) ≈ 0.414
+    float3 rayDir = normalize(forward + right * in.uv.x * fov + up * in.uv.y * fov);
     
     // 球の方程式を解く: |o + t*d|² = r²
     // → (d·d)t² + 2(o·d)t + (o·o - r²) = 0
