@@ -12,6 +12,9 @@ struct MainMenuView: View {
     /// 使い方画面へ遷移
     let onShowHelp: () -> Void
     
+    /// タイトル画面へ戻る
+    var onBackToTitle: (() -> Void)?
+    
     var body: some View {
         ZStack {
             // 背景グラデーション
@@ -27,65 +30,59 @@ struct MainMenuView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 24) {
+                // 戻るボタン
+                HStack {
+                    if let onBack = onBackToTitle {
+                        GlassIconButton(title: "Title", icon: "chevron.left", action: onBack)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                
                 Spacer()
                 
                 // タイトル
                 Text("Main Menu")
-                    .font(.system(size: 42, weight: .bold))
+                    .font(.custom("Optima-Bold", size: 48))
                     .foregroundStyle(.white)
                 
                 Spacer()
                 
-                // ゲームプレイボタン
-                MenuButton(
-                    title: "🎮 Game Play",
-                    color: Color(red: 0.4, green: 0.2, blue: 0.8),
-                    action: onPlayGame
-                )
-                
-                // 過去の記録ボタン
-                MenuButton(
-                    title: "📊 Records",
-                    color: Color(red: 0.2, green: 0.5, blue: 0.8),
-                    action: onShowRecords
-                )
-                
-                // アプリの使い方ボタン
-                MenuButton(
-                    title: "📖 How to Play",
-                    color: Color(red: 0.3, green: 0.6, blue: 0.4),
-                    action: onShowHelp
-                )
+                // メニューボタン
+                VStack(spacing: 20) {
+                    // ゲームプレイボタン
+                    GlassButton(
+                        title: "🎮 Game Play",
+                        action: onPlayGame,
+                        width: 280,
+                        height: 64,
+                        fontSize: 24
+                    )
+                    
+                    // 過去の記録ボタン
+                    GlassButton(
+                        title: "📊 Records",
+                        action: onShowRecords,
+                        width: 280,
+                        height: 64,
+                        fontSize: 24
+                    )
+                    
+                    // アプリの使い方ボタン
+                    GlassButton(
+                        title: "📖 How to Play",
+                        action: onShowHelp,
+                        width: 280,
+                        height: 64,
+                        fontSize: 24
+                    )
+                }
                 
                 Spacer()
                 Spacer()
             }
-            .padding(.horizontal, 40)
         }
-    }
-}
-
-/// メニューボタンコンポーネント
-struct MenuButton: View {
-    let title: String
-    let color: Color
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
-            action()
-        }) {
-            Text(title)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 64)
-                .background(color)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-        .buttonStyle(ScaleButtonStyle())
     }
 }
 
@@ -93,6 +90,7 @@ struct MenuButton: View {
     MainMenuView(
         onPlayGame: { print("Play") },
         onShowRecords: { print("Records") },
-        onShowHelp: { print("Help") }
+        onShowHelp: { print("Help") },
+        onBackToTitle: { print("Back") }
     )
 }

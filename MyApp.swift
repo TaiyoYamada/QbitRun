@@ -31,7 +31,8 @@ struct ContentView: View {
                     MainMenuView(
                         onPlayGame: { navigationPath.append(AppRoute.game) },
                         onShowRecords: { navigationPath.append(AppRoute.records) },
-                        onShowHelp: { navigationPath.append(AppRoute.help) }
+                        onShowHelp: { navigationPath.append(AppRoute.help) },
+                        onBackToTitle: { navigationPath.removeLast() }
                     )
                     .navigationBarBackButtonHidden(true)
                     
