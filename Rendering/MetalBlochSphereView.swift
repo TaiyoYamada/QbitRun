@@ -486,8 +486,10 @@ private final class MetalRenderDelegate: NSObject, MTKViewDelegate {
     
     nonisolated func draw(in mtkView: MTKView) {
         // MainActorで描画を実行
+        // selfをキャプチャせずにローカル変数を使用してデータ競合を回避
+        let blochView = self.view
         Task { @MainActor in
-            self.view?.draw(in: mtkView)
+            blochView?.draw(in: mtkView)
         }
     }
 }

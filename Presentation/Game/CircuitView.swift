@@ -209,7 +209,7 @@ public final class CircuitView: UIView {
 extension CircuitView: UIDropInteractionDelegate {
     
     /// このViewがドロップを受け付けるか判定
-    nonisolated public func dropInteraction(
+    public func dropInteraction(
         _ interaction: UIDropInteraction,
         canHandle session: UIDropSession
     ) -> Bool {
@@ -218,7 +218,7 @@ extension CircuitView: UIDropInteractionDelegate {
     }
     
     /// ドロップ時の提案を返す
-    nonisolated public func dropInteraction(
+    public func dropInteraction(
         _ interaction: UIDropInteraction,
         sessionDidUpdate session: UIDropSession
     ) -> UIDropProposal {
@@ -227,23 +227,21 @@ extension CircuitView: UIDropInteractionDelegate {
     }
     
     /// 実際にドロップされた時の処理
-    nonisolated public func dropInteraction(
+    public func dropInteraction(
         _ interaction: UIDropInteraction,
         performDrop session: UIDropSession
     ) {
-        MainActor.assumeIsolated {
-            // ドラッグアイテムからゲートを取得
-            for item in session.items {
-                if let gate = item.localObject as? QuantumGate {
-                    // 最大数チェック
-                    if gates.count < maxSlots {
-                        // 触覚フィードバック
-                        let generator = UIImpactFeedbackGenerator(style: .medium)
-                        generator.impactOccurred()
-                        
-                        // デリゲートに通知
-                        delegate?.circuitView(self, didReceiveGate: gate)
-                    }
+        // ドラッグアイテムからゲートを取得
+        for item in session.items {
+            if let gate = item.localObject as? QuantumGate {
+                // 最大数チェック
+                if gates.count < maxSlots {
+                    // 触覚フィードバック
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+                    
+                    // デリゲートに通知
+                    delegate?.circuitView(self, didReceiveGate: gate)
                 }
             }
         }
