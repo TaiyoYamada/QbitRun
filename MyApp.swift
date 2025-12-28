@@ -1,20 +1,8 @@
 // SPDX-License-Identifier: MIT
 // MyApp.swift
-// アプリのエントリーポイント（SwiftUI版）
+// アプリのエントリーポイント
 
 import SwiftUI
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SwiftUI App構造
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// @main: アプリのエントリーポイントを示すマクロ
-// App protocol: アプリ全体のライフサイクルを管理
-// WindowGroup: 1つ以上のウィンドウを提供するシーン
-//
-// 画面遷移は NavigationStack + NavigationDestination で宣言的に記述
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// アプリのエントリーポイント
 @main
@@ -27,22 +15,26 @@ struct QuantumGateGameApp: App {
 }
 
 /// ルートコンテンツビュー
-/// NavigationStackで画面遷移を管理
 struct ContentView: View {
-    /// ナビゲーションパス（画面遷移の状態）
     @State private var navigationPath = NavigationPath()
-    
-    /// スコアリポジトリ
     private let scoreRepository = ScoreRepository()
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            MenuView(
-                onStartGame: { navigationPath.append(AppRoute.game) },
-                scoreRepository: scoreRepository
+            // タイトル画面
+            TitleView(
+                onStart: { navigationPath.append(AppRoute.mainMenu) }
             )
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
+                case .mainMenu:
+                    MainMenuView(
+                        onPlayGame: { navigationPath.append(AppRoute.game) },
+                        onShowRecords: { navigationPath.append(AppRoute.records) },
+                        onShowHelp: { navigationPath.append(AppRoute.help) }
+                    )
+                    .navigationBarBackButtonHidden(true)
+                    
                 case .game:
                     GameView(
                         onGameEnd: { score in
@@ -57,6 +49,7 @@ struct ContentView: View {
                         scoreRepository: scoreRepository,
                         onPlayAgain: {
                             navigationPath.removeLast(navigationPath.count)
+                            navigationPath.append(AppRoute.mainMenu)
                             navigationPath.append(AppRoute.game)
                         },
                         onReturnToMenu: {
@@ -64,6 +57,17 @@ struct ContentView: View {
                         }
                     )
                     .navigationBarBackButtonHidden(true)
+                    
+                case .records:
+                    RecordsView(
+                        scoreRepository: scoreRepository,
+                        onBack: { navigationPath.removeLast() }
+                    )
+                    .navigationBarBackButtonHidden(true)
+                    
+                case .help:
+                    HelpView(onBack: { navigationPath.removeLast() })
+                        .navigationBarBackButtonHidden(true)
                 }
             }
         }
@@ -73,11 +77,12 @@ struct ContentView: View {
 
 /// 画面遷移のルート定義
 enum AppRoute: Hashable {
+    case mainMenu
     case game
     case result(score: ScoreEntry)
+    case records
+    case help
 }
-
-// MARK: - プレビュー
 
 #Preview("App") {
     ContentView()

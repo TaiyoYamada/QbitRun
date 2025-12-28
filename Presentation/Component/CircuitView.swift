@@ -54,7 +54,8 @@ public final class CircuitView: UIView {
     private lazy var stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.distribution = .fillEqually
+        stack.distribution = .equalSpacing
+        stack.alignment = .center
         stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
@@ -100,13 +101,19 @@ public final class CircuitView: UIView {
         addInteraction(dropInteraction)
     }
     
-    /// 空のスロットを作成
+    /// 空のスロットを作成（円形）
     private func createEmptySlot() -> UIView {
         let slot = UIView()
         slot.backgroundColor = UIColor.white.withAlphaComponent(0.03)
-        slot.layer.cornerRadius = 8
-        slot.layer.borderWidth = 1
-        slot.layer.borderColor = UIColor.white.withAlphaComponent(0.1).cgColor
+        
+        // 円形にするための設定
+        slot.translatesAutoresizingMaskIntoConstraints = false
+        slot.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        slot.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        slot.layer.cornerRadius = 25  // 正円
+        slot.clipsToBounds = true
+        slot.layer.borderWidth = 2
+        slot.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
         return slot
     }
     

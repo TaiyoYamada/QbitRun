@@ -74,6 +74,9 @@ public final class BlochSphereView: UIView {
     /// ユーザーが回転できるかどうか
     public var isInteractive: Bool = true
     
+    /// 軸ラベル
+    private var axisLabels: [UILabel] = []
+    
     // MARK: - 初期化
     
     public override init(frame: CGRect) {
@@ -116,6 +119,80 @@ public final class BlochSphereView: UIView {
         
         renderDelegate = BlochRenderDelegate(view: self)
         metalView.delegate = renderDelegate
+        
+        setupAxisLabels()
+    }
+    
+    private func setupAxisLabels() {
+        let labelData: [(String, UIColor)] = [
+            ("x", UIColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1)),
+            ("y", UIColor(red: 0.2, green: 0.7, blue: 0.2, alpha: 1)),
+            ("z", UIColor(red: 0.2, green: 0.3, blue: 0.8, alpha: 1))
+        ]
+        
+        for (text, color) in labelData {
+            let label = UILabel()
+            label.text = text
+            label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+            label.textColor = color
+            label.textAlignment = .center
+            label.sizeToFit()
+            addSubview(label)
+            axisLabels.append(label)
+        }
+    }
+    
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        updateAxisLabelPositions()
+    }
+    
+    private func updateAxisLabelPositions() {
+        guard axisLabels.count == 3 else { return }
+        
+        let width = Float(bounds.width)
+        let height = Float(bounds.height)
+        
+        // カメラ設定（updateUniformsと同じ）
+        let cameraDistance: Float = 3.2
+        let cameraX = cameraDistance * cos(cameraPitch) * sin(cameraYaw)
+        let cameraY = cameraDistance * sin(cameraPitch)
+        let cameraZ = cameraDistance * cos(cameraPitch) * cos(cameraYaw)
+        let cameraPosition = simd_float3(cameraX, cameraY, cameraZ)
+        
+        // View/Projection行列
+        let viewMatrix = lookAt(eye: cameraPosition, center: simd_float3(0, 0, 0), up: simd_float3(0, 0, 1))
+        let aspect = width / height
+        let projectionMatrix = perspective(fovyRadians: .pi / 4, aspect: aspect, nearZ: 0.1, farZ: 100)
+        let mvp = projectionMatrix * viewMatrix
+        
+        // +方向の軸端点（矢印の先端付近）
+        let axisPositions: [simd_float3] = [
+            simd_float3(1.35, 0, 0),   // X+
+            simd_float3(0, 1.35, 0),   // Y+
+            simd_float3(0, 0, 1.35)    // Z+
+        ]
+        
+        for (index, pos) in axisPositions.enumerated() {
+            // MVP変換
+            let pos4 = simd_float4(pos.x, pos.y, pos.z, 1.0)
+            let clipPos = mvp * pos4
+            
+            // クリップ座標をNDCに変換
+            let ndcX = clipPos.x / clipPos.w
+            let ndcY = clipPos.y / clipPos.w
+            
+            // NDCをスクリーン座標に変換
+            let screenX = (ndcX + 1.0) * 0.5 * width
+            let screenY = (1.0 - ndcY) * 0.5 * height
+            
+            axisLabels[index].center = CGPoint(x: CGFloat(screenX), y: CGFloat(screenY))
+            
+            // 裏側のラベルは薄く
+            let cameraDir = simd_normalize(cameraPosition)
+            let dotProduct = simd_dot(simd_normalize(pos), cameraDir)
+            axisLabels[index].alpha = CGFloat(max(0.3, min(1.0, 0.5 + dotProduct * 0.5)))
+        }
     }
     
     private func setupPipelines(device: MTLDevice) {
@@ -196,6 +273,9 @@ public final class BlochSphereView: UIView {
         cameraPitch = max(-Float.pi / 2 + 0.1, min(Float.pi / 2 - 0.1, cameraPitch))
         
         gesture.setTranslation(.zero, in: self)
+        
+        // ラベル位置を更新
+        updateAxisLabelPositions()
     }
     
     // MARK: - ジオメトリ作成
@@ -275,22 +355,72 @@ public final class BlochSphereView: UIView {
     
     private func createAxisGeometry(device: MTLDevice) {
         var vertices: [BlochVertex] = []
-        let axisLength: Float = 1.3
+        let axisLength: Float = 1.2
+        let cylinderRadius: Float = 0.005
+        let coneRadius: Float = 0.02
+        let coneLength: Float = 0.1
+        let segments = 8
         
-        // X軸（濃い赤）
-        let xColor = simd_float4(0.8, 0.2, 0.2, 1)
-        vertices.append(BlochVertex(position: simd_float3(-axisLength, 0, 0), normal: simd_float3(1, 0, 0), color: xColor))
-        vertices.append(BlochVertex(position: simd_float3(axisLength, 0, 0), normal: simd_float3(1, 0, 0), color: xColor))
+        // 軸データ: (方向, 色)
+        let axes: [(simd_float3, simd_float4)] = [
+            (simd_float3(1, 0, 0), simd_float4(0.8, 0.2, 0.2, 1)),  // X軸（赤）
+            (simd_float3(0, 1, 0), simd_float4(0.2, 0.7, 0.2, 1)),  // Y軸（緑）
+            (simd_float3(0, 0, 1), simd_float4(0.2, 0.3, 0.8, 1))   // Z軸（青）
+        ]
         
-        // Y軸（濃い緑）
-        let yColor = simd_float4(0.2, 0.7, 0.2, 1)
-        vertices.append(BlochVertex(position: simd_float3(0, -axisLength, 0), normal: simd_float3(0, 1, 0), color: yColor))
-        vertices.append(BlochVertex(position: simd_float3(0, axisLength, 0), normal: simd_float3(0, 1, 0), color: yColor))
-        
-        // Z軸（濃い青）
-        let zColor = simd_float4(0.2, 0.3, 0.8, 1)
-        vertices.append(BlochVertex(position: simd_float3(0, 0, -axisLength), normal: simd_float3(0, 0, 1), color: zColor))
-        vertices.append(BlochVertex(position: simd_float3(0, 0, axisLength), normal: simd_float3(0, 0, 1), color: zColor))
+        for (direction, color) in axes {
+            // 垂直ベクトルを計算
+            var perp1 = simd_cross(direction, simd_float3(0, 1, 0))
+            if simd_length(perp1) < 0.001 {
+                perp1 = simd_cross(direction, simd_float3(1, 0, 0))
+            }
+            perp1 = simd_normalize(perp1)
+            let perp2 = simd_normalize(simd_cross(direction, perp1))
+            
+            let start = -direction * axisLength
+            let cylinderEnd = direction * axisLength
+            let arrowTip = direction * (axisLength + coneLength)
+            
+            // 円柱を三角形で構築
+            for i in 0..<segments {
+                let angle1 = Float(i) * 2.0 * .pi / Float(segments)
+                let angle2 = Float(i + 1) * 2.0 * .pi / Float(segments)
+                
+                let offset1 = (perp1 * cos(angle1) + perp2 * sin(angle1)) * cylinderRadius
+                let offset2 = (perp1 * cos(angle2) + perp2 * sin(angle2)) * cylinderRadius
+                
+                let normal1 = simd_normalize(perp1 * cos(angle1) + perp2 * sin(angle1))
+                let normal2 = simd_normalize(perp1 * cos(angle2) + perp2 * sin(angle2))
+                
+                // 円柱側面（2つの三角形）
+                vertices.append(BlochVertex(position: start + offset1, normal: normal1, color: color))
+                vertices.append(BlochVertex(position: cylinderEnd + offset1, normal: normal1, color: color))
+                vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: normal2, color: color))
+                
+                vertices.append(BlochVertex(position: start + offset1, normal: normal1, color: color))
+                vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: normal2, color: color))
+                vertices.append(BlochVertex(position: start + offset2, normal: normal2, color: color))
+            }
+            
+            // +方向に円錐（矢印）を追加
+            for i in 0..<segments {
+                let angle1 = Float(i) * 2.0 * .pi / Float(segments)
+                let angle2 = Float(i + 1) * 2.0 * .pi / Float(segments)
+                
+                let coneOffset1 = (perp1 * cos(angle1) + perp2 * sin(angle1)) * coneRadius
+                let coneOffset2 = (perp1 * cos(angle2) + perp2 * sin(angle2)) * coneRadius
+                
+                // 円錐の法線
+                let coneNormal1 = simd_normalize(coneOffset1 + direction * coneRadius)
+                let coneNormal2 = simd_normalize(coneOffset2 + direction * coneRadius)
+                let tipNormal = simd_normalize(coneNormal1 + coneNormal2)
+                
+                // 円錐側面
+                vertices.append(BlochVertex(position: arrowTip, normal: tipNormal, color: color))
+                vertices.append(BlochVertex(position: cylinderEnd + coneOffset1, normal: coneNormal1, color: color))
+                vertices.append(BlochVertex(position: cylinderEnd + coneOffset2, normal: coneNormal2, color: color))
+            }
+        }
         
         axisVertexCount = vertices.count
         axisVertexBuffer = device.makeBuffer(bytes: vertices, length: vertices.count * MemoryLayout<BlochVertex>.stride, options: .storageModeShared)
@@ -430,11 +560,11 @@ public final class BlochSphereView: UIView {
             encoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: gridVertexCount)
         }
         
-        // 軸を描画
-        if let pipeline = linePipeline, let buffer = axisVertexBuffer {
+        // 軸を描画（3D円柱）
+        if let pipeline = solidPipeline, let buffer = axisVertexBuffer {
             encoder.setRenderPipelineState(pipeline)
             encoder.setVertexBuffer(buffer, offset: 0, index: 0)
-            encoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: axisVertexCount)
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: axisVertexCount)
         }
         
         // 状態ベクトルを描画（3D形状）

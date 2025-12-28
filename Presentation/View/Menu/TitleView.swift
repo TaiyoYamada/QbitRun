@@ -1,13 +1,10 @@
 import SwiftUI
 import simd
 
-struct MenuView: View {
+struct TitleView: View {
     
-    /// ゲーム開始時のコールバック
-    let onStartGame: () -> Void
-    
-    /// スコアリポジトリ
-    let scoreRepository: ScoreRepository
+    /// メニュー画面へ遷移するコールバック
+    let onStart: () -> Void
     
     /// 4つの角のアニメーション角度（それぞれ異なる動き）
     @State private var angles: [Double] = [0, 0.8, 1.6, 2.4]
@@ -47,18 +44,14 @@ struct MenuView: View {
             // 四隅にブロッホ球を配置
             VStack {
                 HStack {
-                    // 左上
                     cornerBlochSphere(index: 0)
                     Spacer()
-                    // 右上
                     cornerBlochSphere(index: 1)
                 }
                 Spacer()
                 HStack {
-                    // 左下
                     cornerBlochSphere(index: 2)
                     Spacer()
-                    // 右下
                     cornerBlochSphere(index: 3)
                 }
             }
@@ -83,9 +76,9 @@ struct MenuView: View {
                 Button(action: {
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
-                    onStartGame()
+                    onStart()
                 }) {
-                    Text("Start Game")
+                    Text("Start")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 200, height: 56)
@@ -103,7 +96,6 @@ struct MenuView: View {
         }
     }
     
-    /// 角に表示するブロッホ球
     @ViewBuilder
     private func cornerBlochSphere(index: Int) -> some View {
         BlochSphereViewRepresentable(vector: vectorFor(index: index), animated: false)
@@ -128,9 +120,7 @@ struct ScaleButtonStyle: ButtonStyle {
     }
 }
 
-#Preview("メニュー画面") {
-    MenuView(
-        onStartGame: { print("Start tapped") },
-        scoreRepository: ScoreRepository()
-    )
+#Preview("タイトル画面") {
+    TitleView(onStart: { print("Start tapped") })
 }
+

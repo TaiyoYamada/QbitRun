@@ -51,8 +51,9 @@ public final class GatePaletteView: UIView {
     private lazy var stackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal       // 横方向に並べる
-        stack.distribution = .fillEqually  // 均等幅
-        stack.spacing = 12             // ボタン間の隙間
+        stack.distribution = .equalSpacing  // 均等間隔
+        stack.alignment = .center
+        stack.spacing = 16             // ボタン間の隙間
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -96,16 +97,22 @@ public final class GatePaletteView: UIView {
         ])
     }
     
-    /// ゲートボタンを作成
+    /// ゲートボタンを作成（円形）
     private func createGateButton(for gate: QuantumGate) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(gate.symbol, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = gate.color
-        button.layer.cornerRadius = 12
         
-        // ボタンにゲート情報を関連付け（tag を使う方法もあるが、ここでは index を使う）
+        // 円形にするための設定
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.widthAnchor.constraint(equalToConstant: 56).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        button.layer.cornerRadius = 28  // 半径 = 幅/2 で正円
+        button.clipsToBounds = true
+        
+        // ボタンにゲート情報を関連付け
         button.tag = gates.firstIndex(of: gate) ?? 0
         
         // タップイベント

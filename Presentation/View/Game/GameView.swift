@@ -27,10 +27,6 @@ struct GameView: View {
                 // ブロッホ球表示エリア
                 spheresSection
                 
-                // 距離ゲージ
-                DistanceGaugeViewRepresentable(distance: viewModel.distance)
-                    .frame(width: 500, height: 60)
-                
                 // 回路表示エリア
                 circuitSection
                 
@@ -216,19 +212,6 @@ struct GatePaletteViewRepresentable: UIViewRepresentable {
         func gatePalette(_ palette: GatePaletteView, didSelectGate gate: QuantumGate) {
             onGateSelected(gate)
         }
-    }
-}
-
-/// DistanceGaugeView の SwiftUI ラッパー
-struct DistanceGaugeViewRepresentable: UIViewRepresentable {
-    let distance: Double
-    
-    func makeUIView(context: Context) -> DistanceGaugeView {
-        DistanceGaugeView()
-    }
-    
-    func updateUIView(_ uiView: DistanceGaugeView, context: Context) {
-        uiView.setDistance(distance)
     }
 }
 
