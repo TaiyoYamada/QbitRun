@@ -70,11 +70,18 @@ final class GameViewModel {
     /// タイマーが残り10秒以下か
     var isTimeLow: Bool { remainingTime <= 10 }
     
+    /// お手つき回数
+    var missCount: Int { gameEngine.missCount }
+    
+    /// 残りミス回数
+    var remainingMisses: Int { gameEngine.remainingMisses }
+    
     // MARK: - ユーザー操作
     
     /// ゲームを開始
-    func startGame() {
-        gameEngine.start()
+    /// - Parameter difficulty: ゲームの難易度
+    func startGame(difficulty: GameDifficulty = .easy) {
+        gameEngine.start(difficulty: difficulty)
     }
     
     /// ゲートを追加
@@ -93,13 +100,16 @@ final class GameViewModel {
     }
     
     /// 回路を実行して判定
-    /// - Returns: 正解かどうか
-    func runCircuit() -> Bool {
+    /// - Returns: (isCorrect: 正解か, isGameOver: ゲームオーバーか)
+    func runCircuit() -> (isCorrect: Bool, isGameOver: Bool) {
         // 現在の状態がターゲットに十分近いか判定
         let isCorrect = gameEngine.checkCurrentState()
         if isCorrect {
             gameEngine.handleCorrectAnswer()
+            return (isCorrect: true, isGameOver: false)
+        } else {
+            let isGameOver = gameEngine.handleWrongAnswer()
+            return (isCorrect: false, isGameOver: isGameOver)
         }
-        return isCorrect
     }
 }

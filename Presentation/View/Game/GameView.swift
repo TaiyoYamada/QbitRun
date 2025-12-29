@@ -8,6 +8,10 @@ struct GameView: View {
     @State private var showFailureEffect = false
     @State private var circuitGates: [QuantumGate] = []
     
+    /// ゲームの難易度
+    let difficulty: GameDifficulty
+    
+    /// ゲーム終了時のコールバック
     let onGameEnd: (ScoreEntry) -> Void
     
     var body: some View {
@@ -53,7 +57,7 @@ struct GameView: View {
             )
         }
         .onAppear {
-            viewModel.startGame()
+            viewModel.startGame(difficulty: difficulty)
         }
         .onChange(of: viewModel.finalScore) { _, newScore in
             if let score = newScore {
@@ -70,6 +74,15 @@ struct GameView: View {
     
     private var headerSection: some View {
         HStack {
+            // お手つき残り（ハート）
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    Image(systemName: index < viewModel.remainingMisses ? "heart.fill" : "heart")
+                        .font(.system(size: 24))
+                        .foregroundStyle(index < viewModel.remainingMisses ? Color.red : Color.gray.opacity(0.4))
+                }
+            }
+            
             Spacer()
             
             // タイマー
@@ -90,9 +103,8 @@ struct GameView: View {
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(.white.opacity(0.6))
             }
-            
-            Spacer()
         }
+        .padding(.horizontal, 24)
         .padding(.top, 16)
     }
     
@@ -169,9 +181,9 @@ struct GameView: View {
         guard !circuitGates.isEmpty else { return }
         
         // 判定実行
-        let isCorrect = viewModel.runCircuit()
+        let result = viewModel.runCircuit()
         
-        if isCorrect {
+        if result.isCorrect {
             showSuccessEffect = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 showSuccessEffect = false
@@ -183,6 +195,7 @@ struct GameView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 showFailureEffect = false
             }
+            // ゲームオーバーの場合はViewのonChangeで処理
         }
     }
     
@@ -219,5 +232,5 @@ struct EffectOverlayView: UIViewRepresentable {
 }
 
 #Preview("ゲーム画面", traits: .landscapeLeft) {
-    GameView(onGameEnd: { _ in })
+    GameView(difficulty: .easy, onGameEnd: { _ in })
 }

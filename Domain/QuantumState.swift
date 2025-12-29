@@ -191,6 +191,52 @@ public struct QuantumState: Sendable, Equatable {
         beta: Complex(real: 0, imaginary: -1.0 / 2.0.squareRoot())
     )
     
+    // MARK: - Tゲート用の状態（45度刻み）
+    
+    /// T|+⟩ 状態（XY平面上45度）
+    /// (|0⟩ + e^(iπ/4)|1⟩) / √2
+    /// H→Tで到達
+    public static let t45 = QuantumState(
+        alpha: Complex(real: 1.0 / 2.0.squareRoot(), imaginary: 0),
+        beta: Complex(
+            real: cos(Double.pi / 4) / 2.0.squareRoot(),
+            imaginary: sin(Double.pi / 4) / 2.0.squareRoot()
+        )
+    )
+    
+    /// T|+⟩を3回Tした状態（XY平面上135度）
+    /// (|0⟩ + e^(i3π/4)|1⟩) / √2
+    /// H→T→T→Tで到達
+    public static let t135 = QuantumState(
+        alpha: Complex(real: 1.0 / 2.0.squareRoot(), imaginary: 0),
+        beta: Complex(
+            real: cos(3 * Double.pi / 4) / 2.0.squareRoot(),
+            imaginary: sin(3 * Double.pi / 4) / 2.0.squareRoot()
+        )
+    )
+    
+    /// XY平面上225度
+    /// (|0⟩ + e^(i5π/4)|1⟩) / √2
+    /// H→S→S→T で到達
+    public static let t225 = QuantumState(
+        alpha: Complex(real: 1.0 / 2.0.squareRoot(), imaginary: 0),
+        beta: Complex(
+            real: cos(5 * Double.pi / 4) / 2.0.squareRoot(),
+            imaginary: sin(5 * Double.pi / 4) / 2.0.squareRoot()
+        )
+    )
+    
+    /// XY平面上315度
+    /// (|0⟩ + e^(i7π/4)|1⟩) / √2
+    /// H→S→S→S→T で到達
+    public static let t315 = QuantumState(
+        alpha: Complex(real: 1.0 / 2.0.squareRoot(), imaginary: 0),
+        beta: Complex(
+            real: cos(7 * Double.pi / 4) / 2.0.squareRoot(),
+            imaginary: sin(7 * Double.pi / 4) / 2.0.squareRoot()
+        )
+    )
+    
     // MARK: - 確率計算
     
     /// |0⟩ を観測する確率

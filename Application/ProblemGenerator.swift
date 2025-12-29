@@ -26,6 +26,12 @@ import Foundation
 
 /// ゲームの1問を表す構造体
 public struct Problem: Sendable {
+    /// 開始する量子状態（ここからスタート）
+    public let startState: QuantumState
+    
+    /// 開始のブロッホベクトル（可視化用）
+    public let startBlochVector: BlochVector
+    
     /// 目標とする量子状態
     public let targetState: QuantumState
     
@@ -44,57 +50,91 @@ public struct Problem: Sendable {
 
 // MARK: - 問題生成器
 
-/// 難易度に応じた問題を生成する
+/// ブロッホ球の主要状態をターゲットにした問題を生成する
 public struct ProblemGenerator: Sendable {
     
-    // MARK: - 利用可能なゲート
+    // MARK: - 使用可能な状態
     
-    /// 問題生成に使うゲート
-    private let availableGates: [QuantumGate] = [.x, .y, .z, .h, .s, .t]
+    /// 開始・終了状態として使用可能な量子状態
+    /// ブロッホ球の主要10状態
+    private let availableStates: [QuantumState] = [
+        .zero, .one,                    // Z軸（北極・南極）
+        .plus, .minus,                  // X軸
+        .plusI, .minusI,                // Y軸
+        .t45, .t135, .t225, .t315       // 45度刻みの位相
+    ]
+    
+    /// 直前の問題を記録（同じ問題の連続を防ぐ）
+    private nonisolated(unsafe) static var lastProblemKey: String?
     
     // MARK: - 問題生成
     
-    /// 難易度に応じたランダムな問題を生成
-    /// - Parameter difficulty: 解いた問題数（0から増加）
-    public func generateProblem(difficulty: Int) -> Problem {
-        return generateRandomProblem(difficulty: difficulty)
+    /// 難易度に応じた問題を生成
+    /// - Parameters:
+    ///   - gameDifficulty: ゲーム難易度（Easy/Hard）
+    ///   - problemNumber: 問題番号（0から増加）
+    public func generateProblem(gameDifficulty: GameDifficulty, problemNumber: Int) -> Problem {
+        return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber)
     }
     
     // MARK: - ランダム問題生成
     
     /// ランダムな問題を生成
-    private func generateRandomProblem(difficulty: Int) -> Problem {
-        // ランダムに2〜5ゲートの問題を生成
-        let gateCount = Int.random(in: 2...5)
-        
-        // ランダムなゲート列を生成
-        var gates: [QuantumGate] = []
-        for _ in 0..<gateCount {
-            // 同じゲートが連続しないようにする（X→Xは意味がない等）
-            var gate: QuantumGate
-            repeat {
-                gate = availableGates.randomElement()!
-            } while gates.last == gate
-            
-            gates.append(gate)
+    private func generateRandomProblem(gameDifficulty: GameDifficulty, problemNumber: Int, retryCount: Int = 0) -> Problem {
+        // 無限ループ防止
+        guard retryCount < 50 else {
+            return createFallbackProblem(problemNumber: problemNumber)
         }
         
-        // ゲート列を |0⟩ に適用してターゲット状態を得る
-        let targetState = gates.reduce(QuantumState.zero) { state, gate in
-            gate.apply(to: state)
+        // 開始状態を決定
+        let startState: QuantumState
+        switch gameDifficulty {
+        case .easy:
+            // Easy: 常に |0⟩ から開始
+            startState = .zero
+        case .hard:
+            // Hard: ランダムな状態から開始
+            startState = availableStates.randomElement()!
         }
         
-        // 自明な解（|0⟩のまま）を避ける
-        if targetState.fidelity(with: .zero) > 0.99 {
-            return generateRandomProblem(difficulty: difficulty)  // やり直し
+        // 終了状態をランダムに選択
+        let targetState = availableStates.randomElement()!
+        
+        // 同じ状態は避ける
+        if startState.fidelity(with: targetState) > 0.99 {
+            return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, retryCount: retryCount + 1)
         }
+        
+        // 直前と同じ問題（開始・終了ペア）を避ける
+        let problemKey = "\(startState.probabilityZero)->\(targetState.probabilityZero)"
+        if let lastKey = ProblemGenerator.lastProblemKey, lastKey == problemKey {
+            return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, retryCount: retryCount + 1)
+        }
+        
+        // 今回の問題を記録
+        ProblemGenerator.lastProblemKey = problemKey
         
         return Problem(
+            startState: startState,
+            startBlochVector: BlochVector(from: startState),
             targetState: targetState,
             targetBlochVector: BlochVector(from: targetState),
-            minimumGates: gates.count,
-            referenceSolution: gates,
-            difficulty: difficulty
+            minimumGates: 1,
+            referenceSolution: [],
+            difficulty: problemNumber
+        )
+    }
+    
+    /// フォールバック問題
+    private func createFallbackProblem(problemNumber: Int) -> Problem {
+        return Problem(
+            startState: .zero,
+            startBlochVector: .zero,
+            targetState: .one,
+            targetBlochVector: .one,
+            minimumGates: 1,
+            referenceSolution: [.x],
+            difficulty: problemNumber
         )
     }
 }

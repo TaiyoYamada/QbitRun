@@ -48,6 +48,9 @@ public final class GameEngine {
     /// 1問あたりの基本スコア
     private let baseScorePerProblem = 100
     
+    /// お手つきの上限
+    private let maxMisses = 3
+    
     // MARK: - 公開プロパティ（SwiftUI Viewが監視）
     
     /// 現在のゲーム状態
@@ -64,6 +67,9 @@ public final class GameEngine {
     
     /// 獲得したボーナス合計
     public private(set) var totalBonus: Int = 0
+    
+    /// お手つき回数
+    public private(set) var missCount: Int = 0
     
     /// 現在の問題
     public private(set) var currentProblem: Problem?
@@ -83,7 +89,7 @@ public final class GameEngine {
     /// 現在とターゲットの距離（0.0〜1.0）
     public var currentDistance: Double {
         guard let problem = currentProblem else { return 1.0 }
-        let currentState = currentCircuit.apply(to: .zero)
+        let currentState = currentCircuit.apply(to: problem.startState)
         let targetState = problem.targetState
         return currentState.fidelity(with: targetState)
     }
@@ -95,6 +101,9 @@ public final class GameEngine {
     public private(set) var finalScoreEntry: ScoreEntry?
     
     // MARK: - 内部プロパティ
+    
+    /// ゲームの難易度
+    private var gameDifficulty: GameDifficulty = .easy
     
     /// 問題生成器
     private let problemGenerator = ProblemGenerator()
@@ -108,8 +117,12 @@ public final class GameEngine {
     // MARK: - ゲーム制御
     
     /// ゲームを開始
-    public func start() {
+    /// - Parameter difficulty: ゲームの難易度
+    public func start(difficulty: GameDifficulty = .easy) {
         guard state == .ready else { return }
+        
+        // 難易度を設定
+        self.gameDifficulty = difficulty
         
         // 状態をリセット
         state = .playing
@@ -117,13 +130,20 @@ public final class GameEngine {
         score = 0
         problemsSolved = 0
         totalBonus = 0
+        missCount = 0
         currentCircuit = Circuit()
-        currentVector = .zero
         didSolveLastProblem = false
         finalScoreEntry = nil
         
         // 最初の問題を生成
         generateNewProblem()
+        
+        // 開始状態のベクトルを設定
+        if let problem = currentProblem {
+            currentVector = problem.startBlochVector
+        } else {
+            currentVector = .zero
+        }
         
         // タイマーを開始
         startTimer()
@@ -151,9 +171,10 @@ public final class GameEngine {
         score = 0
         problemsSolved = 0
         totalBonus = 0
+        missCount = 0
         currentCircuit = Circuit()
-        currentVector = .zero
         currentProblem = nil
+        currentVector = .zero
         didSolveLastProblem = false
         finalScoreEntry = nil
     }
@@ -199,7 +220,7 @@ public final class GameEngine {
     
     /// 新しい問題を生成
     private func generateNewProblem() {
-        currentProblem = problemGenerator.generateProblem(difficulty: problemsSolved)
+        currentProblem = problemGenerator.generateProblem(gameDifficulty: gameDifficulty, problemNumber: problemsSolved)
     }
     
     // MARK: - 回路操作
@@ -209,8 +230,9 @@ public final class GameEngine {
         guard state == .playing else { return }
         guard currentCircuit.addGate(gate) else { return }
         
-        // 現在の状態を計算（表示用、Runボタンで判定）
-        let currentState = currentCircuit.apply(to: .zero)
+        // 現在の状態を計算（開始状態から）
+        guard let problem = currentProblem else { return }
+        let currentState = currentCircuit.apply(to: problem.startState)
         currentVector = BlochVector(from: currentState)
     }
     
@@ -219,8 +241,9 @@ public final class GameEngine {
         guard state == .playing else { return }
         currentCircuit.removeGate(at: index)
         
-        // 現在の状態を再計算
-        let currentState = currentCircuit.apply(to: .zero)
+        // 現在の状態を再計算（開始状態から）
+        guard let problem = currentProblem else { return }
+        let currentState = currentCircuit.apply(to: problem.startState)
         currentVector = BlochVector(from: currentState)
     }
     
@@ -228,7 +251,12 @@ public final class GameEngine {
     public func clearCircuit() {
         guard state == .playing else { return }
         currentCircuit.clear()
-        currentVector = .zero
+        // 開始状態に戻す
+        if let problem = currentProblem {
+            currentVector = problem.startBlochVector
+        } else {
+            currentVector = .zero
+        }
     }
     
     // MARK: - 正解判定
@@ -239,6 +267,7 @@ public final class GameEngine {
         
         let result = judgeService.judge(
             playerCircuit: currentCircuit,
+            startState: problem.startState,
             targetState: problem.targetState
         )
         
@@ -254,8 +283,11 @@ public final class GameEngine {
             
             // 回路をクリアして次の問題へ
             currentCircuit.clear()
-            currentVector = .zero
             generateNewProblem()
+            // 新しい問題の開始状態に設定
+            if let newProblem = currentProblem {
+                currentVector = newProblem.startBlochVector
+            }
             
             // 少し後にフラグをリセット
             Task {
@@ -293,6 +325,7 @@ public final class GameEngine {
         
         let result = judgeService.judge(
             playerCircuit: currentCircuit,
+            startState: problem.startState,
             targetState: problem.targetState
         )
         
@@ -312,13 +345,34 @@ public final class GameEngine {
         
         // 回路をクリアして次の問題へ
         currentCircuit.clear()
-        currentVector = .zero
         generateNewProblem()
+        // 新しい問題の開始状態に設定
+        if let newProblem = currentProblem {
+            currentVector = newProblem.startBlochVector
+        }
         
         Task {
             try? await Task.sleep(for: .milliseconds(500))
             self.didSolveLastProblem = false
         }
     }
+    
+    /// お手つき処理を実行（Runボタン用）
+    /// - Returns: ゲームオーバーかどうか
+    public func handleWrongAnswer() -> Bool {
+        missCount += 1
+        
+        // 3回ミスでゲームオーバー
+        if missCount >= maxMisses {
+            endGame()
+            return true
+        }
+        
+        return false
+    }
+    
+    /// 残りミス回数
+    public var remainingMisses: Int {
+        max(0, maxMisses - missCount)
+    }
 }
-

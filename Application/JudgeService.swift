@@ -57,11 +57,12 @@ public struct JudgeService: Sendable {
     /// 回路を判定
     /// - Parameters:
     ///   - playerCircuit: プレイヤーが作った回路
+    ///   - startState: 開始の量子状態
     ///   - targetState: 目標の量子状態
     /// - Returns: 判定結果
-    public func judge(playerCircuit: Circuit, targetState: QuantumState) -> JudgeResult {
-        // |0⟩ に回路を適用
-        let resultState = playerCircuit.apply(to: .zero)
+    public func judge(playerCircuit: Circuit, startState: QuantumState, targetState: QuantumState) -> JudgeResult {
+        // 開始状態に回路を適用
+        let resultState = playerCircuit.apply(to: startState)
         
         // フィデリティを計算
         let fidelity = resultState.fidelity(with: targetState)
