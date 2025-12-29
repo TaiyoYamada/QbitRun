@@ -5,7 +5,14 @@ struct RecordsView: View {
     let scoreRepository: ScoreRepository
     let onBack: () -> Void
     
-    @State private var scores: [ScoreEntry] = []
+    @State private var selectedDifficulty: GameDifficulty = .easy
+    @State private var easyScores: [ScoreEntry] = []
+    @State private var hardScores: [ScoreEntry] = []
+    
+    /// 現在選択中の難易度のスコア
+    private var scores: [ScoreEntry] {
+        selectedDifficulty == .easy ? easyScores : hardScores
+    }
     
     var body: some View {
         ZStack {
@@ -45,6 +52,30 @@ struct RecordsView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
                 
+                // 難易度タブ
+                HStack(spacing: 0) {
+                    ForEach(GameDifficulty.allCases, id: \.self) { difficulty in
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedDifficulty = difficulty
+                            }
+                        }) {
+                            VStack(spacing: 4) {
+                                Text("\(difficulty.emoji) \(difficulty.displayName)")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(selectedDifficulty == difficulty ? .white : .white.opacity(0.5))
+                                
+                                // アンダーライン
+                                Rectangle()
+                                    .fill(selectedDifficulty == difficulty ? Color(red: 0.6, green: 0.4, blue: 1.0) : .clear)
+                                    .frame(height: 2)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.horizontal, 24)
+                
                 if scores.isEmpty {
                     Spacer()
                     Text("No records yet")
@@ -81,7 +112,8 @@ struct RecordsView: View {
             }
         }
         .task {
-            scores = await scoreRepository.fetchTopScores()
+            easyScores = await scoreRepository.fetchTopScores(for: .easy)
+            hardScores = await scoreRepository.fetchTopScores(for: .hard)
         }
     }
 }

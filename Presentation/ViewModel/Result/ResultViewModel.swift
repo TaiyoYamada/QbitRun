@@ -22,9 +22,6 @@ final class ResultViewModel {
     /// ランキング順位
     private(set) var rank: Int?
     
-    /// トップスコア一覧
-    private(set) var topScores: [ScoreEntry] = []
-    
     /// ローディング中かどうか
     private(set) var isLoading: Bool = true
     
@@ -35,18 +32,6 @@ final class ResultViewModel {
         self.scoreRepository = scoreRepository
     }
     
-    // MARK: - 計算プロパティ
-    
-    /// 今回のスコアがTop5に入っているか
-    var isCurrentScoreInTop5: Bool {
-        topScores.prefix(5).contains { $0.id == score.id }
-    }
-    
-    /// スコアがトップスコアかどうか
-    func isCurrentScore(_ entry: ScoreEntry) -> Bool {
-        entry.id == score.id
-    }
-    
     // MARK: - アクション
     
     /// スコアを保存してランキングを取得
@@ -55,9 +40,6 @@ final class ResultViewModel {
         
         // スコアを保存して順位を取得
         rank = await scoreRepository.saveScore(score)
-        
-        // Top5を取得
-        topScores = await scoreRepository.fetchTopScores()
         
         isLoading = false
     }

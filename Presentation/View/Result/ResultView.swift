@@ -103,25 +103,6 @@ struct ResultView: View {
                 .buttonStyle(ScaleButtonStyle())
                 .padding(.top, 12)
                 
-                // リーダーボード
-                VStack(spacing: 8) {
-                    Text("Top Scores")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.8))
-                    
-                    ForEach(Array(viewModel.topScores.prefix(5).enumerated()), id: \.element.id) { index, entry in
-                        let isCurrentScore = viewModel.isCurrentScore(entry)
-                        Text("\(index + 1). \(entry.score) pts")
-                            .font(.system(size: 14, weight: isCurrentScore ? .bold : .regular))
-                            .foregroundStyle(
-                                isCurrentScore ?
-                                Color(red: 1.0, green: 0.8, blue: 0.2) :
-                                .white.opacity(0.6)
-                            )
-                    }
-                }
-                .padding(.top, 40)
-                
                 Spacer()
             }
         }

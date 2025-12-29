@@ -42,6 +42,9 @@ public struct ScoreEntry: Sendable, Codable, Identifiable, Hashable, Equatable {
     /// 達成日時
     public let date: Date
     
+    /// ゲームの難易度
+    public let difficulty: GameDifficulty
+    
     // MARK: - イニシャライザ
     
     public init(
@@ -49,13 +52,15 @@ public struct ScoreEntry: Sendable, Codable, Identifiable, Hashable, Equatable {
         score: Int,
         problemsSolved: Int,
         bonusPoints: Int = 0,
-        date: Date = Date()
+        date: Date = Date(),
+        difficulty: GameDifficulty = .easy
     ) {
         self.id = id
         self.score = score
         self.problemsSolved = problemsSolved
         self.bonusPoints = bonusPoints
         self.date = date
+        self.difficulty = difficulty
     }
 }
 
@@ -67,8 +72,8 @@ public actor ScoreRepository {
     
     // MARK: - 定数
     
-    /// UserDefaultsのキー
-    private let storageKey = "quantum_gate_game_scores"
+    /// UserDefaultsのキーのベース
+    private let storageKeyBase = "quantum_gate_game_scores"
     
     /// 保存する最大スコア数
     private let maxScores = 5
@@ -84,13 +89,21 @@ public actor ScoreRepository {
         self.defaults = defaults
     }
     
+    // MARK: - ヘルパー
+    
+    /// 難易度別のストレージキーを取得
+    private func storageKey(for difficulty: GameDifficulty) -> String {
+        "\(storageKeyBase)_\(difficulty.rawValue)"
+    }
+    
     // MARK: - 保存
     
     /// スコアを保存し、ランキング順位を返す
     /// - Returns: 新しい順位（Top5に入らなければnil）
     @discardableResult
     public func saveScore(_ entry: ScoreEntry) -> Int? {
-        var scores = fetchTopScores()
+        let difficulty = entry.difficulty
+        var scores = fetchTopScores(for: difficulty)
         
         // 追加
         scores.append(entry)
@@ -102,7 +115,7 @@ public actor ScoreRepository {
         scores = Array(scores.prefix(maxScores))
         
         // 保存
-        saveScores(scores)
+        saveScores(scores, for: difficulty)
         
         // 新しいエントリの順位を返す
         if let rank = scores.firstIndex(where: { $0.id == entry.id }) {
@@ -114,10 +127,12 @@ public actor ScoreRepository {
     
     // MARK: - 読み込み
     
-    /// Top5を取得（スコア降順）
-    public func fetchTopScores() -> [ScoreEntry] {
+    /// 指定された難易度のTop5を取得（スコア降順）
+    public func fetchTopScores(for difficulty: GameDifficulty) -> [ScoreEntry] {
+        let key = storageKey(for: difficulty)
+        
         // UserDefaultsからデータ取得
-        guard let data = defaults.data(forKey: storageKey) else {
+        guard let data = defaults.data(forKey: key) else {
             return []
         }
         
@@ -131,25 +146,35 @@ public actor ScoreRepository {
         }
     }
     
-    /// ハイスコアを取得
-    public func highScore() -> Int {
-        fetchTopScores().first?.score ?? 0
+    /// 指定された難易度のハイスコアを取得
+    public func highScore(for difficulty: GameDifficulty) -> Int {
+        fetchTopScores(for: difficulty).first?.score ?? 0
     }
     
     // MARK: - 内部メソッド
     
     /// スコアリストを保存
-    private func saveScores(_ scores: [ScoreEntry]) {
+    private func saveScores(_ scores: [ScoreEntry], for difficulty: GameDifficulty) {
+        let key = storageKey(for: difficulty)
         do {
             let data = try JSONEncoder().encode(scores)
-            defaults.set(data, forKey: storageKey)
+            defaults.set(data, forKey: key)
         } catch {
             // エンコード失敗時は何もしない
         }
     }
     
+    /// 指定された難易度のスコアを削除（デバッグ用）
+    public func clearScores(for difficulty: GameDifficulty) {
+        let key = storageKey(for: difficulty)
+        defaults.removeObject(forKey: key)
+    }
+    
     /// 全スコアを削除（デバッグ用）
     public func clearAllScores() {
-        defaults.removeObject(forKey: storageKey)
+        for difficulty in GameDifficulty.allCases {
+            clearScores(for: difficulty)
+        }
     }
 }
+

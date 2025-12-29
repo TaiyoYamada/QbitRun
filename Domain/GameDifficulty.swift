@@ -5,7 +5,7 @@
 import Foundation
 
 /// ゲームの難易度
-public enum GameDifficulty: String, CaseIterable, Sendable {
+public enum GameDifficulty: String, CaseIterable, Sendable, Codable {
     case easy   // Easy: 開始状態は常に |0⟩
     case hard   // Hard: 開始状態もランダム
     

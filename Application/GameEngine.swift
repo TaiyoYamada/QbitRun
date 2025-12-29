@@ -188,7 +188,8 @@ public final class GameEngine {
         finalScoreEntry = ScoreEntry(
             score: score,
             problemsSolved: problemsSolved,
-            bonusPoints: totalBonus
+            bonusPoints: totalBonus,
+            difficulty: gameDifficulty
         )
     }
     
