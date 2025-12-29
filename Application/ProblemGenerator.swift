@@ -54,68 +54,18 @@ public struct ProblemGenerator: Sendable {
     
     // MARK: - 問題生成
     
-    /// 難易度に応じた問題を生成
+    /// 難易度に応じたランダムな問題を生成
     /// - Parameter difficulty: 解いた問題数（0から増加）
     public func generateProblem(difficulty: Int) -> Problem {
-        // 最初から完全ランダム問題を生成
         return generateRandomProblem(difficulty: difficulty)
-    }
-    
-    // MARK: - スターター問題
-    
-    /// 最初の数問は固定（プレイヤーがゲートを学ぶため）
-    private var starterProblems: [Problem] {
-        [
-            // 問題1: X ゲートだけ
-            // |0⟩ → |1⟩
-            Problem(
-                targetState: .one,
-                targetBlochVector: .one,
-                minimumGates: 1,
-                referenceSolution: [.x],
-                difficulty: 0
-            ),
-            
-            // 問題2: H ゲートだけ
-            // |0⟩ → |+⟩
-            Problem(
-                targetState: .plus,
-                targetBlochVector: .plus,
-                minimumGates: 1,
-                referenceSolution: [.h],
-                difficulty: 1
-            ),
-            
-            // 問題3: H → Z（または Z → H とは異なる結果）
-            // |0⟩ → |−⟩ = H → Z → |0⟩ ではなく、X → H で |−⟩
-            Problem(
-                targetState: .minus,
-                targetBlochVector: .minus,
-                minimumGates: 2,
-                referenceSolution: [.x, .h],
-                difficulty: 2
-            ),
-            
-            // 問題4: H → S で |i⟩ へ
-            // |0⟩ → |+⟩ → |i⟩
-            Problem(
-                targetState: .plusI,
-                targetBlochVector: .plusI,
-                minimumGates: 2,
-                referenceSolution: [.h, .s],
-                difficulty: 3
-            )
-        ]
     }
     
     // MARK: - ランダム問題生成
     
     /// ランダムな問題を生成
     private func generateRandomProblem(difficulty: Int) -> Problem {
-        // 難易度に応じてゲート数を決定
-        let minGates = min(2 + difficulty / 3, 4)  // 2〜4ゲート
-        let maxGates = min(minGates + 1, 5)
-        let gateCount = Int.random(in: minGates...maxGates)
+        // ランダムに2〜5ゲートの問題を生成
+        let gateCount = Int.random(in: 2...5)
         
         // ランダムなゲート列を生成
         var gates: [QuantumGate] = []

@@ -5,6 +5,7 @@
 //  Created by 山田大陽 on 2025/12/29.
 //
 
+/// font確認用ファイル
 import SwiftUI
 
 struct FontListView: View {
