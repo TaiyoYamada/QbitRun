@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Domain/GameDifficulty.swift
 // ゲームの難易度設定
 
 import Foundation

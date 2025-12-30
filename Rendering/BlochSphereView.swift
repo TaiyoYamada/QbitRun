@@ -1,23 +1,9 @@
-// SPDX-License-Identifier: MIT
-// Rendering/BlochSphereView.swift
-// Metal（GPU）を使った論文風ブロッホ球レンダリング
+// ブロッホ球レンダリング
 
 import UIKit
 import SwiftUI
 import MetalKit
 import simd
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ブロッホ球
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// 特徴:
-// - 透明な球体（塗りつぶしなし）
-// - 経緯線（グリッド）表示
-// - X/Y/Z軸とラベル
-// - 状態ベクトル（シアン）
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // MARK: - シェーダーで使う構造体
 
@@ -745,15 +731,3 @@ struct BlochSphereViewRepresentable: UIViewRepresentable {
     BlochSphereViewRepresentable(vector: .zero, animated: false)
         .frame(width: 600, height: 600)
 }
-//
-//#Preview("ブロッホ球 - |1⟩") {
-//    BlochSphereViewRepresentable(vector: BlochVector(simd_double3(0, 0, -1)), animated: false)
-//        .frame(width: 400, height: 400)
-//        .background(Color.black)
-//}
-//
-//#Preview("ブロッホ球 - |+⟩") {
-//    BlochSphereViewRepresentable(vector: BlochVector(simd_double3(1, 0, 0)), animated: false)
-//        .frame(width: 400, height: 400)
-//        .background(Color.black)
-//}

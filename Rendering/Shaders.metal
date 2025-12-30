@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Rendering/Shaders.metal
 // ブロッホ球描画用のMetalシェーダー
 
 #include <metal_stdlib>

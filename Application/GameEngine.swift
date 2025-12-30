@@ -1,29 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Application/GameEngine.swift
 // ゲームのコアロジック（タイマー、スコア、状態管理）
 
 import Foundation
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// GameEngineの役割
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// ゲームの「ビジネスロジック」を担当する（UIは知らない）
-//
-// 責務:
-// - 60秒タイマーの管理
-// - スコア計算
-// - 問題生成・正解判定
-// - 回路（ゲートリスト）の管理
-// - ゲーム状態（ready/playing/paused/finished）の遷移
-//
-// @Observable を使用することで、SwiftUI Viewが自動的に状態変化を検知
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-// MARK: - ゲーム状態
-
-/// ゲームの状態を表す列挙型
 public enum GameState: Sendable {
     case ready      // 開始待ち
     case playing    // プレイ中
@@ -31,11 +9,6 @@ public enum GameState: Sendable {
     case finished   // 終了
 }
 
-// MARK: - ゲームエンジン
-
-/// ゲームのコアロジックを管理
-/// @Observable: SwiftUIが自動的に状態変化を検知できる
-/// @MainActor: UIスレッドで動作することを保証
 @Observable
 @MainActor
 public final class GameEngine {
@@ -50,9 +23,9 @@ public final class GameEngine {
     
     /// お手つきの上限
     private let maxMisses = 3
-    
-    // MARK: - 公開プロパティ（SwiftUI Viewが監視）
-    
+
+    // MARK: - 公開プロパティ
+
     /// 現在のゲーム状態
     public private(set) var state: GameState = .ready
     
@@ -115,9 +88,7 @@ public final class GameEngine {
     private var timerTask: Task<Void, Never>?
     
     // MARK: - ゲーム制御
-    
     /// ゲームを開始
-    /// - Parameter difficulty: ゲームの難易度
     public func start(difficulty: GameDifficulty = .easy) {
         guard state == .ready else { return }
         
@@ -194,8 +165,8 @@ public final class GameEngine {
     }
     
     // MARK: - タイマー
-    
-    /// タイマーを開始（Swift Concurrencyを使用）
+
+    /// タイマーを開始
     private func startTimer() {
         timerTask = Task { [weak self] in
             // 1秒ごとにループ

@@ -1,50 +1,12 @@
-// SPDX-License-Identifier: MIT
-// Domain/BlochVector.swift
 // ブロッホ球上の3Dベクトル表現
 
 import Foundation
 import simd
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ブロッホ球とは？
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// 1量子ビットの純粋状態は、単位球面（ブロッホ球）上の
-// 1点として可視化できる。
-//
-//                 |0⟩ (北極)
-//                   ↑
-//                   |
-//       |−⟩ ←──────●──────→ |+⟩  (X軸)
-//                  /|
-//                 / |
-//               |i⟩ (Y軸)
-//                   |
-//                   ↓
-//                 |1⟩ (南極)
-//
-// 量子状態 |ψ⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩
-//
-// ブロッホベクトル座標:
-//   x = sin(θ)cos(φ)
-//   y = sin(θ)sin(φ)
-//   z = cos(θ)
-//
-// 重要な対応:
-//   |0⟩ → (0, 0, +1) 北極
-//   |1⟩ → (0, 0, -1) 南極
-//   |+⟩ → (+1, 0, 0) X軸正
-//   |-⟩ → (-1, 0, 0) X軸負
-//   |i⟩ → (0, +1, 0) Y軸正
-//  |-i⟩ → (0, -1, 0) Y軸負
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 /// ブロッホ球上の単位3Dベクトル
 /// 量子状態を可視化するために使用
 public struct BlochVector: Sendable, Equatable {
     /// 内部の3Dベクトル（simd_double3）
-    /// simd: SIMD（Single Instruction Multiple Data）最適化された数学ライブラリ
     public let vector: simd_double3
     
     // MARK: - イニシャライザ
@@ -131,7 +93,6 @@ public struct BlochVector: Sendable, Equatable {
     /// - 距離 0: 同じ状態
     /// - 距離 2: 反対側（直交状態ではない！）
     ///
-    /// 注: ゲームでは「どれくらい近いか」の視覚的フィードバックに使用
     public func distance(to other: BlochVector) -> Double {
         simd_distance(vector, other.vector)
     }
