@@ -41,6 +41,9 @@ public final class QuantumCircuitAnimationView: UIView {
     /// アニメーション完了時のコールバック
     public var onAnimationComplete: (() -> Void)?
     
+    /// ゲートが中央を通過した時のコールバック（インデックス付き）
+    public var onGatePassCenter: ((Int) -> Void)?
+    
     /// ワイヤーレイヤー
     private var wireLayers: [CAShapeLayer] = []
     
@@ -229,42 +232,58 @@ public final class QuantumCircuitAnimationView: UIView {
         let fadeIn = CABasicAnimation(keyPath: "opacity")
         fadeIn.fromValue = 0
         fadeIn.toValue = 1
-        fadeIn.duration = 0.8
+        fadeIn.duration = 0.5
         fadeIn.fillMode = .forwards
         fadeIn.isRemovedOnCompletion = false
         container.add(fadeIn, forKey: "fadeIn")
         
-        // 右から左へスライド（最後は減速して画面いっぱいに表示）
+        // 右から左へスライド
         let slideAnimation = CABasicAnimation(keyPath: "position.x")
         slideAnimation.fromValue = container.position.x
-        // 最終位置: 回路が画面いっぱいに収まる位置
-        // container.position.xはレイヤーの中心なので、左端が画面左端に来るように
-        slideAnimation.toValue = bounds.width / 2
+        // 左端が画面中央を通過して左へ抜ける
+        slideAnimation.toValue = -container.bounds.width / 2
         slideAnimation.duration = duration
-        slideAnimation.beginTime = CACurrentMediaTime() + 0.3
-        slideAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)  // 最後に減速
+        slideAnimation.beginTime = CACurrentMediaTime() + 0.2
+        slideAnimation.timingFunction = CAMediaTimingFunction(name: .linear)
         slideAnimation.fillMode = .forwards
         slideAnimation.isRemovedOnCompletion = false
         
-        // 一時停止後にフェードアウト
+        // ゲートが中央を通過するタイミングでコールバック発火
+        scheduleGatePassCallbacks(duration: duration)
+        
+        // フェードアウト（最後）
         let fadeOut = CABasicAnimation(keyPath: "opacity")
         fadeOut.fromValue = 1
         fadeOut.toValue = 0
-        fadeOut.duration = 0.6
-        fadeOut.beginTime = CACurrentMediaTime() + 0.3 + duration + 0.5  // 停止後0.5秒待ってフェード
+        fadeOut.duration = 0.4
+        fadeOut.beginTime = CACurrentMediaTime() + 0.2 + duration - 0.3
         fadeOut.fillMode = .forwards
         fadeOut.isRemovedOnCompletion = false
         
         CATransaction.begin()
         CATransaction.setCompletionBlock { [weak self] in
-            // フェードアウト完了後にコールバック
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5 + 0.6) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 self?.onAnimationComplete?()
             }
         }
         container.add(slideAnimation, forKey: "slide")
         container.add(fadeOut, forKey: "fadeOut")
         CATransaction.commit()
+    }
+    
+    /// ゲートが画面中央を通過するタイミングをスケジュール
+    private func scheduleGatePassCallbacks(duration: TimeInterval) {
+        // 回路全体の移動距離と時間から、各ゲートが中央を通過するタイミングを計算
+        // 8つのゲートを均等に配置
+        let gateCount = 8
+        let interval = duration / Double(gateCount + 1)
+        
+        for i in 0..<gateCount {
+            let delay = 0.2 + interval * Double(i + 1)
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.onGatePassCenter?(i)
+            }
+        }
     }
     
     // MARK: - Drawing

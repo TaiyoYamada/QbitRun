@@ -57,6 +57,12 @@ public final class BlochSphereView: UIView {
     private var cameraYaw: Float = 0.5
     private var cameraPitch: Float = 0.35
     
+    /// 軌道アニメーション用の媒介変数（継続的に増加）
+    private var orbitPhase: Double = 0.0
+    
+    /// 連続軌道アニメーションが有効かどうか
+    public var continuousOrbitAnimation: Bool = false
+    
     /// ユーザーが回転できるかどうか
     public var isInteractive: Bool = true
     
@@ -76,6 +82,13 @@ public final class BlochSphereView: UIView {
     
     /// 軸と軸ラベルを表示するかどうか
     public var showAxes: Bool = true {
+        didSet {
+            updateAxesVisibility()
+        }
+    }
+    
+    /// 軸ラベル（x, y, z）を表示するかどうか
+    public var showAxisLabels: Bool = true {
         didSet {
             updateAxesVisibility()
         }
@@ -104,7 +117,7 @@ public final class BlochSphereView: UIView {
     /// 軸表示の更新
     private func updateAxesVisibility() {
         for label in axisLabels {
-            label.isHidden = !showAxes
+            label.isHidden = !showAxes || !showAxisLabels
         }
     }
     
@@ -562,8 +575,25 @@ public final class BlochSphereView: UIView {
     // MARK: - 描画
     
     func draw(in view: MTKView) {
-        // アニメーション更新
-        if let target = targetBlochVector, animationProgress < 1.0 {
+        // 連続軌道アニメーション（有効な場合）
+        if continuousOrbitAnimation {
+            // フェーズを滑らかに進行（60FPSで約0.02ずつ）
+            orbitPhase += 0.02
+            
+            // Lissajous曲線を使用した滑らかな軌道
+            // 異なる周波数で美しいパターンを描く
+            let theta = sin(orbitPhase * 0.7) * .pi * 0.8 + .pi / 2  // 極角（0〜π）
+            let phi = orbitPhase * 1.3  // 方位角（連続回転）
+            
+            let x = sin(theta) * cos(phi)
+            let y = sin(theta) * sin(phi)
+            let z = cos(theta)
+            
+            currentBlochVector = BlochVector(simd_double3(x, y, z))
+            updateStateVectorBuffer(vector: currentBlochVector)
+        }
+        // 通常のアニメーション更新（setVectorで設定された場合）
+        else if let target = targetBlochVector, animationProgress < 1.0 {
             animationProgress += 0.08
             if animationProgress >= 1.0 {
                 animationProgress = 1.0
@@ -707,12 +737,16 @@ struct BlochSphereViewRepresentable: UIViewRepresentable {
     var animated: Bool
     var showBackground: Bool = true
     var showAxes: Bool = true
+    var showAxisLabels: Bool = true
+    var continuousOrbitAnimation: Bool = false
     var backgroundPadding: CGFloat = 24
     
     func makeUIView(context: Context) -> BlochSphereView {
         let view = BlochSphereView()
         view.showBackground = showBackground
         view.showAxes = showAxes
+        view.showAxisLabels = showAxisLabels
+        view.continuousOrbitAnimation = continuousOrbitAnimation
         view.backgroundPadding = backgroundPadding
         return view
     }
@@ -720,8 +754,12 @@ struct BlochSphereViewRepresentable: UIViewRepresentable {
     func updateUIView(_ uiView: BlochSphereView, context: Context) {
         uiView.showBackground = showBackground
         uiView.showAxes = showAxes
+        uiView.showAxisLabels = showAxisLabels
+        uiView.continuousOrbitAnimation = continuousOrbitAnimation
         uiView.backgroundPadding = backgroundPadding
-        uiView.setVector(vector, animated: animated)
+        if !continuousOrbitAnimation {
+            uiView.setVector(vector, animated: animated)
+        }
     }
 }
 

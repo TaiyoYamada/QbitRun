@@ -6,25 +6,24 @@ import SwiftUI
 import simd
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Cinematic Title Screen
+// Cinematic Title Screen（案B: 回路とブロッホ球の統合）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 // アニメーションフロー:
 //
-// 0秒: バイナリレイン開始
-// 1秒: 量子回路が右→左へ流れる
-// 3秒: ブロッホ球が中央に生成
-// 4秒: 「タップしてXゲートを適用」
-// タップ: |0⟩ → |1⟩ 回転
+// 0秒: バイナリレイン開始 + ブロッホ球が中央に出現
+// 0.5秒: 量子回路が右→左へ流れる（2秒間）
+//        ゲートが球を通過するたびに状態ベクトルが回転
+// 2.5秒: 回路消失、「タップしてXゲートを適用」
+// タップ: ベクトルが南極へ移動
 // → メインメニューへ遷移
 //
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// アニメーションフェーズ
 private enum TitlePhase: Equatable {
-    case binaryRain      // バイナリレイン開始
-    case circuitFlow     // 量子回路アニメーション
-    case blochAppear     // ブロッホ球生成
+    case initial         // 初期状態
+    case circuitFlow     // 量子回路アニメーション中
     case waitingTap      // タップ待ち
     case applyingGate    // Xゲート適用中
     case transition      // メニューへ遷移
@@ -38,12 +37,13 @@ struct CinematicTitleView: View {
     
     // MARK: - State
     
-    @State private var phase: TitlePhase = .binaryRain
+    @State private var phase: TitlePhase = .initial
     @State private var blochVector: BlochVector = .zero
     @State private var showBlochSphere: Bool = false
     @State private var showTapPrompt: Bool = false
     @State private var promptOpacity: Double = 1.0
     @State private var showGateSymbol: Bool = false
+    @State private var orbitActive: Bool = true  // 軌道アニメーション有効
     
     var body: some View {
         GeometryReader { geometry in
@@ -60,49 +60,37 @@ struct CinematicTitleView: View {
                 .ignoresSafeArea()
                 
                 // Layer 2: 量子回路アニメーション
-                if phase == .circuitFlow || phase == .blochAppear {
+                if phase == .circuitFlow {
                     QuantumCircuitRepresentable(
-                        startAnimation: phase == .circuitFlow,
                         size: geometry.size,
                         onComplete: {
-                            withAnimation(.easeOut(duration: 0.5)) {
-                                phase = .blochAppear
-                                showBlochSphere = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            withAnimation {
                                 phase = .waitingTap
                                 showTapPrompt = true
-                                startPromptPulse()
                             }
+                            startPromptPulse()
                         }
                     )
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .ignoresSafeArea()
+                    .allowsHitTesting(false)
                 }
                 
-                // Layer 3: ブロッホ球
+                // Layer 3: ブロッホ球（最前面、軸あり・ラベルなし、滑らかな軌道アニメーション）
                 if showBlochSphere {
-                    VStack {
-                        Spacer()
-                        
-                        Text(blochVector == .zero ? "|0⟩" : "|1⟩")
-                            .font(.custom("Menlo-Bold", size: 32))
-                            .foregroundColor(.white)
-                            .shadow(color: .cyan.opacity(0.8), radius: 10)
-                        
-                        BlochSphereViewRepresentable(
-                            vector: blochVector,
-                            animated: true,
-                            showBackground: false,
-                            showAxes: true
-                        )
-                        .frame(width: 350, height: 350)
-                        .scaleEffect(showBlochSphere ? 1.0 : 0.3)
-                        .opacity(showBlochSphere ? 1.0 : 0)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.7), value: showBlochSphere)
-                        
-                        Spacer()
-                    }
+                    BlochSphereViewRepresentable(
+                        vector: blochVector,
+                        animated: true,
+                        showBackground: false,
+                        showAxes: true,
+                        showAxisLabels: false,
+                        continuousOrbitAnimation: orbitActive  // 滑らかな軌道アニメーション
+                    )
+                    .frame(width: 500, height: 500)
+                    .scaleEffect(showBlochSphere ? 1.0 : 0.3)
+                    .opacity(showBlochSphere ? 1.0 : 0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showBlochSphere)
+                    .zIndex(100)  // 最前面に表示
                 }
                 
                 // Layer 4: タップ促進UI
@@ -159,7 +147,11 @@ struct CinematicTitleView: View {
     // MARK: - Animation Sequence
     
     private func startAnimationSequence() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        // ブロッホ球を即座に表示（軌道アニメーションは自動的に開始）
+        showBlochSphere = true
+        
+        // 0.5秒後に回路アニメーション開始
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             phase = .circuitFlow
         }
     }
@@ -179,14 +171,16 @@ struct CinematicTitleView: View {
         phase = .applyingGate
         showTapPrompt = false
         
+        // 軌道アニメーションを停止
+        orbitActive = false
+        
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             showGateSymbol = true
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            withAnimation {
-                blochVector = BlochVector(simd_double3(0, 0, -1))
-            }
+        // Xゲートで|1⟩に移動
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            blochVector = BlochVector(simd_double3(0, 0, -1))
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -215,17 +209,14 @@ private struct BinaryRainRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: BinaryRainContainerView, context: Context) {
-        // サイズが有効な場合のみ処理
         guard size.width > 0 && size.height > 0 else { return }
         
-        // レイン開始
         if !context.coordinator.hasStartedRain {
             context.coordinator.hasStartedRain = true
             uiView.startRain(size: size)
         }
         
-        // フェードアウト
-        if phase == .circuitFlow && !context.coordinator.hasFadedRain {
+        if phase == .waitingTap && !context.coordinator.hasFadedRain {
             context.coordinator.hasFadedRain = true
             uiView.fadeOutRain()
         }
@@ -241,12 +232,10 @@ private struct BinaryRainRepresentable: UIViewRepresentable {
     }
 }
 
-/// バイナリレインのコンテナView（レイアウトを正しく処理）
 private class BinaryRainContainerView: UIView {
     private var rainLayer: BinaryRainLayer?
     
     func startRain(size: CGSize) {
-        // 既存のレイヤーを削除
         rainLayer?.removeFromSuperlayer()
         
         let newRainLayer = BinaryRainLayer()
@@ -270,7 +259,6 @@ private class BinaryRainContainerView: UIView {
 // MARK: - Quantum Circuit Representable
 
 private struct QuantumCircuitRepresentable: UIViewRepresentable {
-    let startAnimation: Bool
     let size: CGSize
     let onComplete: () -> Void
     
@@ -281,19 +269,16 @@ private struct QuantumCircuitRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: QuantumCircuitAnimationView, context: Context) {
-        // サイズが有効な場合のみ処理
         guard size.width > 0 && size.height > 0 else { return }
-        guard startAnimation && !context.coordinator.hasStarted else { return }
+        guard !context.coordinator.hasStarted else { return }
         
         context.coordinator.hasStarted = true
         
-        // フレームを明示的に設定
         uiView.frame = CGRect(origin: .zero, size: size)
         uiView.onAnimationComplete = onComplete
         
-        // 少し遅延してアニメーション開始（レイアウト完了を待つ）
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            uiView.startAnimation()  // デフォルト8秒
+            uiView.startAnimation(duration: 2.0)  // 2秒
         }
     }
     
