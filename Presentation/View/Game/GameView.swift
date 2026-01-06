@@ -17,15 +17,8 @@ struct GameView: View {
     var body: some View {
         ZStack {
             // 背景グラデーション
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.15),
-                    Color(red: 0.1, green: 0.05, blue: 0.2)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // 背景グラデーション
+            Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // タイマーとスコア

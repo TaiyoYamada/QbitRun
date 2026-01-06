@@ -17,15 +17,8 @@ struct RecordsView: View {
     var body: some View {
         ZStack {
             // 背景
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.15),
-                    Color(red: 0.1, green: 0.05, blue: 0.2)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // 背景
+            Color.black.ignoresSafeArea()
             
             VStack(spacing: 24) {
                 // ヘッダー

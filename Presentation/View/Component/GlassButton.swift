@@ -83,9 +83,9 @@ struct GlassIconButton: View {
         }) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                 Text(title)
-                    .font(.custom("Optima-Bold", size: 16))
+                    .font(.custom("Optima-Bold", size: 20))
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 20)

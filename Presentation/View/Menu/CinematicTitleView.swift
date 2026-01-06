@@ -50,9 +50,9 @@ struct CinematicTitleView: View {
             ZStack {
                 // 背景（純黒）
                 Color.black.ignoresSafeArea()
-                
 
-                
+
+
                 // Layer 2: 量子回路アニメーション（背景ループ）
                 // 常に表示、最背面に配置（Color.blackの上、ブロッホ球の下）
                 QuantumCircuitRepresentable(
@@ -61,7 +61,7 @@ struct CinematicTitleView: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .ignoresSafeArea()
                 .opacity(0.8) // 全体の透明度を少し下げる（内部でさらに0.3になる）
-                
+
                 // Layer 3: ブロッホ球（最前面、軸あり・ラベルなし、滑らかな軌道アニメーション）
                 if showBlochSphere {
                     BlochSphereViewRepresentable(
@@ -82,25 +82,18 @@ struct CinematicTitleView: View {
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showBlochSphere)
                     .zIndex(100)  // 最前面に表示
                 }
-                
+
                 // Layer 4: タップ促進UI
                 if showTapPrompt && phase == .waitingTap {
                     VStack {
                         Spacer()
-                        
-                        HStack(spacing: 12) {
-                            Image(systemName: "hand.tap.fill")
-                                .font(.system(size: 24))
-                            Text("Tap to Measure Quantum State")
-                                .font(.custom("Optima-Bold", size: 24))
-                        }
-                        .foregroundColor(.white)
-                        .opacity(promptOpacity)
-                        .padding(.bottom, 100)
+                        Text("Tap to Measure Quantum State")
+                            .font(.custom("Optima-Bold", size: 40))
                     }
+                    .foregroundColor(.white)
+                    .opacity(promptOpacity)
+                    .padding(.bottom, 100)
                 }
-                
-
             }
         }
         .onTapGesture {
@@ -182,37 +175,7 @@ struct CinematicTitleView: View {
 
 // MARK: - Quantum Circuit Representable
 
-private struct QuantumCircuitRepresentable: UIViewRepresentable {
-    let size: CGSize
-    
-    func makeUIView(context: Context) -> QuantumCircuitAnimationView {
-        let view = QuantumCircuitAnimationView()
-        view.backgroundColor = .clear
-        return view
-    }
-    
-    func updateUIView(_ uiView: QuantumCircuitAnimationView, context: Context) {
-        guard size.width > 0 && size.height > 0 else { return }
-        guard !context.coordinator.hasStarted else { return }
-        
-        context.coordinator.hasStarted = true
-        
-        uiView.frame = CGRect(origin: .zero, size: size)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            // ゆっくり（30秒）、薄く（0.25）ループ再生
-            uiView.startLoopingAnimation(duration: 30.0, opacity: 0.25)
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-    
-    class Coordinator {
-        var hasStarted = false
-    }
-}
+
 
 // MARK: - Preview
 

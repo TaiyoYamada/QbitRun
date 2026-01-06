@@ -16,71 +16,69 @@ struct MainMenuView: View {
     var onBackToTitle: (() -> Void)?
     
     var body: some View {
-        ZStack {
-            // 背景グラデーション
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.15),
-                    Color(red: 0.1, green: 0.05, blue: 0.2),
-                    Color(red: 0.05, green: 0.1, blue: 0.2)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            
-            VStack(spacing: 24) {
-                // 戻るボタン
-                HStack {
-                    if let onBack = onBackToTitle {
-                        GlassIconButton(title: "Title", icon: "chevron.left", action: onBack)
+        GeometryReader { geometry in
+            ZStack {
+                // 背景（純黒）
+                Color.black.ignoresSafeArea()
+                
+                // 背景回路（ループアニメーション）
+                QuantumCircuitRepresentable(size: geometry.size)
+                    .ignoresSafeArea()
+                    .opacity(0.8)
+                
+                VStack(spacing: 24) {
+                    // 戻るボタン
+                    HStack {
+                        if let onBack = onBackToTitle {
+                            GlassIconButton(title: "Title", icon: "chevron.left", action: onBack)
+                        }
+                        Spacer()
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    
+                    Spacer()
+                    
+                    // タイトル
+                    Text("Main Menu")
+                        .font(.custom("Optima-Bold", size: 60))
+                        .foregroundStyle(.white)
+                    
+                    Spacer()
+                    
+                    // メニューボタン
+                    VStack(spacing: 40) {
+                        // ゲームプレイボタン
+                        GlassButton(
+                            title: "Game Play",
+                            action: onPlayGame,
+                            width: 300,
+                            height: 80,
+                            fontSize: 30
+                        )
+                        
+                        // 過去の記録ボタン
+                        GlassButton(
+                            title: "Records",
+                            action: onShowRecords,
+                            width: 300,
+                            height: 80,
+                            fontSize: 30
+                        )
+                        
+                        // アプリの使い方ボタン
+                        GlassButton(
+                            title: "How to Play",
+                            action: onShowHelp,
+                            width: 300,
+                            height: 80,
+                            fontSize: 30
+                        )
+                    }
+                    
+                    Spacer()
                     Spacer()
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                
-                Spacer()
-                
-                // タイトル
-                Text("Main Menu")
-                    .font(.custom("Optima-Bold", size: 48))
-                    .foregroundStyle(.white)
-                
-                Spacer()
-                
-                // メニューボタン
-                VStack(spacing: 20) {
-                    // ゲームプレイボタン
-                    GlassButton(
-                        title: "🎮 Game Play",
-                        action: onPlayGame,
-                        width: 280,
-                        height: 64,
-                        fontSize: 24
-                    )
-                    
-                    // 過去の記録ボタン
-                    GlassButton(
-                        title: "📊 Records",
-                        action: onShowRecords,
-                        width: 280,
-                        height: 64,
-                        fontSize: 24
-                    )
-                    
-                    // アプリの使い方ボタン
-                    GlassButton(
-                        title: "📖 How to Play",
-                        action: onShowHelp,
-                        width: 280,
-                        height: 64,
-                        fontSize: 24
-                    )
-                }
-                
-                Spacer()
-                Spacer()
             }
         }
     }
