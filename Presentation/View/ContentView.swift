@@ -11,8 +11,8 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            // タイトル画面
-            TitleView(
+            // シネマティックタイトル画面
+            CinematicTitleView(
                 onStart: { navigationPath.append(AppRoute.mainMenu) }
             )
             .navigationDestination(for: AppRoute.self) { route in
