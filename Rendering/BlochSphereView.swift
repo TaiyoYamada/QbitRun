@@ -60,8 +60,18 @@ public final class BlochSphereView: UIView {
     /// 軌道アニメーション用の媒介変数（継続的に増加）
     private var orbitPhase: Double = 0.0
     
+    /// 停止時のコールバック（現在のベクトルを返す）
+    public var onOrbitStop: ((BlochVector) -> Void)?
+    
     /// 連続軌道アニメーションが有効かどうか
-    public var continuousOrbitAnimation: Bool = false
+    public var continuousOrbitAnimation: Bool = false {
+        didSet {
+            // アニメーションが停止された時、現在のベクトルを通知
+            if !continuousOrbitAnimation && oldValue {
+                onOrbitStop?(currentBlochVector)
+            }
+        }
+    }
     
     /// ユーザーが回転できるかどうか
     public var isInteractive: Bool = true
@@ -740,6 +750,7 @@ struct BlochSphereViewRepresentable: UIViewRepresentable {
     var showAxisLabels: Bool = true
     var continuousOrbitAnimation: Bool = false
     var backgroundPadding: CGFloat = 24
+    var onOrbitStop: ((BlochVector) -> Void)? = nil
     
     func makeUIView(context: Context) -> BlochSphereView {
         let view = BlochSphereView()
@@ -757,6 +768,8 @@ struct BlochSphereViewRepresentable: UIViewRepresentable {
         uiView.showAxisLabels = showAxisLabels
         uiView.continuousOrbitAnimation = continuousOrbitAnimation
         uiView.backgroundPadding = backgroundPadding
+        uiView.onOrbitStop = onOrbitStop  // コールバックを設定
+        
         if !continuousOrbitAnimation {
             uiView.setVector(vector, animated: animated)
         }

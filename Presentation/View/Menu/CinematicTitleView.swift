@@ -42,7 +42,7 @@ struct CinematicTitleView: View {
     @State private var showBlochSphere: Bool = false
     @State private var showTapPrompt: Bool = false
     @State private var promptOpacity: Double = 1.0
-    @State private var showGateSymbol: Bool = false
+
     @State private var orbitActive: Bool = true  // 軌道アニメーション有効
     
     var body: some View {
@@ -51,30 +51,16 @@ struct CinematicTitleView: View {
                 // 背景（純黒）
                 Color.black.ignoresSafeArea()
                 
-                // Layer 1: バイナリレイン
-                BinaryRainRepresentable(
-                    phase: phase,
+
+                
+                // Layer 2: 量子回路アニメーション（背景ループ）
+                // 常に表示、最背面に配置（Color.blackの上、ブロッホ球の下）
+                QuantumCircuitRepresentable(
                     size: geometry.size
                 )
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .ignoresSafeArea()
-                
-                // Layer 2: 量子回路アニメーション
-                if phase == .circuitFlow {
-                    QuantumCircuitRepresentable(
-                        size: geometry.size,
-                        onComplete: {
-                            withAnimation {
-                                phase = .waitingTap
-                                showTapPrompt = true
-                            }
-                            startPromptPulse()
-                        }
-                    )
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-                }
+                .opacity(0.8) // 全体の透明度を少し下げる（内部でさらに0.3になる）
                 
                 // Layer 3: ブロッホ球（最前面、軸あり・ラベルなし、滑らかな軌道アニメーション）
                 if showBlochSphere {
@@ -84,7 +70,11 @@ struct CinematicTitleView: View {
                         showBackground: false,
                         showAxes: true,
                         showAxisLabels: false,
-                        continuousOrbitAnimation: orbitActive  // 滑らかな軌道アニメーション
+                        continuousOrbitAnimation: orbitActive,  // 滑らかな軌道アニメーション
+                        onOrbitStop: { finalVector in
+                            // 軌道停止時に観測を行う
+                            measureQuantumState(from: finalVector)
+                        }
                     )
                     .frame(width: 500, height: 500)
                     .scaleEffect(showBlochSphere ? 1.0 : 0.3)
@@ -101,7 +91,7 @@ struct CinematicTitleView: View {
                         HStack(spacing: 12) {
                             Image(systemName: "hand.tap.fill")
                                 .font(.system(size: 24))
-                            Text("Tap to apply X gate")
+                            Text("Tap to Measure Quantum State")
                                 .font(.custom("Optima-Bold", size: 24))
                         }
                         .foregroundColor(.white)
@@ -110,11 +100,7 @@ struct CinematicTitleView: View {
                     }
                 }
                 
-                // Layer 5: Xゲートシンボル
-                if showGateSymbol {
-                    xGateSymbolView
-                        .transition(.scale.combined(with: .opacity))
-                }
+
             }
         }
         .onTapGesture {
@@ -125,24 +111,7 @@ struct CinematicTitleView: View {
         }
     }
     
-    // MARK: - Xゲートシンボル
-    
-    private var xGateSymbolView: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.black.opacity(0.8))
-                .frame(width: 80, height: 80)
-            
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.cyan, lineWidth: 3)
-                .frame(width: 80, height: 80)
-            
-            Text("X")
-                .font(.custom("Menlo-Bold", size: 48))
-                .foregroundColor(.white)
-        }
-        .shadow(color: .cyan.opacity(0.6), radius: 20)
-    }
+
     
     // MARK: - Animation Sequence
     
@@ -150,9 +119,13 @@ struct CinematicTitleView: View {
         // ブロッホ球を即座に表示（軌道アニメーションは自動的に開始）
         showBlochSphere = true
         
-        // 0.5秒後に回路アニメーション開始
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            phase = .circuitFlow
+        // 少し待ってからタップ待ち状態へフェードイン
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation {
+                phase = .waitingTap
+                showTapPrompt = true
+            }
+            startPromptPulse()
         }
     }
     
@@ -171,96 +144,46 @@ struct CinematicTitleView: View {
         phase = .applyingGate
         showTapPrompt = false
         
-        // 軌道アニメーションを停止
+        // 軌道アニメーションを停止（これによりonOrbitStopが呼ばれ、measureQuantumStateが実行される）
         orbitActive = false
         
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-            showGateSymbol = true
-        }
-        
-        // Xゲートで|1⟩に移動
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            blochVector = BlochVector(simd_double3(0, 0, -1))
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            withAnimation(.easeOut(duration: 0.3)) {
-                showGateSymbol = false
-            }
-        }
-        
+        // メニュー遷移
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             phase = .transition
             onStart()
         }
     }
-}
-
-// MARK: - Binary Rain Representable
-
-private struct BinaryRainRepresentable: UIViewRepresentable {
-    let phase: TitlePhase
-    let size: CGSize
     
-    func makeUIView(context: Context) -> BinaryRainContainerView {
-        let container = BinaryRainContainerView()
-        container.backgroundColor = .clear
-        return container
-    }
-    
-    func updateUIView(_ uiView: BinaryRainContainerView, context: Context) {
-        guard size.width > 0 && size.height > 0 else { return }
+    /// 量子状態の観測（測定）
+    /// 現在のベクトルから、近い方の基底状態（|0⟩または|1⟩）に収束させる
+    private func measureQuantumState(from vector: BlochVector) {
+        // ベクトルのZ成分を確認（Z軸が量子化軸）
+        let z = vector.vector.z
         
-        if !context.coordinator.hasStartedRain {
-            context.coordinator.hasStartedRain = true
-            uiView.startRain(size: size)
+        // Z > 0 なら |0⟩ (北極)、Z <= 0 なら |1⟩ (南極) に収束
+        // 確率的には cos(theta/2)^2 だが、ここでは「近い方」というユーザー要望により距離判定
+        let measuredState: BlochVector
+        if z > 0 {
+            measuredState = .zero // |0⟩
+        } else {
+            measuredState = BlochVector(simd_double3(0, 0, -1)) // |1⟩
         }
         
-        if phase == .waitingTap && !context.coordinator.hasFadedRain {
-            context.coordinator.hasFadedRain = true
-            uiView.fadeOutRain()
+        // アニメーションで収束させる
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                self.blochVector = measuredState
+            }
         }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-    
-    class Coordinator {
-        var hasStartedRain = false
-        var hasFadedRain = false
     }
 }
 
-private class BinaryRainContainerView: UIView {
-    private var rainLayer: BinaryRainLayer?
-    
-    func startRain(size: CGSize) {
-        rainLayer?.removeFromSuperlayer()
-        
-        let newRainLayer = BinaryRainLayer()
-        newRainLayer.frame = CGRect(origin: .zero, size: size)
-        layer.addSublayer(newRainLayer)
-        rainLayer = newRainLayer
-        
-        newRainLayer.startRain(in: size)
-    }
-    
-    func fadeOutRain() {
-        rainLayer?.fadeOut(duration: 1.5)
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        rainLayer?.frame = bounds
-    }
-}
+
 
 // MARK: - Quantum Circuit Representable
 
 private struct QuantumCircuitRepresentable: UIViewRepresentable {
     let size: CGSize
-    let onComplete: () -> Void
     
     func makeUIView(context: Context) -> QuantumCircuitAnimationView {
         let view = QuantumCircuitAnimationView()
@@ -275,10 +198,10 @@ private struct QuantumCircuitRepresentable: UIViewRepresentable {
         context.coordinator.hasStarted = true
         
         uiView.frame = CGRect(origin: .zero, size: size)
-        uiView.onAnimationComplete = onComplete
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            uiView.startAnimation(duration: 2.0)  // 2秒
+            // ゆっくり（30秒）、薄く（0.25）ループ再生
+            uiView.startLoopingAnimation(duration: 30.0, opacity: 0.25)
         }
     }
     

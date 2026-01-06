@@ -120,12 +120,13 @@ public final class QuantumCircuitAnimationView: UIView {
         // ===== 第8層 =====
         GatePlacement(type: .cnotControl(target: 4), qubit: 0, xPosition: 0.40),
         GatePlacement(type: .cnotTarget, qubit: 4, xPosition: 0.40),
-        GatePlacement(type: .x, qubit: 2, xPosition: 0.40),
+        // Xゲートは x=0.40 (CNOT 0-4) と被るため 0.45 へ移動
         
         // ===== 第9層 =====
         GatePlacement(type: .t, qubit: 4, xPosition: 0.45),
         GatePlacement(type: .h, qubit: 1, xPosition: 0.45),
         GatePlacement(type: .s, qubit: 0, xPosition: 0.45),
+        GatePlacement(type: .x, qubit: 2, xPosition: 0.45), // Moved from 0.40
         
         // ===== 第10層 =====
         GatePlacement(type: .cnotControl(target: 3), qubit: 2, xPosition: 0.50),
@@ -140,12 +141,13 @@ public final class QuantumCircuitAnimationView: UIView {
         // ===== 第12層 =====
         GatePlacement(type: .cnotControl(target: 1), qubit: 4, xPosition: 0.60),
         GatePlacement(type: .cnotTarget, qubit: 1, xPosition: 0.60),
-        GatePlacement(type: .s, qubit: 2, xPosition: 0.60),
+        // Sゲートは x=0.60 (CNOT 4-1) と被るため 0.65 へ移動
         
         // ===== 第13層 =====
         GatePlacement(type: .t, qubit: 0, xPosition: 0.65),
         GatePlacement(type: .x, qubit: 1, xPosition: 0.65),
         GatePlacement(type: .h, qubit: 3, xPosition: 0.65),
+        GatePlacement(type: .s, qubit: 2, xPosition: 0.65), // Moved from 0.60
         
         // ===== 第14層 =====
         GatePlacement(type: .cnotControl(target: 2), qubit: 1, xPosition: 0.70),
@@ -200,75 +202,73 @@ public final class QuantumCircuitAnimationView: UIView {
     
     // MARK: - Animation
     
-    /// 回路アニメーション開始（ゆっくり流れる）
-    public func startAnimation(duration: TimeInterval = 3.0) {
+    // MARK: - Animation
+    
+    /// 回路アニメーション開始（無限ループ）
+    public func startLoopingAnimation(duration: TimeInterval = 20.0, opacity: Float = 0.3) {
         // クリーンアップ
         containerLayer?.removeFromSuperlayer()
         wireLayers.removeAll()
         gateLayers.removeAll()
+        layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         
-        // コンテナ作成（長い回路用）
-        let container = CALayer()
-        container.frame = CGRect(
-            x: bounds.width,
-            y: 0,
-            width: bounds.width * 3.5,  // 長い回路
-            height: bounds.height
-        )
-        layer.addSublayer(container)
-        containerLayer = container
+        // メインコンテナ（画面全体）
+        let mainContainer = CALayer()
+        mainContainer.frame = bounds
+        mainContainer.opacity = opacity
+        layer.addSublayer(mainContainer)
+        containerLayer = mainContainer
         
         // ワイヤー間隔
         wireSpacing = bounds.height / CGFloat(qubitCount + 1)
         
-        // 描画
-        drawWires(in: container)
-        placeGates(in: container)
-        drawCNOTConnections(in: container)
-        drawQubitLabels(in: container)
+        // ループ用に2つの回路レイヤーを作成して連結
+        // 回路の幅
+        let circuitWidth = bounds.width * 2.0 // 画面の2倍くらいの幅で作成
         
-        // フェードイン
-        container.opacity = 0
-        let fadeIn = CABasicAnimation(keyPath: "opacity")
-        fadeIn.fromValue = 0
-        fadeIn.toValue = 1
-        fadeIn.duration = 0.5
-        fadeIn.fillMode = .forwards
-        fadeIn.isRemovedOnCompletion = false
-        container.add(fadeIn, forKey: "fadeIn")
+        let layer1 = makeSingleCircuitLayer(width: circuitWidth)
+        let layer2 = makeSingleCircuitLayer(width: circuitWidth)
         
-        // 右から左へスライド
-        let slideAnimation = CABasicAnimation(keyPath: "position.x")
-        slideAnimation.fromValue = container.position.x
-        // 左端が画面中央を通過して左へ抜ける
-        slideAnimation.toValue = -container.bounds.width / 2
-        slideAnimation.duration = duration
-        slideAnimation.beginTime = CACurrentMediaTime() + 0.2
-        slideAnimation.timingFunction = CAMediaTimingFunction(name: .linear)
-        slideAnimation.fillMode = .forwards
-        slideAnimation.isRemovedOnCompletion = false
+        // 初期位置の設定
+        layer1.frame = CGRect(x: 0, y: 0, width: circuitWidth, height: bounds.height)
+        layer2.frame = CGRect(x: circuitWidth, y: 0, width: circuitWidth, height: bounds.height)
         
-        // ゲートが中央を通過するタイミングでコールバック発火
-        scheduleGatePassCallbacks(duration: duration)
+        mainContainer.addSublayer(layer1)
+        mainContainer.addSublayer(layer2)
         
-        // フェードアウト（最後）
-        let fadeOut = CABasicAnimation(keyPath: "opacity")
-        fadeOut.fromValue = 1
-        fadeOut.toValue = 0
-        fadeOut.duration = 0.4
-        fadeOut.beginTime = CACurrentMediaTime() + 0.2 + duration - 0.3
-        fadeOut.fillMode = .forwards
-        fadeOut.isRemovedOnCompletion = false
+        // アニメーション設定（無限ループ）
+        // 2つのレイヤーを同時に左へ動かす
+        let moveLeft = CABasicAnimation(keyPath: "position.x")
+        moveLeft.byValue = -circuitWidth
+        moveLeft.duration = duration
+        moveLeft.repeatCount = .infinity
+        moveLeft.timingFunction = CAMediaTimingFunction(name: .linear)
+        moveLeft.isRemovedOnCompletion = false
         
-        CATransaction.begin()
-        CATransaction.setCompletionBlock { [weak self] in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self?.onAnimationComplete?()
-            }
-        }
-        container.add(slideAnimation, forKey: "slide")
-        container.add(fadeOut, forKey: "fadeOut")
-        CATransaction.commit()
+        layer1.add(moveLeft, forKey: "loop")
+        layer2.add(moveLeft, forKey: "loop")
+    }
+    
+    /// 1回分の回路レイヤーを作成
+    private func makeSingleCircuitLayer(width: CGFloat) -> CALayer {
+        let container = CALayer()
+        container.frame = CGRect(x: 0, y: 0, width: width, height: bounds.height)
+        
+        // 描画メソッドはcontainerのboundsを使うか、引数で渡す必要があるが、
+        // 既存メソッドは `frame` を見ていないか、あるいは `bounds` を見ているか？
+        // drawWiresなどは `container` に追加するだけ。
+        // ただし `placeGates` でx位置を決める際、`width` が重要。
+        // 既存の `placeGates` は `bounds.width` (self.bounds.width) を参照している可能性がある。
+        // 確認して修正が必要なら修正する。
+        // ここでは一旦そのまま呼ぶ。
+        
+        drawWires(in: container, width: width)
+        placeGates(in: container, width: width)
+        drawCNOTConnections(in: container, width: width)
+        // qubitラベルは固定表示したいが、流れるなら一緒に流す
+        // drawQubitLabels(in: container) // ラベルも流す
+        
+        return container
     }
     
     /// ゲートが画面中央を通過するタイミングをスケジュール
@@ -305,13 +305,13 @@ public final class QuantumCircuitAnimationView: UIView {
         }
     }
     
-    private func drawWires(in container: CALayer) {
+    private func drawWires(in container: CALayer, width: CGFloat) {
         for i in 0..<qubitCount {
             let y = wireSpacing * CGFloat(i + 1)
             
             let path = UIBezierPath()
             path.move(to: CGPoint(x: 55, y: y))
-            path.addLine(to: CGPoint(x: container.bounds.width, y: y))
+            path.addLine(to: CGPoint(x: width, y: y))
             
             let wireLayer = CAShapeLayer()
             wireLayer.path = path.cgPath
@@ -324,9 +324,9 @@ public final class QuantumCircuitAnimationView: UIView {
         }
     }
     
-    private func placeGates(in container: CALayer) {
+    private func placeGates(in container: CALayer, width: CGFloat) {
         for placement in circuitLayout {
-            let x = container.bounds.width * placement.xPosition
+            let x = width * placement.xPosition
             let y = wireSpacing * CGFloat(placement.qubit + 1)
             
             let gateLayer = createGateLayer(type: placement.type, at: CGPoint(x: x, y: y))
@@ -435,9 +435,9 @@ public final class QuantumCircuitAnimationView: UIView {
         return container
     }
     
-    private func drawCNOTConnections(in container: CALayer) {
+    private func drawCNOTConnections(in container: CALayer, width: CGFloat) {
         for pair in cnotConnections {
-            let x = container.bounds.width * pair.xPos
+            let x = width * pair.xPos
             let y1 = wireSpacing * CGFloat(pair.control + 1)
             let y2 = wireSpacing * CGFloat(pair.target + 1)
             
