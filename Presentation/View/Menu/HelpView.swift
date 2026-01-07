@@ -374,11 +374,12 @@ struct HelpView: View {
 struct CoverFlowCarousel: View {
     let items: [LabContent]
     @Binding var centeredIndex: Int
+    @State private var scrolledID: Int?
     
     var body: some View {
         GeometryReader { fullGeo in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) { // Spacing handled by padding
+                HStack(spacing: 0) {
                     ForEach(0..<items.count, id: \.self) { index in
                         GeometryReader { geo in
                             let midX = geo.frame(in: .global).midX
@@ -386,7 +387,7 @@ struct CoverFlowCarousel: View {
                             let dist = midX - screenMidX
                             
                             // 3D Transforms
-                            let rotation = Double(dist / -10) // Tilt based on distance
+                            let rotation = Double(dist / -10)
                             let scale = 1.0 - abs(dist / fullGeo.size.width) * 0.3
                             
                             CoverFlowCard(content: items[index])
@@ -398,42 +399,37 @@ struct CoverFlowCarousel: View {
                                 .scaleEffect(scale)
                                 .opacity(1.0 - abs(dist / fullGeo.size.width) * 0.5)
                                 .onTapGesture {
-                                    withAnimation(.spring()) {
-                                        centeredIndex = index
+                                    withAnimation {
+                                        scrolledID = index
                                     }
                                 }
                         }
                         .frame(width: 160, height: 160)
+                        .id(index) // Essential for scrollPosition
                     }
                 }
-                .padding(.horizontal, (fullGeo.size.width - 160) / 2) // Center first item
+                .scrollTargetLayout()
             }
-            // Sync scrolling implies implementing a Snap logic, 
-            // which is hard with plain ScrollView in SwiftUI < version 17.
-            // Simplified: Use TabView for snapping, but with 3D effect applied inside.
-            // Or just rely on tapping for now.
-            // Let's switch to TabView-based Custom Carousel for reliable snapping
-            .disabled(true) // Disable manual scroll, use Overlay controls or DragGesture
-            .overlay(
-                // Simple gesture handler for swipe
-                Color.clear
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture()
-                            .onEnded { value in
-                                if value.translation.width < -50 {
-                                    withAnimation {
-                                        centeredIndex = min(items.count - 1, centeredIndex + 1)
-                                    }
-                                }
-                                if value.translation.width > 50 {
-                                    withAnimation {
-                                        centeredIndex = max(0, centeredIndex - 1)
-                                    }
-                                }
-                            }
-                    )
-            )
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $scrolledID)
+            .contentMargins(.horizontal, (fullGeo.size.width - 160) / 2, for: .scrollContent)
+            .onAppear {
+                if scrolledID == nil {
+                    scrolledID = centeredIndex
+                }
+            }
+            .onChange(of: scrolledID) { _, newValue in
+                if let val = newValue {
+                    centeredIndex = val
+                }
+            }
+            .onChange(of: centeredIndex) { _, newValue in
+                if scrolledID != newValue {
+                    withAnimation {
+                        scrolledID = newValue
+                    }
+                }
+            }
         }
     }
 }
