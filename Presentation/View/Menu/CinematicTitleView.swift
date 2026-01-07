@@ -1,24 +1,5 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Menu/CinematicTitleView.swift
-// 映画のような導入アニメーション付きタイトル画面
-
 import SwiftUI
 import simd
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Cinematic Title Screen（案B: 回路とブロッホ球の統合）
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// アニメーションフロー:
-//
-// 0秒: バイナリレイン開始 + ブロッホ球が中央に出現
-// 0.5秒: 量子回路が右→左へ流れる（2秒間）
-//        ゲートが球を通過するたびに状態ベクトルが回転
-// 2.5秒: 回路消失、「タップしてXゲートを適用」
-// タップ: ベクトルが南極へ移動
-// → メインメニューへ遷移
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// アニメーションフェーズ
 private enum TitlePhase: Equatable {
@@ -76,11 +57,11 @@ struct CinematicTitleView: View {
                             measureQuantumState(from: finalVector)
                         }
                     )
-                    .frame(width: 500, height: 500)
+                    .frame(width: 500, height: 550)
                     .scaleEffect(showBlochSphere ? 1.0 : 0.3)
                     .opacity(showBlochSphere ? 1.0 : 0)
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showBlochSphere)
-                    .zIndex(100)  // 最前面に表示
+                    .zIndex(100)
                 }
 
                 // Layer 4: タップ促進UI

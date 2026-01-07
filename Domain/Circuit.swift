@@ -40,9 +40,9 @@ public struct Circuit: Sendable {
         gates.remove(at: index)
     }
     
-    /// 最後のゲートを削除
+    /// 最後のゲートを削除（空の場合は何もしない）
     public mutating func removeLastGate() {
-        gates.removeLast()
+        _ = gates.popLast()
     }
     
     /// 全ゲートをクリア

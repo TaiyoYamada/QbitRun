@@ -178,14 +178,16 @@ struct GameView: View {
         
         if result.isCorrect {
             showSuccessEffect = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
                 showSuccessEffect = false
                 // 正解したら回路をクリア
                 circuitGates.removeAll()
             }
         } else {
             showFailureEffect = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
                 showFailureEffect = false
             }
             // ゲームオーバーの場合はViewのonChangeで処理

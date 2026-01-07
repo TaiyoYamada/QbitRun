@@ -81,6 +81,9 @@ public final class GameEngine {
     /// 問題生成器
     private let problemGenerator = ProblemGenerator()
     
+    /// 前回の問題キー（同じ問題の連続を防ぐ）
+    private var lastProblemKey: String?
+    
     /// 正解判定サービス
     private let judgeService = JudgeService()
     
@@ -192,7 +195,9 @@ public final class GameEngine {
     
     /// 新しい問題を生成
     private func generateNewProblem() {
-        currentProblem = problemGenerator.generateProblem(gameDifficulty: gameDifficulty, problemNumber: problemsSolved)
+        let result = problemGenerator.generateProblem(gameDifficulty: gameDifficulty, problemNumber: problemsSolved, lastProblemKey: lastProblemKey)
+        currentProblem = result.problem
+        lastProblemKey = result.problemKey
     }
     
     // MARK: - 回路操作

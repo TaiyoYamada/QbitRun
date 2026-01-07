@@ -21,8 +21,7 @@ struct ContentView: View {
                     MainMenuView(
                         onPlayGame: { navigationPath.append(AppRoute.difficultySelect) },
                         onShowRecords: { navigationPath.append(AppRoute.records) },
-                        onShowHelp: { navigationPath.append(AppRoute.help) },
-                        onBackToTitle: { navigationPath.removeLast() }
+                        onShowHelp: { navigationPath.append(AppRoute.help) }
                     )
                     .navigationBarBackButtonHidden(true)
                     

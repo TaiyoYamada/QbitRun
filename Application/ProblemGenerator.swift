@@ -64,26 +64,24 @@ public struct ProblemGenerator: Sendable {
         .t45, .t135, .t225, .t315       // 45度刻みの位相
     ]
     
-    /// 直前の問題を記録（同じ問題の連続を防ぐ）
-    private nonisolated(unsafe) static var lastProblemKey: String?
-    
     // MARK: - 問題生成
     
     /// 難易度に応じた問題を生成
     /// - Parameters:
     ///   - gameDifficulty: ゲーム難易度（Easy/Hard）
     ///   - problemNumber: 問題番号（0から増加）
-    public func generateProblem(gameDifficulty: GameDifficulty, problemNumber: Int) -> Problem {
-        return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber)
+    ///   - lastProblemKey: 前回の問題キー（同じ問題の連続を防ぐ）
+    public func generateProblem(gameDifficulty: GameDifficulty, problemNumber: Int, lastProblemKey: String? = nil) -> (problem: Problem, problemKey: String) {
+        return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, lastProblemKey: lastProblemKey)
     }
     
     // MARK: - ランダム問題生成
     
     /// ランダムな問題を生成
-    private func generateRandomProblem(gameDifficulty: GameDifficulty, problemNumber: Int, retryCount: Int = 0) -> Problem {
+    private func generateRandomProblem(gameDifficulty: GameDifficulty, problemNumber: Int, lastProblemKey: String?, retryCount: Int = 0) -> (problem: Problem, problemKey: String) {
         // 無限ループ防止
         guard retryCount < 50 else {
-            return createFallbackProblem(problemNumber: problemNumber)
+            return (createFallbackProblem(problemNumber: problemNumber), "fallback")
         }
         
         // 開始状態を決定
@@ -102,19 +100,16 @@ public struct ProblemGenerator: Sendable {
         
         // 同じ状態は避ける
         if startState.fidelity(with: targetState) > 0.99 {
-            return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, retryCount: retryCount + 1)
+            return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, lastProblemKey: lastProblemKey, retryCount: retryCount + 1)
         }
         
         // 直前と同じ問題（開始・終了ペア）を避ける
         let problemKey = "\(startState.probabilityZero)->\(targetState.probabilityZero)"
-        if let lastKey = ProblemGenerator.lastProblemKey, lastKey == problemKey {
-            return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, retryCount: retryCount + 1)
+        if let lastKey = lastProblemKey, lastKey == problemKey {
+            return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, lastProblemKey: lastProblemKey, retryCount: retryCount + 1)
         }
         
-        // 今回の問題を記録
-        ProblemGenerator.lastProblemKey = problemKey
-        
-        return Problem(
+        let problem = Problem(
             startState: startState,
             startBlochVector: BlochVector(from: startState),
             targetState: targetState,
@@ -123,6 +118,8 @@ public struct ProblemGenerator: Sendable {
             referenceSolution: [],
             difficulty: problemNumber
         )
+        
+        return (problem, problemKey)
     }
     
     /// フォールバック問題
