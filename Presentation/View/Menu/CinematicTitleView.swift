@@ -57,7 +57,7 @@ struct CinematicTitleView: View {
                             measureQuantumState(from: finalVector)
                         }
                     )
-                    .frame(width: 500, height: 550)
+                    .frame(width: 550, height: 550)
                     .scaleEffect(showBlochSphere ? 1.0 : 0.3)
                     .opacity(showBlochSphere ? 1.0 : 0)
                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showBlochSphere)
