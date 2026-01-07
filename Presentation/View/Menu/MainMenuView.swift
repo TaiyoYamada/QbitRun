@@ -14,6 +14,8 @@ struct MainMenuView: View {
     @State private var particleTrigger: UUID?
     @State private var nextAction: (() -> Void)?
     @State private var showContent = false
+    @State private var isEyesOpen = false // 初期は閉じている
+    @State private var showBlinkEffect = true
     
     // 背景のブロッホ球用ベクトル（自転アニメーションさせる）
     @State private var backgroundVector = BlochVector.plus
@@ -67,11 +69,27 @@ struct MainMenuView: View {
                     }
                 )
                 .allowsHitTesting(false)
+                // Layer 5: まぶた（Blink Effect）
+                if showBlinkEffect {
+                    EyelidView(isOpen: isEyesOpen)
+                        .zIndex(200)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) {
                 showContent = true
+            }
+            // 少し遅れて目を開く
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeInOut(duration: 0.8)) {
+                    isEyesOpen = true
+                }
+                // アニメーション完了後にViewを削除
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    showBlinkEffect = false
+                }
             }
             startBackgroundRotation()
         }

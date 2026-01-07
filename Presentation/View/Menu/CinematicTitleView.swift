@@ -23,6 +23,7 @@ struct CinematicTitleView: View {
     @State private var showBlochSphere: Bool = false
     @State private var showTapPrompt: Bool = false
     @State private var promptOpacity: Double = 1.0
+    @State private var isEyesClosed: Bool = false // まぶたの状態
 
     @State private var orbitActive: Bool = true  // 軌道アニメーション有効
     
@@ -68,13 +69,18 @@ struct CinematicTitleView: View {
                 if showTapPrompt && phase == .waitingTap {
                     VStack {
                         Spacer()
-                        Text("Tap to Measure Quantum State")
-                            .font(.custom("Optima-Bold", size: 40))
+                        Text("TAP TO OBSERVE")
+                            .font(.custom("Optima-Bold", size: 45))
                     }
                     .foregroundColor(.white)
                     .opacity(promptOpacity)
                     .padding(.bottom, 100)
                 }
+                
+                // Layer 5: まぶた（Blink Effect）
+                // 初期状態は開いている。タップ後に閉じる。
+                EyelidView(isOpen: !isEyesClosed)
+                    .zIndex(200)
             }
         }
         .onTapGesture {
@@ -118,11 +124,16 @@ struct CinematicTitleView: View {
         phase = .applyingGate
         showTapPrompt = false
         
-        // 軌道アニメーションを停止（これによりonOrbitStopが呼ばれ、measureQuantumStateが実行される）
+        // 軌道アニメーションを停止
         orbitActive = false
         
-        // メニュー遷移
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        // まぶたを閉じる（アニメーション時間 0.8秒に合わせて遷移）
+        withAnimation(.easeInOut(duration: 0.8)) {
+            isEyesClosed = true
+        }
+        
+        // 完全に閉じた後に画面遷移
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) {
             phase = .transition
             onStart()
         }
