@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Component/GlassButton.swift
-// グラスモーフィズムスタイルのボタンコンポーネント
-
 import SwiftUI
 
 /// グラスモーフィズムボタン（回転するグラデーションボーダー）

@@ -1,27 +1,4 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Game/GatePaletteView.swift
-// 量子ゲートのパレット（ドラッグ元）
-
 import UIKit
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// デリゲートパターンとは？
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// SwiftUIでは親Viewが子のイベントを@Bindingやclosureで受け取るが、
-// UIKitでは「デリゲート（delegate）」パターンを使う：
-//
-// 1. protocol でイベント通知メソッドを定義
-// 2. イベント発生元（この場合GatePaletteView）が delegate?.method() を呼ぶ
-// 3. イベント受信側（GameViewController）が protocol に準拠して処理
-//
-// SwiftUI               UIKit
-// ─────────────────────────────────────────────────────────────────
-// @Binding var value    weak var delegate: Delegate?
-// onChange { }          delegate?.valueDidChange()
-// action closure        protocol + delegate pattern
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━
 
 /// ゲート選択イベントを通知するデリゲート
 @MainActor

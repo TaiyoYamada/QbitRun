@@ -1,34 +1,6 @@
-// SPDX-License-Identifier: MIT
-// Domain/QuantumState.swift
-// 量子状態を表す純粋なドメインモデル
-
 import Foundation
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 量子ビットとは？
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// 古典ビット: 0 または 1 のどちらか一方
-// 量子ビット: |0⟩ と |1⟩ の「重ね合わせ」状態が可能
-//
-// 量子状態は次の形で表される:
-//   |ψ⟩ = α|0⟩ + β|1⟩
-//
-// ここで:
-//   α, β = 複素数（Complex）の確率振幅
-//   |α|² + |β|² = 1（正規化条件）
-//   |α|² = |0⟩ を観測する確率
-//   |β|² = |1⟩ を観測する確率
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 // MARK: - 複素数
-
-/// 複素数を表す構造体
-/// 量子力学では確率振幅が複素数なので必須
-///
-/// 複素数: a + bi の形（i は虚数単位、i² = -1）
-/// 例: 3 + 4i → real = 3, imaginary = 4
 public struct Complex: Sendable, Equatable {
     /// 実部（Real part）
     public let real: Double
@@ -116,12 +88,6 @@ extension Complex {
 
 // MARK: - 量子状態
 
-/// 1量子ビットの量子状態を表す
-/// |ψ⟩ = α|0⟩ + β|1⟩
-///
-/// この構造体は以下を保証する:
-/// - 常に正規化されている（|α|² + |β|² = 1）
-/// - Sendable準拠でスレッドセーフ
 public struct QuantumState: Sendable, Equatable {
     /// |0⟩ の確率振幅
     public let alpha: Complex
@@ -261,10 +227,6 @@ public struct QuantumState: Sendable, Equatable {
     }
     
     /// フィデリティ（忠実度）を計算: |⟨self|other⟩|²
-    /// - 1.0: 完全一致（同じ状態）
-    /// - 0.0: 直交（まったく異なる状態）
-    ///
-    /// ゲームでは「ターゲット状態にどれだけ近いか」を判定するのに使用
     public func fidelity(with other: QuantumState) -> Double {
         innerProduct(with: other).magnitudeSquared
     }

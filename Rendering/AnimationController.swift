@@ -1,44 +1,9 @@
-// SPDX-License-Identifier: MIT
-// Rendering/AnimationController.swift
-// Core Animationを使ったアニメーション効果
-
 import UIKit
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Core Animation とは？
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// UIKitのビューの下で動く低レベルアニメーションフレームワーク
-//
-// SwiftUI                    Core Animation
-// ─────────────────────────────────────────────────────────────────
-// .animation()              CABasicAnimation
-// .transition()             CATransition
-// withAnimation { }         CATransaction.begin() / commit()
-// ParticleEmitter          CAEmitterLayer
-//
-// 主要クラス:
-// - CALayer: ビューの描画を担当（UIView.layerでアクセス）
-// - CABasicAnimation: 単純なプロパティアニメーション
-// - CAKeyframeAnimation: キーフレームアニメーション
-// - CAEmitterLayer: パーティクルエミッター
-// - CAAnimationGroup: 複数アニメーションのグループ化
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-/// Core Animationを使ったアニメーション効果を提供
 /// ゲームのフィードバック（成功エフェクト等）で使用
 @MainActor
 public final class AnimationController {
     
-    // MARK: - 成功エフェクト
-    
-    /// パーティクルバーストエフェクト
-    /// 正解時に発生する粒子の爆発
-    ///
-    /// - Parameters:
-    ///   - layer: パーティクルを追加するレイヤー
-    ///   - position: 発生位置
     public static func createSuccessEffect(in layer: CALayer, at position: CGPoint) {
         // CAEmitterLayer: パーティクルを発生させるレイヤー
         let emitterLayer = CAEmitterLayer()

@@ -1,9 +1,5 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Menu/HelpView.swift
-// Quantum Lab 2.0 (Interactive CoverFlow)
-
 import SwiftUI
-import UIKit // Keep for fallback if needed, but Image(_ resource:) should work now
+import UIKit
 
 // MARK: - Models
 

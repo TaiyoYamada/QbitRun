@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Menu/DifficultySelectView.swift
-// 難易度選択画面
-
 import SwiftUI
 
 /// 難易度選択画面

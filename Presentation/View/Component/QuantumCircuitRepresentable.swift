@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Component/QuantumCircuitRepresentable.swift
-
 import SwiftUI
 import UIKit
 

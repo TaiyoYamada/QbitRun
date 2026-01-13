@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Component/ParticleEffectRepresentable.swift
-// パーティクルエフェクトのSwiftUIラッパー
-
 import SwiftUI
 import UIKit
 

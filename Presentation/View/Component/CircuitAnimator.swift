@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Component/CircuitAnimator.swift
-// 低レベルAPIを使用した派手なアニメーション
-
 import UIKit
 
 /// 回路アニメーションを管理

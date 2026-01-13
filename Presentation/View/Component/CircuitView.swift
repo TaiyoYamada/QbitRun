@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Component/CircuitView.swift
-// 量子回路ビュー（ワイヤーベースデザイン）
-
 import UIKit
 import UniformTypeIdentifiers
 

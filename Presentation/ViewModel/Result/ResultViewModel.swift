@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/ViewModel/Result/ResultViewModel.swift
-// リザルト画面のViewModel
-
 import Foundation
 
 /// リザルト画面のViewModel

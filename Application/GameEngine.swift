@@ -1,5 +1,3 @@
-// ゲームのコアロジック（タイマー、スコア、状態管理）
-
 import Foundation
 
 public enum GameState: Sendable {

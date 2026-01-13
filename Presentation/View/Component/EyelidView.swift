@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Component/EyelidView.swift
-// まぶたの開閉アニメーション（Blink Effect）
-
 import SwiftUI
 
 /// 目の開口部（アパーチャ）の形状

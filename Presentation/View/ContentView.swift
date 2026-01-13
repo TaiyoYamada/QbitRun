@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/ContentView.swift
-// ルートコンテンツビュー（ナビゲーション管理）
-
 import SwiftUI
 
 /// ルートコンテンツビュー

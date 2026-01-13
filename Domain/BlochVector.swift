@@ -38,12 +38,6 @@ public struct BlochVector: Sendable, Equatable {
     /// 量子状態からブロッホベクトルへ変換
     /// これが最も重要な変換関数
     public init(from state: QuantumState) {
-        // ブロッホベクトルの各成分を計算
-        // 公式:
-        //   x = 2 * Re(α*β)  = 2 * (αr*βr + αi*βi)
-        //   y = 2 * Im(α*β)  = 2 * (αr*βi - αi*βr)
-        //   z = |α|² - |β|²
-        
         let alpha = state.alpha
         let beta = state.beta
         
