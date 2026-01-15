@@ -17,19 +17,40 @@ struct SwiftUIGatePaletteView: View {
                     onGateSelected(gate)
                 } label: {
                     Text(gate.symbol)
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.custom("Optima-Bold", size: 28))
                         .foregroundStyle(.white)
                         .frame(width: 56, height: 56)
-                        .background(gate.swiftUIColor)
+                        .background(
+                            ZStack {
+                                gate.swiftUIColor
+                                
+                                // Internal gradient/shine for gem-like effect
+                                LinearGradient(
+                                    colors: [.white.opacity(0.4), .clear],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            }
+                        )
                         .clipShape(Circle())
+                        .shadow(color: gate.swiftUIColor.opacity(0.6), radius: 8, x: 0, y: 0)
+                        .overlay(
+                            Circle()
+                                .stroke(.white.opacity(0.6), lineWidth: 1)
+                        )
                 }
                 .buttonStyle(GateButtonStyle())
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(.white.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(.white.opacity(0.1), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 

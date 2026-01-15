@@ -26,13 +26,7 @@ public struct JudgeService: Sendable {
     private let fidelityThreshold: Double = 0.95
     
     // MARK: - 判定
-    
-    /// 回路を判定
-    /// - Parameters:
-    ///   - playerCircuit: プレイヤーが作った回路
-    ///   - startState: 開始の量子状態
-    ///   - targetState: 目標の量子状態
-    /// - Returns: 判定結果
+
     public func judge(playerCircuit: Circuit, startState: QuantumState, targetState: QuantumState) -> JudgeResult {
         // 開始状態に回路を適用
         let resultState = playerCircuit.apply(to: startState)
