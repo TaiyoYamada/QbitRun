@@ -128,21 +128,16 @@ struct HelpView: View {
     var body: some View {
         ZStack {
             // 1. Deep Space Background
-            Color.black.ignoresSafeArea()
+            StandardBackgroundView(showGrid: true, circuitOpacity: 0.2)
             
-            // Starfield or Particles (Custom view or simple effect)
-            RandomStarField() // Simple star effect
+            // Starfield (Keeping as layer 2)
+            RandomStarField() 
             
             VStack(spacing: 0) {
                 // 2. Holographic Display Area (Top Half)
                 ZStack {
-                    // Grid Floor (Perspective)
-                    VStack {
-                        Spacer()
-                        PerspectiveGrid()
-                            .frame(height: 200)
-                            .opacity(0.3)
-                    }
+                    // Grid Floor (Perspective) - REMOVED for cleaner look
+
                     
                     // Main Visual (Image or Bloch Sphere)
                     mainVisualArea

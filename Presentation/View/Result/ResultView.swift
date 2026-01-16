@@ -16,6 +16,11 @@ struct ResultView: View {
     /// メニューに戻る
     let onReturnToMenu: () -> Void
     
+    // アニメーション用State
+    @State private var showContent = false
+    @State private var scoreCount = 0
+    @State private var particleTrigger: UUID?
+    
     // MARK: - 初期化
     
     init(score: ScoreEntry, scoreRepository: ScoreRepository, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
@@ -26,81 +31,206 @@ struct ResultView: View {
     
     var body: some View {
         ZStack {
-            // 背景グラデーション
-            // 背景グラデーション
-            Color.black.ignoresSafeArea()
+            // MARK: - Layer 1: Background
+            StandardBackgroundView(showGrid: true, circuitOpacity: 0)
             
-            VStack(spacing: 0) {
-                Spacer()
-                    .frame(height: 60)
+            // Layer 2: Particle Effect (Celebration)
+            if scoreCount > 0 {
+                ParticleEffectRepresentable(
+                    trigger: $particleTrigger,
+                    targetCenter: CGPoint(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2),
+                    onComplete: {}
+                )
+                .allowsHitTesting(false)
+            }
+            
+            // MARK: - Layer 3: Main Content
+            VStack(spacing: 30) {
                 
-                // Time's Up!
-                Text("Time's Up!")
-                    .font(.system(size: 36, weight: .bold))
+                // Header: "MISSION ACCOMPLISHED"
+                Text("MISSION COMPLETE")
+                    .font(.custom("Optima-Bold", size: 48))
                     .foregroundStyle(.white)
+                    .shadow(color: .cyan.opacity(0.8), radius: 10, x: 0, y: 0)
+                    .scaleEffect(showContent ? 1.0 : 0.8)
+                    .opacity(showContent ? 1.0 : 0)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: showContent)
                 
-                // スコア（大きな数字）
-                Text("\(viewModel.score.score)")
-                    .font(.system(size: 64, weight: .bold))
-                    .foregroundStyle(Color(red: 0.6, green: 0.4, blue: 1.0))
-                    .padding(.top, 16)
-                
-                // 統計情報
-                Text("Problems Solved: \(viewModel.score.problemsSolved)\nBonus Points: \(viewModel.score.bonusPoints)")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 12)
-                
-                // ランキング順位
-                if let rank = viewModel.rank {
-                    Text("🏆 Rank #\(rank)")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color(red: 1.0, green: 0.8, blue: 0.2))
-                        .padding(.top, 16)
-                }
-                
-                // Play Againボタン
-                Button(action: {
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
-                    onPlayAgain()
-                }) {
-                    Text("Play Again")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 180, height: 50)
-                        .background(Color(red: 0.4, green: 0.2, blue: 0.8))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-                .buttonStyle(ScaleButtonStyle())
-                .padding(.top, 32)
-                
-                // Menuボタン
-                Button(action: {
-                    let generator = UIImpactFeedbackGenerator(style: .light)
-                    generator.impactOccurred()
-                    onReturnToMenu()
-                }) {
-                    Text("Menu")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.8))
-                        .frame(width: 180, height: 50)
-                        .background(.white.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                // Score Card (Glassmorphism)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(.ultraThinMaterial)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(.white.opacity(0.3), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.cyan.opacity(0.6), .purple.opacity(0.6)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
                         )
+                        .shadow(color: .cyan.opacity(0.2), radius: 20)
+                    
+                    VStack(spacing: 16) {
+                        Text("TOTAL SCORE")
+                            .font(.custom("Optima-Bold", size: 16))
+                            .tracking(2)
+                            .foregroundStyle(.white.opacity(0.7))
+                        
+                        Text("\(scoreCount)")
+                            .font(.custom("Optima-Bold", size: 80))
+                            .monospacedDigit()
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.white, .cyan],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .shadow(color: .cyan.opacity(0.5), radius: 10)
+                            .contentTransition(.numericText())
+                        
+                        // Rank Badge
+                        if let rank = viewModel.rank {
+                            HStack(spacing: 8) {
+                                Image(systemName: "trophy.fill")
+                                    .foregroundStyle(.yellow)
+                                Text("RANK #\(rank)")
+                                    .font(.custom("Optima-Bold", size: 24))
+                                    .foregroundStyle(.yellow)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .background(Color.yellow.opacity(0.2))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(.yellow.opacity(0.5), lineWidth: 1))
+                        } else {
+                             Text("Keep Trying for Top 5!")
+                                .font(.custom("Optima-Regular", size: 14))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                        
+                        // Details Grid
+                        HStack(spacing: 40) {
+                            detailItem(label: "PROBLEMS", value: "\(viewModel.score.problemsSolved)")
+                            detailItem(label: "BONUS", value: "\(viewModel.score.bonusPoints)")
+                        }
+                        .padding(.top, 8)
+                    }
+                    .padding(40)
                 }
-                .buttonStyle(ScaleButtonStyle())
-                .padding(.top, 12)
+                .frame(width: 500)
+                .scaleEffect(showContent ? 1.0 : 0.9)
+                .opacity(showContent ? 1.0 : 0)
+                .animation(.spring(response: 0.7, dampingFraction: 0.8).delay(0.2), value: showContent)
                 
-                Spacer()
+                // Action Buttons
+                HStack(spacing: 30) {
+                    ResultActionButton(
+                        title: "RETURN TO BASE",
+                        icon: "house.fill",
+                        color: .gray,
+                        action: onReturnToMenu
+                    )
+                    
+                    ResultActionButton(
+                        title: "RETRY MISSION",
+                        icon: "arrow.clockwise",
+                        color: .cyan,
+                        action: onPlayAgain
+                    )
+                }
+                .opacity(showContent ? 1.0 : 0)
+                .offset(y: showContent ? 0 : 20)
+                .animation(.easeOut(duration: 0.5).delay(0.6), value: showContent)
             }
         }
         .task {
+            // データロードとアニメーション開始
             await viewModel.loadResults()
+            
+            withAnimation {
+                showContent = true
+            }
+            
+            // スコアのカウントアップ
+            let totalScore = viewModel.score.score
+            let duration = 1.5
+            let steps = 30
+            let stepDelay = duration / Double(steps)
+            let stepValue = totalScore / steps
+            
+            for i in 0...steps {
+                try? await Task.sleep(nanoseconds: UInt64(stepDelay * 1_000_000_000))
+                if i == steps {
+                    scoreCount = totalScore
+                    particleTrigger = UUID() // 完了時に花吹雪
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.notificationOccurred(.success)
+                } else {
+                    scoreCount = stepValue * i
+                    let generator = UIImpactFeedbackGenerator(style: .light)
+                    generator.impactOccurred()
+                }
+            }
+        }
+    }
+    
+    private func detailItem(label: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.custom("Optima-Regular", size: 12))
+                .foregroundStyle(.white.opacity(0.6))
+            Text(value)
+                .font(.custom("Optima-Bold", size: 24))
+                .foregroundStyle(.white)
+        }
+    }
+}
+
+/// Result画面専用のアクションボタン
+struct ResultActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    @State private var isHovering = false
+    
+    var body: some View {
+        Button(action: {
+            // Haptic
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            action()
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .bold))
+                Text(title)
+                    .font(.custom("Optima-Bold", size: 16))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(color.opacity(isHovering ? 0.4 : 0.2))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(color.opacity(0.5), lineWidth: 1)
+            )
+            .scaleEffect(isHovering ? 1.05 : 1.0)
+            .shadow(color: color.opacity(isHovering ? 0.5 : 0), radius: 10)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onHover { hover in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovering = hover
+            }
         }
     }
 }
@@ -109,9 +239,10 @@ struct ResultView: View {
 
 #Preview("リザルト画面") {
     ResultView(
-        score: ScoreEntry(score: 1500, problemsSolved: 8, bonusPoints: 300),
+        score: ScoreEntry(score: 1560, problemsSolved: 12, bonusPoints: 360),
         scoreRepository: ScoreRepository(),
         onPlayAgain: { },
         onReturnToMenu: { }
     )
+    .preferredColorScheme(.dark)
 }

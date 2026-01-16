@@ -17,19 +17,8 @@ struct GameView: View {
     var body: some View {
         ZStack {
             // MARK: - Layer 1: Background
-            Color.black.ignoresSafeArea()
-            
-
-            
-            // Subtle Radial Gradient for depth
-            RadialGradient(
-                colors: [Color.blue.opacity(0.1), Color.black],
-                center: .center,
-                startRadius: 100,
-                endRadius: 800
-            )
-            .ignoresSafeArea()
-            .allowsHitTesting(false)
+            // MARK: - Layer 1: Background
+            StandardBackgroundView(showGrid: false, circuitOpacity: 0)
 
             // MARK: - Layer 2: Main Content
             VStack(spacing: 0) {
