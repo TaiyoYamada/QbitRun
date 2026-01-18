@@ -52,24 +52,7 @@ struct MainMenuView: View {
                 .opacity(showContent ? 1 : 0)
                 .offset(x: showContent ? 0 : -50)
                 
-                // Layer 4: Particle Effect
-                // 画面中央（またはブロッホ球の中心）に向かって収束
-                ParticleEffectRepresentable(
-                    trigger: $particleTrigger,
-                    targetCenter: CGPoint(
-                        x: geometry.size.width * 0.75, // 右側のブロッホ球あたり
-                        y: geometry.size.height * 0.6
-                    ),
-                    onComplete: {
-                        // エフェクト完了後に画面遷移
-                        nextAction?()
-                        // 状態リセット
-                        nextAction = nil
-                        particleTrigger = nil
-                    }
-                )
-                .allowsHitTesting(false)
-                // Layer 5: まぶた（Blink Effect）
+                // Layer 4: まぶた（Blink Effect）
                 if showBlinkEffect {
                     EyelidView(isOpen: isEyesOpen)
                         .zIndex(200)
@@ -190,17 +173,11 @@ struct MainMenuView: View {
     // MARK: - Logic
     
     private func triggerTransition(action: @escaping () -> Void) {
-        // 連打防止
-        guard particleTrigger == nil else { return }
-        
-        // アクションを保持
-        nextAction = action
-        
         // 触感フィードバック
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         
-        // エフェクト発火
-        particleTrigger = UUID()
+        // 直接アクション実行
+        action()
     }
     
     /// 背景の惑星（ブロッホ球）をゆっくり自転させる

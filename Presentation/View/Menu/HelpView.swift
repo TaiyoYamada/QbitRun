@@ -189,11 +189,11 @@ struct HelpView: View {
                 .zIndex(1) // Above floor
             }
         }
-        .onChange(of: centeredIndex) { _ in
+        .onChange(of: centeredIndex) { oldValue, newValue in
             triggerHaptic()
             playSimulation()
         }
-        .onChange(of: currentMode) { _ in
+        .onChange(of: currentMode) {oldValue, newValue in
             centeredIndex = 0
             playSimulation()
         }
@@ -513,8 +513,8 @@ struct PerspectiveGrid: View {
         )
     }
 }
-
-#Preview("Quantum Lab 2.0") {
-    HelpView(onBack: {})
-        .preferredColorScheme(.dark)
-}
+//
+//#Preview("Quantum Lab 2.0") {
+//    HelpView(onBack: {})
+//        .preferredColorScheme(.dark)
+//}

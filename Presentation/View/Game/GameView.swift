@@ -123,46 +123,47 @@ struct GameView: View {
         }
     }
     
-    // MARK: - ブロッホ球表示
+    // MARK: - ブロッホ球表示（統合ビュー）
     
     private var spheresSection: some View {
-        HStack(spacing: 40) {
-            // 現在の状態
-            VStack(spacing: 8) {
-                    BlochSphereViewRepresentable(
-                        vector: viewModel.currentVector,
-                        animated: true,
-                        showBackground: false
-                    )
-                    .frame(width: 320, height: 320)
-
-                Text("CURRENT")
-                    .font(.custom("Optima-Bold", size: 18))
-                    .tracking(2)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .shadow(color: .white.opacity(0.2), radius: 2)
-            }
+        VStack(spacing: 12) {
+            // 単一のブロッホ球で現在とターゲットを同時表示
+            BlochSphereViewRepresentable(
+                vector: viewModel.currentVector,
+                animated: true,
+                targetVector: viewModel.targetVector,  // ゴースト表示
+                showBackground: false
+            )
+            .frame(width: 400, height: 400)
             
-            // 矢印
-            Image(systemName: "arrow.right")
-                .font(.system(size: 40, weight: .light))
-                .foregroundStyle(.white.opacity(0.3))
-            
-            // ターゲット状態
-            VStack(spacing: 8) {
-                    BlochSphereViewRepresentable(
-                        vector: viewModel.targetVector,
-                        animated: true,
-                        showBackground: false
-                    )
-                    .frame(width: 320, height: 320)
-
-                Text("TARGET")
-                    .font(.custom("Optima-Bold", size: 18))
-                    .tracking(2)
-                    .foregroundStyle(.yellow.opacity(0.8))
-                    .shadow(color: .yellow.opacity(0.2), radius: 2)
+            // 凡例
+            HStack(spacing: 32) {
+                // 現在の状態（赤）
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
+                        .frame(width: 12, height: 12)
+                    Text("CURRENT")
+                        .font(.custom("Optima-Bold", size: 14))
+                        .tracking(1)
+                        .foregroundStyle(.white.opacity(0.8))
+                }
+                
+                // ターゲット状態（金）
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
+                        .frame(width: 12, height: 12)
+                    Text("TARGET")
+                        .font(.custom("Optima-Bold", size: 14))
+                        .tracking(1)
+                        .foregroundStyle(.yellow.opacity(0.8))
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial.opacity(0.5))
+            .clipShape(Capsule())
         }
         .padding(.vertical, 10)
     }

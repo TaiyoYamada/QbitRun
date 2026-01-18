@@ -49,11 +49,19 @@ public final class BlochSphereView: UIView {
     private var stateVectorVertexCount: Int = 0
     private var uniformBuffer: MTLBuffer?
     
+    // MARK: - ゴーストターゲット用
+    
+    private var ghostTargetBuffer: MTLBuffer?
+    private var ghostTargetVertexCount: Int = 0
+    
     // MARK: - 表示状態
     
     private var currentBlochVector: BlochVector = .zero
-    private var targetBlochVector: BlochVector?
+    private var animatingToVector: BlochVector?  // アニメーション中の目標
     private var animationProgress: Float = 1.0
+    
+    /// ゲーム上のターゲット状態（ゴースト表示用）
+    private var displayTargetVector: BlochVector?
     private var cameraYaw: Float = 0.5
     private var cameraPitch: Float = 0.35
     
@@ -572,16 +580,100 @@ public final class BlochSphereView: UIView {
     
     public func setVector(_ vector: BlochVector, animated: Bool) {
         if animated && animationProgress >= 1.0 {
-            targetBlochVector = vector
+            animatingToVector = vector
             animationProgress = 0.0
         } else {
             currentBlochVector = vector
-            targetBlochVector = nil
+            animatingToVector = nil
             animationProgress = 1.0
             updateStateVectorBuffer(vector: vector)
         }
     }
     
+    /// ゲームのターゲット状態を設定（ゴースト表示用）
+    public func setTargetVector(_ vector: BlochVector?) {
+        displayTargetVector = vector
+        updateGhostTargetBuffer()
+    }
+    
+    // MARK: - ゴーストターゲットバッファ
+    
+    private func updateGhostTargetBuffer() {
+        guard let device = device, let target = displayTargetVector else {
+            ghostTargetVertexCount = 0
+            return
+        }
+        
+        var vertices: [BlochVertex] = []
+        // 金色半透明（ゴースト表示）
+        let ghostColor = simd_float4(1.0, 0.85, 0.2, 0.45)
+        let targetPos = target.float3
+        let length = simd_length(targetPos)
+        
+        guard length > 0.001 else {
+            ghostTargetVertexCount = 0
+            return
+        }
+        
+        let direction = simd_normalize(targetPos)
+        
+        // 少し細めのゴースト矢印
+        let cylinderRadius: Float = 0.025
+        let coneRadius: Float = 0.04
+        let coneLength: Float = 0.15
+        let segments = 12
+        
+        let cylinderEnd = targetPos - direction * coneLength
+        
+        var perp1 = simd_cross(direction, simd_float3(0, 0, 1))
+        if simd_length(perp1) < 0.001 {
+            perp1 = simd_cross(direction, simd_float3(1, 0, 0))
+        }
+        perp1 = simd_normalize(perp1)
+        let perp2 = simd_normalize(simd_cross(direction, perp1))
+        
+        // 円柱
+        for i in 0..<segments {
+            let angle1 = Float(i) * 2.0 * .pi / Float(segments)
+            let angle2 = Float(i + 1) * 2.0 * .pi / Float(segments)
+            
+            let offset1 = (perp1 * cos(angle1) + perp2 * sin(angle1)) * cylinderRadius
+            let offset2 = (perp1 * cos(angle2) + perp2 * sin(angle2)) * cylinderRadius
+            
+            let normal1 = simd_normalize(perp1 * cos(angle1) + perp2 * sin(angle1))
+            let normal2 = simd_normalize(perp1 * cos(angle2) + perp2 * sin(angle2))
+            
+            vertices.append(BlochVertex(position: offset1, normal: normal1, color: ghostColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset1, normal: normal1, color: ghostColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: normal2, color: ghostColor))
+            
+            vertices.append(BlochVertex(position: offset1, normal: normal1, color: ghostColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: normal2, color: ghostColor))
+            vertices.append(BlochVertex(position: offset2, normal: normal2, color: ghostColor))
+        }
+        
+        // 円錐
+        for i in 0..<segments {
+            let angle1 = Float(i) * 2.0 * .pi / Float(segments)
+            let angle2 = Float(i + 1) * 2.0 * .pi / Float(segments)
+            
+            let offset1 = (perp1 * cos(angle1) + perp2 * sin(angle1)) * coneRadius
+            let offset2 = (perp1 * cos(angle2) + perp2 * sin(angle2)) * coneRadius
+            
+            let coneNormal1 = simd_normalize(offset1 + direction * coneRadius)
+            let coneNormal2 = simd_normalize(offset2 + direction * coneRadius)
+            let tipNormal = simd_normalize(coneNormal1 + coneNormal2)
+            
+            vertices.append(BlochVertex(position: targetPos, normal: tipNormal, color: ghostColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset1, normal: coneNormal1, color: ghostColor))
+            vertices.append(BlochVertex(position: cylinderEnd + offset2, normal: coneNormal2, color: ghostColor))
+        }
+        
+        ghostTargetVertexCount = vertices.count
+        ghostTargetBuffer = device.makeBuffer(bytes: vertices, length: vertices.count * MemoryLayout<BlochVertex>.stride, options: .storageModeShared)
+    }
+    
+
     // MARK: - 描画
     
     func draw(in view: MTKView) {
@@ -602,13 +694,14 @@ public final class BlochSphereView: UIView {
             currentBlochVector = BlochVector(simd_double3(x, y, z))
             updateStateVectorBuffer(vector: currentBlochVector)
         }
-        // 通常のアニメーション更新（setVectorで設定された場合）
-        else if let target = targetBlochVector, animationProgress < 1.0 {
-            animationProgress += 0.08
+        // 通常のアニメーション更新（setVectorで設定された場合）- スローモーション
+        else if let target = animatingToVector, animationProgress < 1.0 {
+            // アニメーション速度を遅く（0.08 -> 0.02）して動きを見やすく
+            animationProgress += 0.02
             if animationProgress >= 1.0 {
                 animationProgress = 1.0
                 currentBlochVector = target
-                targetBlochVector = nil
+                animatingToVector = nil
             } else {
                 let t = animationProgress
                 let currentV = currentBlochVector.vector * Double(1 - t)
@@ -650,7 +743,15 @@ public final class BlochSphereView: UIView {
             encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: axisVertexCount)
         }
         
-        // 状態ベクトルを描画（3D形状）
+        
+        // ゴーストターゲットベクトルを描画（半透明金色）
+        if let pipeline = solidPipeline, let buffer = ghostTargetBuffer, ghostTargetVertexCount > 0 {
+            encoder.setRenderPipelineState(pipeline)
+            encoder.setVertexBuffer(buffer, offset: 0, index: 0)
+            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: ghostTargetVertexCount)
+        }
+        
+        // 状態ベクトルを描画（3D形状・メインの赤い矢印）
         if let pipeline = solidPipeline, let buffer = stateVectorBuffer, stateVectorVertexCount > 0 {
             encoder.setRenderPipelineState(pipeline)
             encoder.setVertexBuffer(buffer, offset: 0, index: 0)
@@ -745,6 +846,7 @@ private final class BlochRenderDelegate: NSObject, MTKViewDelegate {
 struct BlochSphereViewRepresentable: UIViewRepresentable {
     var vector: BlochVector
     var animated: Bool
+    var targetVector: BlochVector? = nil  // ゴースト表示用のターゲット
     var showBackground: Bool = true
     var showAxes: Bool = true
     var showAxisLabels: Bool = true
@@ -768,7 +870,10 @@ struct BlochSphereViewRepresentable: UIViewRepresentable {
         uiView.showAxisLabels = showAxisLabels
         uiView.continuousOrbitAnimation = continuousOrbitAnimation
         uiView.backgroundPadding = backgroundPadding
-        uiView.onOrbitStop = onOrbitStop  // コールバックを設定
+        uiView.onOrbitStop = onOrbitStop
+        
+        // ゴーストターゲットを設定
+        uiView.setTargetVector(targetVector)
         
         if !continuousOrbitAnimation {
             uiView.setVector(vector, animated: animated)
