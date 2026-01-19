@@ -19,7 +19,6 @@ struct ResultView: View {
     // アニメーション用State
     @State private var showContent = false
     @State private var scoreCount = 0
-    @State private var particleTrigger: UUID?
     
     // MARK: - 初期化
     
@@ -31,20 +30,10 @@ struct ResultView: View {
     
     var body: some View {
         ZStack {
-            // MARK: - Layer 1: Background
+            // MARK: - Layer 1: Background（回路アニメーション無効）
             StandardBackgroundView(showGrid: true, circuitOpacity: 0)
             
-            // Layer 2: Particle Effect (Celebration)
-            if scoreCount > 0 {
-                ParticleEffectRepresentable(
-                    trigger: $particleTrigger,
-                    targetCenter: CGPoint(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2),
-                    onComplete: {}
-                )
-                .allowsHitTesting(false)
-            }
-            
-            // MARK: - Layer 3: Main Content
+            // MARK: - Layer 2: Main Content
             VStack(spacing: 30) {
                 
                 // Header: "MISSION ACCOMPLISHED"
@@ -166,7 +155,6 @@ struct ResultView: View {
                 try? await Task.sleep(nanoseconds: UInt64(stepDelay * 1_000_000_000))
                 if i == steps {
                     scoreCount = totalScore
-                    particleTrigger = UUID() // 完了時に花吹雪
                     let generator = UINotificationFeedbackGenerator()
                     generator.notificationOccurred(.success)
                 } else {
