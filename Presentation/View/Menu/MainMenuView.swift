@@ -215,8 +215,6 @@ struct MenuButtonCard: View {
     let color: Color
     let action: () -> Void
     
-    @State private var isHovering = false
-    
     var body: some View {
         Button(action: action) {
             HStack(spacing: 20) {
@@ -239,12 +237,11 @@ struct MenuButtonCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
                         .tracking(1)
                     
                     Text(subtitle)
                         .font(.system(size: 14))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .opacity(0.6)
                 }
                 
                 Spacer()
@@ -252,21 +249,12 @@ struct MenuButtonCard: View {
                 // Arrow
                 Image(systemName: "chevron.right")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.3))
-                    .offset(x: isHovering ? 5 : 0)
+                    .opacity(0.3)
             }
             .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-            )
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(isHovering ? color.opacity(0.8) : .white.opacity(0.1), lineWidth: isHovering ? 2 : 1)
-            )
-            .scaleEffect(isHovering ? 1.02 : 1.0)
         }
-        .buttonStyle(PlainButtonStyle()) // デフォルトのエフェクトを消す
+        .buttonStyle(GlassButtonStyle())
+        .tint(color)
     }
 }
 

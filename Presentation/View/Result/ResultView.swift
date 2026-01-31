@@ -46,70 +46,66 @@ struct ResultView: View {
                     .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: showContent)
                 
                 // Score Card (Glassmorphism)
-                ZStack {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.cyan.opacity(0.6), .purple.opacity(0.6)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 2
-                                )
-                        )
-                        .shadow(color: .cyan.opacity(0.2), radius: 20)
+                VStack(spacing: 16) {
+                    Text("TOTAL SCORE")
+                        .font(.custom("Optima-Bold", size: 16))
+                        .tracking(2)
+                        .foregroundStyle(.white.opacity(0.7))
                     
-                    VStack(spacing: 16) {
-                        Text("TOTAL SCORE")
-                            .font(.custom("Optima-Bold", size: 16))
-                            .tracking(2)
-                            .foregroundStyle(.white.opacity(0.7))
-                        
-                        Text("\(scoreCount)")
-                            .font(.custom("Optima-Bold", size: 80))
-                            .monospacedDigit()
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.white, .cyan],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
+                    Text("\(scoreCount)")
+                        .font(.custom("Optima-Bold", size: 80))
+                        .monospacedDigit()
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.white, .cyan],
+                                startPoint: .top,
+                                endPoint: .bottom
                             )
-                            .shadow(color: .cyan.opacity(0.5), radius: 10)
-                            .contentTransition(.numericText())
-                        
-                        // Rank Badge
-                        if let rank = viewModel.rank {
-                            HStack(spacing: 8) {
-                                Image(systemName: "trophy.fill")
-                                    .foregroundStyle(.yellow)
-                                Text("RANK #\(rank)")
-                                    .font(.custom("Optima-Bold", size: 24))
-                                    .foregroundStyle(.yellow)
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
-                            .background(Color.yellow.opacity(0.2))
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(.yellow.opacity(0.5), lineWidth: 1))
-                        } else {
-                             Text("Keep Trying for Top 5!")
-                                .font(.custom("Optima-Regular", size: 14))
-                                .foregroundStyle(.white.opacity(0.5))
+                        )
+                        .shadow(color: .cyan.opacity(0.5), radius: 10)
+                        .contentTransition(.numericText())
+                    
+                    // Rank Badge
+                    if let rank = viewModel.rank {
+                        HStack(spacing: 8) {
+                            Image(systemName: "trophy.fill")
+                                .foregroundStyle(.yellow)
+                            Text("RANK #\(rank)")
+                                .font(.custom("Optima-Bold", size: 24))
+                                .foregroundStyle(.yellow)
                         }
-                        
-                        // Details Grid
-                        HStack(spacing: 40) {
-                            detailItem(label: "PROBLEMS", value: "\(viewModel.score.problemsSolved)")
-                            detailItem(label: "BONUS", value: "\(viewModel.score.bonusPoints)")
-                        }
-                        .padding(.top, 8)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Color.yellow.opacity(0.2))
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(.yellow.opacity(0.5), lineWidth: 1))
+                    } else {
+                         Text("Keep Trying for Top 5!")
+                            .font(.custom("Optima-Regular", size: 14))
+                            .foregroundStyle(.white.opacity(0.5))
                     }
-                    .padding(40)
+                    
+                    // Details Grid
+                    HStack(spacing: 40) {
+                        detailItem(label: "PROBLEMS", value: "\(viewModel.score.problemsSolved)")
+                        detailItem(label: "BONUS", value: "\(viewModel.score.bonusPoints)")
+                    }
+                    .padding(.top, 8)
                 }
+                .padding(40)
+                .glassEffect(in: RoundedRectangle(cornerRadius: 24))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.cyan.opacity(0.6), .purple.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                )
+                .shadow(color: .cyan.opacity(0.2), radius: 20)
                 .frame(width: 500)
                 .scaleEffect(showContent ? 1.0 : 0.9)
                 .opacity(showContent ? 1.0 : 0)
@@ -128,6 +124,7 @@ struct ResultView: View {
                         title: "RETRY MISSION",
                         icon: "arrow.clockwise",
                         color: .cyan,
+                        isProminent: true,
                         action: onPlayAgain
                     )
                 }
@@ -184,8 +181,15 @@ struct ResultActionButton: View {
     let icon: String
     let color: Color
     let action: () -> Void
+    let isProminent: Bool
     
-    @State private var isHovering = false
+    init(title: String, icon: String, color: Color, isProminent: Bool = false, action: @escaping () -> Void) {
+        self.title = title
+        self.icon = icon
+        self.color = color
+        self.isProminent = isProminent
+        self.action = action
+    }
     
     var body: some View {
         Button(action: {
@@ -194,34 +198,14 @@ struct ResultActionButton: View {
             generator.impactOccurred()
             action()
         }) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .bold))
-                Text(title)
-                    .font(.custom("Optima-Bold", size: 16))
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(color.opacity(isHovering ? 0.4 : 0.2))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(color.opacity(0.5), lineWidth: 1)
-            )
-            .scaleEffect(isHovering ? 1.05 : 1.0)
-            .shadow(color: color.opacity(isHovering ? 0.5 : 0), radius: 10)
+            Label(title, systemImage: icon)
+                .font(.custom("Optima-Bold", size: 16))
         }
-        .buttonStyle(PlainButtonStyle())
-        .onHover { hover in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isHovering = hover
-            }
-        }
+        .buttonStyle(GlassButtonStyle())
+        .tint(color)
     }
 }
+
 
 // MARK: - プレビュー
 

@@ -86,9 +86,13 @@ struct GameView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
+            .glassEffect(in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(.white.opacity(0.1), lineWidth: 1))
+            .overlay(Capsule().stroke(.white.opacity(0.3), lineWidth: 1))
             
             Spacer()
             
@@ -117,9 +121,9 @@ struct GameView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
+            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.1), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.3), lineWidth: 1))
         }
     }
     
@@ -162,7 +166,11 @@ struct GameView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(.ultraThinMaterial.opacity(0.5))
+            .glassEffect(in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
             .clipShape(Capsule())
         }
         .padding(.vertical, 10)
@@ -205,18 +213,16 @@ struct GameView: View {
             .padding(.horizontal, 4)
 
             // Circuit Area
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                
                 SwiftUICircuitView(
                     gates: $circuitGates,
                     onRun: { runCircuit() }
                 )
-                .padding(12)
-            }
-            .frame(height: 100) // Height constraint for stability
+                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2).frame(height: 100) // Height constraint for stability
         }
     }
     

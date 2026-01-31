@@ -291,7 +291,7 @@ public final class QuantumCircuitAnimationView: UIView {
             textLayer.foregroundColor = UIColor.white.withAlphaComponent(0.8).cgColor
             textLayer.alignmentMode = .right
             textLayer.frame = CGRect(x: 5, y: y - 14, width: 45, height: 28)
-            textLayer.contentsScale = UIScreen.main.scale
+            textLayer.contentsScale = traitCollection.displayScale
             
             container.addSublayer(textLayer)
         }
@@ -364,7 +364,7 @@ public final class QuantumCircuitAnimationView: UIView {
         textLayer.foregroundColor = Self.gateColor.cgColor
         textLayer.alignmentMode = .center
         textLayer.frame = CGRect(x: 0, y: (size - 28) / 2, width: size, height: 28)
-        textLayer.contentsScale = UIScreen.main.scale
+        textLayer.contentsScale = traitCollection.displayScale
         container.addSublayer(textLayer)
         
         return container
