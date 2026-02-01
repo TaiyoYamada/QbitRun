@@ -23,9 +23,9 @@ struct DifficultySelectView: View {
                         
                         Spacer()
                     }
-                    .padding(.horizontal, 40)
-                    .padding(.top, 40)
-                    
+                    .padding(.horizontal, 60)
+                    .padding(.top, 50)
+
                     Spacer()
                     
                     // Title
@@ -178,6 +178,35 @@ private struct DifficultyCard: View {
         }
     }
 }
+
+/// 小型のグラスボタン（アイコン＋テキスト）
+struct GlassIconButton: View {
+    let title: String
+    let icon: String
+    let action: () -> Void
+
+    @State private var borderRotation: Double = 0
+
+    var body: some View {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        }) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 25, weight: .semibold))
+                Text(title)
+                    .font(.custom("Optima-Bold", size: 25))
+            }
+            .foregroundStyle(.black)
+            .padding(.horizontal, 30)
+            .padding(.vertical, 18)
+        }
+        .glassEffect(.regular.tint(.cyan).interactive())
+    }
+}
+
+
 
 #Preview("難易度選択", traits: .landscapeLeft) {
     DifficultySelectView(

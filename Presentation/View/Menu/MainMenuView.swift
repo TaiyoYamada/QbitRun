@@ -264,6 +264,7 @@ struct MenuButtonCard: View {
             .padding(16)
             .contentShape(Rectangle())
         }
+//        .glassEffect(.regular.tint(color).interactive())
         .buttonStyle(.glass)
         .tint(color)
     }
