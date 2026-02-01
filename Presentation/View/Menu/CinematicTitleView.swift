@@ -28,90 +28,107 @@ struct CinematicTitleView: View {
     @State private var orbitActive: Bool = true  // 軌道アニメーション有効
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // 背景（純黒）
-                Color.black.ignoresSafeArea()
+        GlassEffectContainer {
+            GeometryReader { geometry in
+                ZStack {
+                    // 背景（純黒）
+                    Color.black.ignoresSafeArea()
 
-
-
-                // Layer 2: 量子回路アニメーション（背景ループ）
-                // 常に表示、最背面に配置（Color.blackの上、ブロッホ球の下）
-                QuantumCircuitRepresentable(
-                    size: geometry.size
-                )
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .ignoresSafeArea()
-                .opacity(0.8) // 全体の透明度を少し下げる（内部でさらに0.3になる）
-
-                // Layer 3: ブロッホ球（最前面、軸あり・ラベルなし、滑らかな軌道アニメーション）
-                if showBlochSphere {
-                    BlochSphereViewRepresentable(
-                        vector: blochVector,
-                        animated: true,
-                        showBackground: false,
-                        showAxes: true,
-                        showAxisLabels: false,
-                        continuousOrbitAnimation: orbitActive,  // 滑らかな軌道アニメーション
-                        onOrbitStop: { finalVector in
-                            // 軌道停止時に観測を行う
-                            measureQuantumState(from: finalVector)
-                        }
+                    // Layer 2: 量子回路アニメーション（背景ループ）
+                    // 常に表示、最背面に配置（Color.blackの上、ブロッホ球の下）
+                    QuantumCircuitRepresentable(
+                        size: geometry.size
                     )
-                    .frame(width: 550, height: 550)
-                    .scaleEffect(showBlochSphere ? 1.0 : 0.3)
-                    .opacity(showBlochSphere ? 1.0 : 0)
-                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showBlochSphere)
-                    .zIndex(100)
-                }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .ignoresSafeArea()
+                    .opacity(0.8) // 全体の透明度を少し下げる（内部でさらに0.3になる）
 
-                // Layer 4: タップ促進UI
-                if showTapPrompt && phase == .waitingTap {
-                    VStack {
-                        Spacer()
-                        Text("TAP TO OBSERVE")
-                            .font(.custom("Optima-Bold", size: 45))
+                    // Layer 3: ブロッホ球（最前面、軸あり・ラベルなし、滑らかな軌道アニメーション）
+                    if showBlochSphere {
+                        BlochSphereViewRepresentable(
+                            vector: blochVector,
+                            animated: true,
+                            showBackground: false,
+                            showAxes: true,
+                            showAxisLabels: false,
+                            continuousOrbitAnimation: orbitActive,  // 滑らかな軌道アニメーション
+                            onOrbitStop: { finalVector in
+                                // 軌道停止時に観測を行う（次のランループで実行して状態更新の競合を回避）
+                                Task { @MainActor in
+                                    measureQuantumState(from: finalVector)
+                                }
+                            }
+                        )
+                        .frame(width: 550, height: 550)
+                        .scaleEffect(showBlochSphere ? 1.0 : 0.3)
+                        .opacity(showBlochSphere ? 1.0 : 0)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showBlochSphere)
+                        .zIndex(100)
                     }
-                    .foregroundColor(.white)
-                    .opacity(promptOpacity)
-                    .padding(.bottom, 100)
+
+                    // Layer 4: タップ促進UI
+                    if showTapPrompt && phase == .waitingTap {
+                        VStack {
+                            Spacer()
+                            Text("TAP TO OBSERVE")
+                                .font(.custom("Optima-Bold", size: 45))
+                        }
+                        .foregroundColor(.white)
+                        .opacity(promptOpacity)
+                        .padding(.bottom, 100)
+                    }
+                    
+                    // Layer 5: まぶた（Blink Effect）
+                    // 初期状態は開いている。タップ後に閉じる。
+                    EyelidView(isOpen: !isEyesClosed)
+                        .zIndex(200)
                 }
-                
-                // Layer 5: まぶた（Blink Effect）
-                // 初期状態は開いている。タップ後に閉じる。
-                EyelidView(isOpen: !isEyesClosed)
-                    .zIndex(200)
+            }
+            .onTapGesture {
+                handleTap()
+            }
+            .task {
+                await startAnimationSequence()
             }
         }
-        .onTapGesture {
-            handleTap()
-        }
-        .onAppear {
-            startAnimationSequence()
-        }
     }
-    
 
     
     // MARK: - Animation Sequence
     
-    private func startAnimationSequence() {
+    /// アニメーションシーケンス（Swift Concurrency版）
+    private func startAnimationSequence() async {
         // ブロッホ球を即座に表示（軌道アニメーションは自動的に開始）
         showBlochSphere = true
         
         // 少し待ってからタップ待ち状態へフェードイン
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation {
-                phase = .waitingTap
-                showTapPrompt = true
-            }
-            startPromptPulse()
+        try? await Task.sleep(for: .seconds(1.5))
+        
+        guard !Task.isCancelled else { return }
+        
+        withAnimation {
+            phase = .waitingTap
+            showTapPrompt = true
         }
+        
+        // プロンプトのパルスアニメーション開始
+        await startPromptPulse()
     }
     
-    private func startPromptPulse() {
-        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-            promptOpacity = 0.4
+    /// プロンプトのパルスアニメーション（Swift Concurrency版）
+    private func startPromptPulse() async {
+        while !Task.isCancelled && phase == .waitingTap {
+            withAnimation(.easeInOut(duration: 0.8)) {
+                promptOpacity = 0.4
+            }
+            try? await Task.sleep(for: .milliseconds(800))
+            
+            guard !Task.isCancelled && phase == .waitingTap else { break }
+            
+            withAnimation(.easeInOut(duration: 0.8)) {
+                promptOpacity = 1.0
+            }
+            try? await Task.sleep(for: .milliseconds(800))
         }
     }
     
@@ -127,13 +144,15 @@ struct CinematicTitleView: View {
         // 軌道アニメーションを停止
         orbitActive = false
         
-        // まぶたを閉じる（アニメーション時間 0.8秒に合わせて遷移）
+        // まぶたを閉じる
         withAnimation(.easeInOut(duration: 0.8)) {
             isEyesClosed = true
         }
         
-        // 完全に閉じた後に画面遷移
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) {
+        // Swift Concurrencyで遷移処理
+        Task { @MainActor in
+            // 完全に閉じた後に画面遷移
+            try? await Task.sleep(for: .milliseconds(850))
             phase = .transition
             onStart()
         }
@@ -141,6 +160,7 @@ struct CinematicTitleView: View {
     
     /// 量子状態の観測（測定）
     /// 現在のベクトルから、近い方の基底状態（|0⟩または|1⟩）に収束させる
+    @MainActor
     private func measureQuantumState(from vector: BlochVector) {
         // ベクトルのZ成分を確認（Z軸が量子化軸）
         let z = vector.vector.z
@@ -155,10 +175,8 @@ struct CinematicTitleView: View {
         }
         
         // アニメーションで収束させる
-        DispatchQueue.main.async {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                self.blochVector = measuredState
-            }
+        withAnimation(.easeInOut(duration: 0.4)) {
+            blochVector = measuredState
         }
     }
 }

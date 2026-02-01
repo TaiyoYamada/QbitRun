@@ -15,85 +15,88 @@ struct RecordsView: View {
     }
     
     var body: some View {
-        ZStack {
-            // MARK: - Layer 1: Background
-            StandardBackgroundView(showGrid: true, circuitOpacity: 0.2)
-            
-            VStack(spacing: 0) {
-                // Header
-                ZStack {
-                    HStack {
-                        Button(action: {
-                            let generator = UIImpactFeedbackGenerator(style: .medium)
-                            generator.impactOccurred()
-                            onBack()
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .bold))
-                                Text("BACK")
-                                    .font(.custom("Optima-Bold", size: 16))
+        GlassEffectContainer {
+            ZStack {
+                // MARK: - Layer 1: Background
+                StandardBackgroundView(showGrid: true, circuitOpacity: 0.2)
+                
+                VStack(spacing: 0) {
+                    // Header
+                    ZStack {
+                        HStack {
+                            Button(action: {
+                                let generator = UIImpactFeedbackGenerator(style: .medium)
+                                generator.impactOccurred()
+                                onBack()
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 18, weight: .bold))
+                                    Text("BACK")
+                                        .font(.custom("Optima-Bold", size: 16))
+                                }
+                                .foregroundStyle(.white.opacity(0.8))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(.white.opacity(0.1))
+                                .clipShape(Capsule())
                             }
-                            .foregroundStyle(.white.opacity(0.8))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(.white.opacity(0.1))
-                            .clipShape(Capsule())
+                            
+                            Spacer()
                         }
                         
-                        Spacer()
-                    }
-                    
-                    Text("FLIGHT LOG")
-                        .font(.custom("Optima-Bold", size: 24))
-                        .foregroundStyle(.white)
-                        .tracking(2)
-                        .shadow(color: .cyan.opacity(0.5), radius: 8)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 20)
-                
-                // Difficulty Tabs
-                HStack(spacing: 12) {
-                    DifficultyTabButton(
-                        difficulty: .easy,
-                        isSelected: selectedDifficulty == .easy,
-                        action: { selectedDifficulty = .easy }
-                    )
-                    
-                    DifficultyTabButton(
-                        difficulty: .hard,
-                        isSelected: selectedDifficulty == .hard,
-                        action: { selectedDifficulty = .hard }
-                    )
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                
-                // List Content
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        if scores.isEmpty {
-                            emptyStateView
-                        } else {
-                            ForEach(Array(scores.enumerated()), id: \.offset) { index, score in
-                                ScoreRowCard(index: index, score: score)
-                                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                            }
-                        }
+                        Text("FLIGHT LOG")
+                            .font(.custom("Optima-Bold", size: 24))
+                            .foregroundStyle(.white)
+                            .tracking(2)
+                            .shadow(color: .cyan.opacity(0.5), radius: 8)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
+                    .padding(.top, 20)
+                    .padding(.bottom, 20)
+                    
+                    // Difficulty Tabs
+                    HStack(spacing: 12) {
+                        DifficultyTabButton(
+                            difficulty: .easy,
+                            isSelected: selectedDifficulty == .easy,
+                            action: { selectedDifficulty = .easy }
+                        )
+                        
+                        DifficultyTabButton(
+                            difficulty: .hard,
+                            isSelected: selectedDifficulty == .hard,
+                            action: { selectedDifficulty = .hard }
+                        )
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
+                    
+                    // List Content
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            if scores.isEmpty {
+                                emptyStateView
+                            } else {
+                                ForEach(Array(scores.enumerated()), id: \.offset) { index, score in
+                                    ScoreRowCard(index: index, score: score)
+                                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 40)
+                    }
                 }
             }
-        }
-        .task {
-            // データロード
-            easyScores = await scoreRepository.fetchTopScores(for: .easy)
-            hardScores = await scoreRepository.fetchTopScores(for: .hard)
+            .task {
+                // データロード
+                easyScores = await scoreRepository.fetchTopScores(for: .easy)
+                hardScores = await scoreRepository.fetchTopScores(for: .hard)
+            }
         }
     }
+
     
     private var emptyStateView: some View {
         VStack(spacing: 16) {

@@ -11,14 +11,15 @@ struct MainMenuView: View {
     
     // MARK: - State
     
-    @State private var particleTrigger: UUID?
-    @State private var nextAction: (() -> Void)?
     @State private var showContent = false
     @State private var isEyesOpen = false // 初期は閉じている
     @State private var showBlinkEffect = true
     
     // 背景のブロッホ球用ベクトル（自転アニメーションさせる）
     @State private var backgroundVector = BlochVector.plus
+    
+    // 背景回転タスク管理用
+    @State private var rotationTask: Task<Void, Never>?
     
     var body: some View {
         GlassEffectContainer(spacing: 30)  {
@@ -61,21 +62,15 @@ struct MainMenuView: View {
                     }
                 }
             }
-            .onAppear {
-                withAnimation(.easeOut(duration: 0.8)) {
-                    showContent = true
-                }
-                // 少し遅れて目を開く
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeInOut(duration: 0.8)) {
-                        isEyesOpen = true
-                    }
-                    // アニメーション完了後にViewを削除
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                        showBlinkEffect = false
-                    }
-                }
-                startBackgroundRotation()
+            .task {
+                // アニメーション開始
+                await startAppearanceAnimation()
+                // 背景回転を開始
+                await startBackgroundRotation()
+            }
+            .onDisappear {
+                // タスクのクリーンアップ
+                rotationTask?.cancel()
             }
         }
     }
@@ -185,28 +180,38 @@ struct MainMenuView: View {
         action()
     }
     
-    /// 背景の惑星（ブロッホ球）をゆっくり自転させる
-    private func startBackgroundRotation() {
-        // ベクトルをゆっくり変化させたいが、
-        // 単純なState更新だと再描画負荷が高い可能性がある。
-        // BlochSphereView自体が内部でアニメーション補間を持っているので、
-        // 定期的にターゲットを変えるアプローチをとる。
+    /// 画面表示時のアニメーション（Swift Concurrency版）
+    private func startAppearanceAnimation() async {
+        // コンテンツをフェードイン
+        withAnimation(.easeOut(duration: 0.8)) {
+            showContent = true
+        }
         
-        Task { @MainActor in
-            // 無限ループでベクトルを更新（軌道を描く）
-            // X軸周りに回転させる例
-            var angle: Double = 0
-            while !Task.isCancelled {
-                angle += 0.02
-                let y = sin(angle)
-                let z = cos(angle)
-                
-                // ブロッホ球の更新
-                // （SwiftUIの描画更新サイクルに任せる）
-                backgroundVector = BlochVector(x: 0, y: y, z: z)
-                
-                try? await Task.sleep(for: .milliseconds(50))
-            }
+        // 少し遅れて目を開く
+        try? await Task.sleep(for: .milliseconds(100))
+        
+        withAnimation(.easeInOut(duration: 0.8)) {
+            isEyesOpen = true
+        }
+        
+        // アニメーション完了後にViewを削除
+        try? await Task.sleep(for: .milliseconds(800))
+        showBlinkEffect = false
+    }
+    
+    /// 背景の惑星（ブロッホ球）をゆっくり自転させる（Swift Concurrency版）
+    private func startBackgroundRotation() async {
+        var angle: Double = 0
+        
+        while !Task.isCancelled {
+            angle += 0.02
+            let y = sin(angle)
+            let z = cos(angle)
+            
+            // ブロッホ球の更新
+            backgroundVector = BlochVector(x: 0, y: y, z: z)
+            
+            try? await Task.sleep(for: .milliseconds(50))
         }
     }
 }

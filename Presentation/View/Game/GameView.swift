@@ -15,61 +15,64 @@ struct GameView: View {
     let onGameEnd: (ScoreEntry) -> Void
     
     var body: some View {
-        ZStack {
-            // MARK: - Layer 1: Background
-            // MARK: - Layer 1: Background
-            StandardBackgroundView(showGrid: false, circuitOpacity: 0)
+        GlassEffectContainer {
+            ZStack {
+                // MARK: - Layer 1: Background
+                // MARK: - Layer 1: Background
+                StandardBackgroundView(showGrid: false, circuitOpacity: 0)
 
-            // MARK: - Layer 2: Main Content
-            VStack(spacing: 0) {
-                // タイマーとスコア
-                headerSection
-                    .padding(.top, 16)
-                    .padding(.horizontal, 24)
-                
-                Spacer()
-                
-                // ブロッホ球表示エリア
-                spheresSection
-                
-                Spacer()
-                
-                // 回路表示エリア
-                circuitSection
-                    .padding(.horizontal, 24)
-                
-                Spacer()
-                
-                // ゲートパレット（タップで追加）
-                SwiftUIGatePaletteView { gate in
-                    if circuitGates.count < 5 {
-                        circuitGates.append(gate)
-                        viewModel.addGate(gate)
+                // MARK: - Layer 2: Main Content
+                VStack(spacing: 0) {
+                    // タイマーとスコア
+                    headerSection
+                        .padding(.top, 16)
+                        .padding(.horizontal, 24)
+                    
+                    Spacer()
+                    
+                    // ブロッホ球表示エリア
+                    spheresSection
+                    
+                    Spacer()
+                    
+                    // 回路表示エリア
+                    circuitSection
+                        .padding(.horizontal, 24)
+                    
+                    Spacer()
+                    
+                    // ゲートパレット（タップで追加）
+                    SwiftUIGatePaletteView { gate in
+                        if circuitGates.count < 5 {
+                            circuitGates.append(gate)
+                            viewModel.addGate(gate)
+                        }
                     }
+                    // Palette has its own padding/styling now, but we add safe area padding
+                    .padding(.bottom, 8)
                 }
-                // Palette has its own padding/styling now, but we add safe area padding
-                .padding(.bottom, 8)
+                
+                // MARK: - Layer 3: Overlay Effects
+                EffectOverlayView(
+                    showSuccess: $showSuccessEffect,
+                    showFailure: $showFailureEffect
+                )
             }
-            
-            // MARK: - Layer 3: Overlay Effects
-            EffectOverlayView(
-                showSuccess: $showSuccessEffect,
-                showFailure: $showFailureEffect
-            )
-        }
-        .onAppear {
-            viewModel.startGame(difficulty: difficulty)
-        }
-        .onChange(of: viewModel.finalScore) { _, newScore in
-            if let score = newScore {
-                onGameEnd(score)
+            .onAppear {
+                viewModel.startGame(difficulty: difficulty)
             }
-        }
-        .onChange(of: circuitGates) { _, newGates in
-            // 回路ゲートが変更されたらViewModelを更新
-            syncCircuitToViewModel()
+            .onChange(of: viewModel.finalScore) { _, newScore in
+                if let score = newScore {
+                    onGameEnd(score)
+                }
+            }
+            .onChange(of: circuitGates) { _, newGates in
+                // 回路ゲートが変更されたらViewModelを更新
+                syncCircuitToViewModel()
+            }
         }
     }
+
     
     // MARK: - ヘッダー（Glassmorphism）
     

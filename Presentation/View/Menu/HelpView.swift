@@ -43,6 +43,9 @@ struct HelpView: View {
     @State private var blochVector: BlochVector = .zero
     @State private var showFlash: Bool = false
     
+    // アニメーションタスク管理
+    @State private var simulationTask: Task<Void, Never>?
+    
     // Data Sources
     private let theoryContents: [LabContent] = [
         LabContent(
@@ -126,81 +129,85 @@ struct HelpView: View {
     // MARK: - Body
     
     var body: some View {
-        ZStack {
-            // 1. Deep Space Background
-            StandardBackgroundView(showGrid: true, circuitOpacity: 0.2)
-            
-            // Starfield (Keeping as layer 2)
-            RandomStarField() 
-            
-            VStack(spacing: 0) {
-                // 2. Holographic Display Area (Top Half)
-                ZStack {
-                    // Grid Floor (Perspective) - REMOVED for cleaner look
-
-                    
-                    // Main Visual (Image or Bloch Sphere)
-                    mainVisualArea
-                        .frame(height: 350)
-                        // Add floating effect
-                        .offset(y: sin(Date().timeIntervalSince1970) * 5)
-                        .padding(.top, 40)
-                    
-                    // Mode Switcher (Top Overlay)
-                    VStack {
-                        navigationHeader
-                        modeSwitcher
-                            .padding(.top, 10)
-                        Spacer()
-                    }
-                }
-                .frame(maxHeight: .infinity)
-                .zIndex(0)
+        GlassEffectContainer {
+            ZStack {
+                // 1. Deep Space Background
+                StandardBackgroundView(showGrid: true, circuitOpacity: 0.2)
                 
-                // 3. 3D CoverFlow Carousel (Bottom Half)
-                ZStack(alignment: .bottom) {
-                    // Content Info (Hologram Text above Carousel)
-                    VStack(spacing: 8) {
-                        Text(selectedContent.title.uppercased())
-                            .font(.custom("Optima-Bold", size: 32))
-                            .foregroundStyle(.white)
-                            .shadow(color: .cyan, radius: 10)
+                // Starfield (Keeping as layer 2)
+                RandomStarField() 
+                
+                VStack(spacing: 0) {
+                    // 2. Holographic Display Area (Top Half)
+                    ZStack {
+                        // Main Visual (Image or Bloch Sphere)
+                        mainVisualArea
+                            .frame(height: 350)
+                            // Add floating effect
+                            .offset(y: sin(Date().timeIntervalSince1970) * 5)
+                            .padding(.top, 40)
                         
-                        Text(selectedContent.description)
-                            .font(.system(size: 14))
-                            .foregroundStyle(.white.opacity(0.8))
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 300)
-                            .lineLimit(3)
+                        // Mode Switcher (Top Overlay)
+                        VStack {
+                            navigationHeader
+                            modeSwitcher
+                                .padding(.top, 10)
+                            Spacer()
+                        }
                     }
-                    .padding(.bottom, 180) // Lift above carousel
-                    .transition(.opacity.combined(with: .scale))
-                    .id(selectedContent.id) // Animate text change
+                    .frame(maxHeight: .infinity)
+                    .zIndex(0)
                     
-                    // The Carousel itself
-                    CoverFlowCarousel(
-                        items: currentContents,
-                        centeredIndex: $centeredIndex
-                    )
-                    .frame(height: 160)
-                    .padding(.bottom, 20)
+                    // 3. 3D CoverFlow Carousel (Bottom Half)
+                    ZStack(alignment: .bottom) {
+                        // Content Info (Hologram Text above Carousel)
+                        VStack(spacing: 8) {
+                            Text(selectedContent.title.uppercased())
+                                .font(.custom("Optima-Bold", size: 32))
+                                .foregroundStyle(.white)
+                                .shadow(color: .cyan, radius: 10)
+                            
+                            Text(selectedContent.description)
+                                .font(.system(size: 14))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: 300)
+                                .lineLimit(3)
+                        }
+                        .padding(.bottom, 180) // Lift above carousel
+                        .transition(.opacity.combined(with: .scale))
+                        .id(selectedContent.id) // Animate text change
+                        
+                        // The Carousel itself
+                        CoverFlowCarousel(
+                            items: currentContents,
+                            centeredIndex: $centeredIndex
+                        )
+                        .frame(height: 160)
+                        .padding(.bottom, 20)
+                    }
+                    .frame(height: 300)
+                    .zIndex(1) // Above floor
                 }
-                .frame(height: 300)
-                .zIndex(1) // Above floor
+            }
+            .onChange(of: centeredIndex) { oldValue, newValue in
+                triggerHaptic()
+                playSimulation()
+            }
+            .onChange(of: currentMode) { oldValue, newValue in
+                centeredIndex = 0
+                playSimulation()
+            }
+            .onAppear {
+                playSimulation()
+            }
+            .onDisappear {
+                // タスクのクリーンアップ
+                simulationTask?.cancel()
             }
         }
-        .onChange(of: centeredIndex) { oldValue, newValue in
-            triggerHaptic()
-            playSimulation()
-        }
-        .onChange(of: currentMode) {oldValue, newValue in
-            centeredIndex = 0
-            playSimulation()
-        }
-        .onAppear {
-            playSimulation()
-        }
     }
+
     
     // MARK: - Components
     
@@ -284,74 +291,83 @@ struct HelpView: View {
         .overlay(Capsule().stroke(.white.opacity(0.2), lineWidth: 1))
     }
     
-    // MARK: - Logic (Same as before)
+    // MARK: - Logic (Swift Concurrency版)
     
     private func playSimulation() {
+        // 既存のタスクをキャンセル
+        simulationTask?.cancel()
+        
         let content = selectedContent
         
         showFlash = false
         blochVector = content.initialVector
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        simulationTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            
+            guard !Task.isCancelled else { return }
+            
             switch content.effectType {
             case .none:
                 if let target = content.targetVector {
                     withAnimation(.easeInOut(duration: 0.8)) {
-                        self.blochVector = target
+                        blochVector = target
                     }
                 }
             case .superpositionShake:
-                animateSuperposition()
+                await animateSuperposition()
             case .measurementCollapse:
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    performMeasurement()
-                }
+                try? await Task.sleep(for: .milliseconds(800))
+                guard !Task.isCancelled else { return }
+                await performMeasurement()
             }
         }
     }
     
-    private func animateSuperposition() {
+    /// 重ね合わせアニメーション（Swift Concurrency版）
+    private func animateSuperposition() async {
         guard selectedContent.effectType == .superpositionShake else { return }
         
-        Task { @MainActor in
-            let angles = [0.0, 90.0, 180.0, 270.0]
-            var i = 0
+        let angles = [0.0, 90.0, 180.0, 270.0]
+        var i = 0
+        
+        while !Task.isCancelled && selectedContent.effectType == .superpositionShake {
+            let angle = angles[i % 4]
+            let rad = angle * .pi / 180
+            let x = cos(rad)
+            let y = sin(rad)
             
-            while selectedContent.effectType == .superpositionShake {
-                let angle = angles[i % 4]
-                let rad = angle * .pi / 180
-                let x = cos(rad)
-                let y = sin(rad)
-                
-                withAnimation(.linear(duration: 0.5)) {
-                    self.blochVector = BlochVector(x: x, y: y, z: 0)
-                }
-                
-                i += 1
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+            withAnimation(.linear(duration: 0.5)) {
+                blochVector = BlochVector(x: x, y: y, z: 0)
             }
+            
+            i += 1
+            try? await Task.sleep(for: .milliseconds(500))
         }
     }
     
-    private func performMeasurement() {
-        guard selectedContent.effectType == .measurementCollapse else { return }
+    /// 測定エフェクト（Swift Concurrency版）
+    private func performMeasurement() async {
+        guard !Task.isCancelled && selectedContent.effectType == .measurementCollapse else { return }
+        
         showFlash = true
         let result = Bool.random() ? BlochVector.zero : BlochVector(x: 0, y: 0, z: -1)
-        self.blochVector = result
+        blochVector = result
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-             showFlash = false // Fade out handled by animation value
-        }
+        try? await Task.sleep(for: .milliseconds(100))
+        showFlash = false
         
-        // Retry loop
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            if self.selectedContent.effectType == .measurementCollapse {
-                self.blochVector = .plus
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.performMeasurement()
-                }
-            }
-        }
+        // リトライループ
+        try? await Task.sleep(for: .seconds(2.5))
+        
+        guard !Task.isCancelled && selectedContent.effectType == .measurementCollapse else { return }
+        
+        blochVector = .plus
+        
+        try? await Task.sleep(for: .seconds(1.0))
+        
+        guard !Task.isCancelled else { return }
+        await performMeasurement()
     }
     
     private func triggerHaptic() {

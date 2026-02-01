@@ -10,70 +10,73 @@ struct DifficultySelectView: View {
     let onBack: () -> Void
     
     var body: some View {
-        ZStack {
-            // MARK: - Background
-            StandardBackgroundView(showGrid: true, circuitOpacity: 0.3)
-            
-            // MARK: - Main Content
-            VStack(spacing: 0) {
-                // Header Area
-                HStack {
-                    GlassIconButton(title: "Back", icon: "chevron.left", action: onBack)
+        GlassEffectContainer {
+            ZStack {
+                // MARK: - Background
+//                StandardBackgroundView(showGrid: true, circuitOpacity: 0.3)
+                
+                // MARK: - Main Content
+                VStack(spacing: 0) {
+                    // Header Area
+                    HStack {
+                        GlassIconButton(title: "Back", icon: "chevron.left", action: onBack)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 40)
+                    .padding(.top, 40)
                     
                     Spacer()
-                }
-                .padding(.horizontal, 40)
-                .padding(.top, 40)
-                
-                Spacer()
-                
-                // Title
-                VStack(spacing: 8) {
-                    Text("SELECT DIFFICULTY")
-                        .font(.custom("Optima-Bold", size: 48))
-                        .foregroundStyle(.white)
-                        .shadow(color: .cyan.opacity(0.8), radius: 10, x: 0, y: 0)
                     
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.clear, .cyan, .clear],
-                                startPoint: .leading,
-                                endPoint: .trailing
+                    // Title
+                    VStack(spacing: 8) {
+                        Text("SELECT DIFFICULTY")
+                            .font(.custom("Optima-Bold", size: 48))
+                            .foregroundStyle(.white)
+                            .shadow(color: .cyan.opacity(0.8), radius: 10, x: 0, y: 0)
+                        
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.clear, .cyan, .clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
-                        )
-                        .frame(height: 2)
-                        .frame(width: 300)
-                }
-                
-                Spacer()
-                
-                // Difficulty Cards
-                HStack(spacing: 40) {
-                    DifficultyCard(
-                        difficulty: .easy,
-                        color: .cyan,
-                        description: "Standard quantum stability.\nRecommended for new pilots.",
-                        action: { onSelectDifficulty(.easy) }
-                    )
+                            .frame(height: 2)
+                            .frame(width: 300)
+                    }
                     
-                    DifficultyCard(
-                        difficulty: .hard,
-                        color: .orange,
-                        description: "High quantum fluctuation.\nFor veteran pilots only.",
-                        action: { onSelectDifficulty(.hard) }
-                    )
+                    Spacer()
+                    
+                    // Difficulty Cards
+                    HStack(spacing: 40) {
+                        DifficultyCard(
+                            difficulty: .easy,
+                            color: .cyan,
+                            description: "Standard quantum stability.\nRecommended for new pilots.",
+                            action: { onSelectDifficulty(.easy) }
+                        )
+                        
+                        DifficultyCard(
+                            difficulty: .hard,
+                            color: .orange,
+                            description: "High quantum fluctuation.\nFor veteran pilots only.",
+                            action: { onSelectDifficulty(.hard) }
+                        )
+                    }
+                    .containerRelativeFrame(.horizontal) { length, axis in
+                        length * 0.8
+                    }
+                    
+                    Spacer()
+                    Spacer()
                 }
-                .containerRelativeFrame(.horizontal) { length, axis in
-                    length * 0.8
-                }
-                
-                Spacer()
-                Spacer()
             }
         }
     }
 }
+
 
 // MARK: - Components
 
