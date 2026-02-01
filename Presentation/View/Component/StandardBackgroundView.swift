@@ -54,6 +54,6 @@ struct StandardBackgroundView: View {
     }
 }
 
-#Preview {
+#Preview("背景", traits: .landscapeLeft) {
     StandardBackgroundView()
 }

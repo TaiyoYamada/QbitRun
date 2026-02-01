@@ -21,60 +21,62 @@ struct MainMenuView: View {
     @State private var backgroundVector = BlochVector.plus
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Layer 1: Deep Background
-                settingsLayer
-                
-                // Layer 2: 3D Object (Background Planet)
-                // 右下に大きく配置
-                PositionedBlochSphere(geometry: geometry)
-                
-                // Layer 3: Main UI
-                HStack {
-                    VStack(alignment: .leading, spacing: 30) {
-                        // Header
-                        headerView
-                        
-                        Spacer()
-                            .frame(height: 20)
-                        
-                        // Menu Items
-                        menuButtons
-                        
+        GlassEffectContainer(spacing: 30)  {
+            GeometryReader { geometry in
+                ZStack {
+                    // Layer 1: Deep Background
+                    settingsLayer
+
+                    // Layer 2: 3D Object (Background Planet)
+                    // 右下に大きく配置
+                    PositionedBlochSphere(geometry: geometry)
+
+                    // Layer 3: Main UI
+                    HStack {
+                        VStack(alignment: .leading, spacing: 30) {
+                            // Header
+                            headerView
+
+                            Spacer()
+                                .frame(height: 20)
+
+                            // Menu Items
+                            menuButtons
+
+                            Spacer()
+                        }
+                        .padding(.leading, 60)
+                        .frame(width: geometry.size.width * 0.5) // 左半分を使う
+
                         Spacer()
                     }
-                    .padding(.leading, 60)
-                    .frame(width: geometry.size.width * 0.5) // 左半分を使う
-                    
-                    Spacer()
-                }
-                .opacity(showContent ? 1 : 0)
-                .offset(x: showContent ? 0 : -50)
-                
-                // Layer 4: まぶた（Blink Effect）
-                if showBlinkEffect {
-                    EyelidView(isOpen: isEyesOpen)
-                        .zIndex(200)
-                        .allowsHitTesting(false)
+                    .opacity(showContent ? 1 : 0)
+                    .offset(x: showContent ? 0 : -50)
+
+                    // Layer 4: まぶた（Blink Effect）
+                    if showBlinkEffect {
+                        EyelidView(isOpen: isEyesOpen)
+                            .zIndex(200)
+                            .allowsHitTesting(false)
+                    }
                 }
             }
-        }
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.8)) {
-                showContent = true
-            }
-            // 少し遅れて目を開く
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                withAnimation(.easeInOut(duration: 0.8)) {
-                    isEyesOpen = true
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.8)) {
+                    showContent = true
                 }
-                // アニメーション完了後にViewを削除
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    showBlinkEffect = false
+                // 少し遅れて目を開く
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeInOut(duration: 0.8)) {
+                        isEyesOpen = true
+                    }
+                    // アニメーション完了後にViewを削除
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        showBlinkEffect = false
+                    }
                 }
+                startBackgroundRotation()
             }
-            startBackgroundRotation()
         }
     }
     
@@ -151,7 +153,8 @@ struct MainMenuView: View {
                 color: .cyan,
                 action: { triggerTransition(action: onPlayGame) }
             )
-            
+            .id("btn_play")
+
             MenuButtonCard(
                 title: "Flight Log",
                 subtitle: "View your past records",
@@ -159,7 +162,8 @@ struct MainMenuView: View {
                 color: .purple,
                 action: { triggerTransition(action: onShowRecords) }
             )
-            
+            .id("btn_log")
+
             MenuButtonCard(
                 title: "Manual",
                 subtitle: "How to operate qubits",
@@ -167,6 +171,7 @@ struct MainMenuView: View {
                 color: .green,
                 action: { triggerTransition(action: onShowHelp) }
             )
+            .id("btn_help")
         }
     }
     
@@ -241,7 +246,7 @@ struct MenuButtonCard: View {
                     
                     Text(subtitle)
                         .font(.system(size: 14))
-                        .opacity(0.6)
+//                        .opacity(0.6)
                 }
                 
                 Spacer()
@@ -249,11 +254,12 @@ struct MenuButtonCard: View {
                 // Arrow
                 Image(systemName: "chevron.right")
                     .font(.system(size: 16, weight: .bold))
-                    .opacity(0.3)
+//                    .opacity(0.3)
             }
             .padding(16)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(GlassButtonStyle())
+        .buttonStyle(.glass)
         .tint(color)
     }
 }

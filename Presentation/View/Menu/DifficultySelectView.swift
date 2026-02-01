@@ -11,42 +11,62 @@ struct DifficultySelectView: View {
     
     var body: some View {
         ZStack {
-            // 背景グラデーション
-            // 背景グラデーション
-            Color.black.ignoresSafeArea()
+            // MARK: - Background
+            StandardBackgroundView(showGrid: true, circuitOpacity: 0.3)
             
-            VStack(spacing: 24) {
-                // 戻るボタン
+            // MARK: - Main Content
+            VStack(spacing: 0) {
+                // Header Area
                 HStack {
                     GlassIconButton(title: "Back", icon: "chevron.left", action: onBack)
+                    
                     Spacer()
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
                 
                 Spacer()
                 
-                // タイトル
-                Text("Select Difficulty")
-                    .font(.custom("Optima-Bold", size: 40))
-                    .foregroundStyle(.white)
+                // Title
+                VStack(spacing: 8) {
+                    Text("SELECT DIFFICULTY")
+                        .font(.custom("Optima-Bold", size: 48))
+                        .foregroundStyle(.white)
+                        .shadow(color: .cyan.opacity(0.8), radius: 10, x: 0, y: 0)
+                    
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [.clear, .cyan, .clear],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(height: 2)
+                        .frame(width: 300)
+                }
                 
                 Spacer()
                 
-                // 難易度ボタン
-                VStack(spacing: 24) {
-                    // Easy
-                    DifficultyButton(
+                // Difficulty Cards
+                HStack(spacing: 40) {
+                    DifficultyCard(
                         difficulty: .easy,
+                        color: .cyan,
+                        description: "Standard quantum stability.\nRecommended for new pilots.",
                         action: { onSelectDifficulty(.easy) }
                     )
                     
-                    // Hard
-                    DifficultyButton(
+                    DifficultyCard(
                         difficulty: .hard,
+                        color: .orange,
+                        description: "High quantum fluctuation.\nFor veteran pilots only.",
                         action: { onSelectDifficulty(.hard) }
                     )
                 }
+                .containerRelativeFrame(.horizontal) { length, axis in
+                    length * 0.8
+                }
                 
                 Spacer()
                 Spacer()
@@ -55,48 +75,85 @@ struct DifficultySelectView: View {
     }
 }
 
-/// 難易度ボタン
-private struct DifficultyButton: View {
+// MARK: - Components
+
+private struct DifficultyCard: View {
     let difficulty: GameDifficulty
+    let color: Color
+    let description: String
     let action: () -> Void
+    
+    @State private var isHovering = false
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                HStack(spacing: 12) {
-                    Text(difficulty.emoji)
-                        .font(.system(size: 32))
-                    Text(difficulty.displayName)
-                        .font(.custom("Optima-Bold", size: 28))
-                        .foregroundStyle(.white)
-                }
-                
-                Text(difficulty.description)
-                    .font(.custom("Optima", size: 16))
-                    .foregroundStyle(.white.opacity(0.7))
-            }
-            .frame(width: 280, height: 100)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
+            ZStack {
+                // Background Glass
+                RoundedRectangle(cornerRadius: 24)
                     .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(
-                                difficulty == .hard
-                                    ? Color.orange.opacity(0.5)
-                                    : Color.white.opacity(0.3),
-                                lineWidth: 1
-                            )
+                    .opacity(0.8)
+                
+                // Border & Glow
+                RoundedRectangle(cornerRadius: 24)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                color.opacity(0.6),
+                                color.opacity(0.1),
+                                color.opacity(0.6)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
                     )
-            )
+                    .shadow(color: color.opacity(isHovering ? 0.6 : 0.2), radius: isHovering ? 20 : 10)
+                
+                // Content
+                VStack(spacing: 20) {
+                    // Emoji / Icon
+                    ZStack {
+                        Circle()
+                            .fill(color.opacity(0.2))
+                            .frame(width: 80, height: 80)
+                            .blur(radius: 10)
+                        
+                        Text(difficulty.emoji)
+                            .font(.system(size: 50))
+                            .shadow(color: color.opacity(0.5), radius: 5)
+                    }
+                    
+                    // Text Info
+                    VStack(spacing: 12) {
+                        Text(difficulty.displayName)
+                            .font(.custom("Optima-Bold", size: 32))
+                            .foregroundStyle(.white)
+                        
+                        Text(description)
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(30)
+            }
+            .frame(height: 300)
+            .contentShape(Rectangle()) // Ensure tap area is solid
+            .scaleEffect(isHovering ? 1.02 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovering)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.plain) // Use plain style inside the wrapper to handle custom animation
+        .onHover { mirroring in
+            isHovering = mirroring
+        }
     }
 }
 
-#Preview("難易度選択") {
+#Preview("難易度選択", traits: .landscapeLeft) {
     DifficultySelectView(
-        onSelectDifficulty: { print("Selected: \($0)") },
-        onBack: { print("Back") }
+        onSelectDifficulty: { _ in },
+        onBack: {}
     )
 }
