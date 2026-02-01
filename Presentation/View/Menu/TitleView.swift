@@ -106,7 +106,7 @@ struct TitleView: View {
                         )
                         .shadow(color: .white.opacity(0.15), radius: 15, x: 0, y: 5)
                 }
-                .buttonStyle(ScaleButtonStyle())
+                .buttonStyle(.glass)
                 .padding(.top, 48)
                 .onAppear {
                     withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {

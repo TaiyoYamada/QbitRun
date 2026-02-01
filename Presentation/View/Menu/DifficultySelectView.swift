@@ -13,8 +13,8 @@ struct DifficultySelectView: View {
         GlassEffectContainer {
             ZStack {
                 // MARK: - Background
-//                StandardBackgroundView(showGrid: true, circuitOpacity: 0.3)
-                
+                backgroundLayer
+
                 // MARK: - Main Content
                 VStack(spacing: 0) {
                     // Header Area
@@ -73,6 +73,31 @@ struct DifficultySelectView: View {
                     Spacer()
                 }
             }
+        }
+    }
+    private var backgroundLayer: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            // 背景回路（薄く表示）
+            QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
+                .ignoresSafeArea()
+                .opacity(0.3)
+
+            // グリッド装飾（未来的演出）
+            VStack {
+                Spacer()
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.cyan.opacity(0.1), .clear],
+                            startPoint: .bottom,
+                            endPoint: .top
+                        )
+                    )
+                    .frame(height: 200)
+            }
+            .ignoresSafeArea()
         }
     }
 }
