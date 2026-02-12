@@ -6,7 +6,6 @@ import SwiftUI
 
 /// 画面遷移のルート定義
 enum AppRoute: Hashable {
-    case mainMenu
     case difficultySelect
     case game(difficulty: GameDifficulty)
     case result(score: ScoreEntry)
@@ -36,11 +35,6 @@ final class AppCoordinator {
     }
     
     // MARK: - Navigation Actions
-    
-    /// メインメニューへ遷移
-    func navigateToMainMenu() {
-        path.append(AppRoute.mainMenu)
-    }
     
     /// 難易度選択画面へ遷移
     func navigateToDifficultySelect() {

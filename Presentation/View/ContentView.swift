@@ -7,9 +7,11 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            // シネマティックタイトル画面
-            CinematicTitleView(
-                onStart: { coordinator.navigateToMainMenu() }
+            // メインメニュー（ルートビュー）
+            MainMenuView(
+                onPlayGame: { coordinator.navigateToDifficultySelect() },
+                onShowRecords: { coordinator.navigateToRecords() },
+                onShowHelp: { coordinator.navigateToHelp() }
             )
             .navigationBarBackButtonHidden(true)
             .navigationDestination(for: AppRoute.self) { route in
@@ -23,13 +25,6 @@ struct ContentView: View {
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-        case .mainMenu:
-            MainMenuView(
-                onPlayGame: { coordinator.navigateToDifficultySelect() },
-                onShowRecords: { coordinator.navigateToRecords() },
-                onShowHelp: { coordinator.navigateToHelp() }
-            )
-            .navigationBarBackButtonHidden(true)
             
         case .difficultySelect:
             DifficultySelectView(

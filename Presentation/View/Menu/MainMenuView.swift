@@ -11,9 +11,9 @@ struct MainMenuView: View {
     
     // MARK: - State
     
+    // MARK: - State
+    
     @State private var showContent = false
-    @State private var isEyesOpen = false // 初期は閉じている
-    @State private var showBlinkEffect = true
     
     // 背景のブロッホ球用ベクトル（自転アニメーションさせる）
     @State private var backgroundVector = BlochVector.plus
@@ -53,13 +53,6 @@ struct MainMenuView: View {
                     }
                     .opacity(showContent ? 1 : 0)
                     .offset(x: showContent ? 0 : -50)
-
-                    // Layer 4: まぶた（Blink Effect）
-                    if showBlinkEffect {
-                        EyelidView(isOpen: isEyesOpen)
-                            .zIndex(200)
-                            .allowsHitTesting(false)
-                    }
                 }
             }
             .task {
@@ -186,17 +179,6 @@ struct MainMenuView: View {
         withAnimation(.easeOut(duration: 0.8)) {
             showContent = true
         }
-        
-        // 少し遅れて目を開く
-        try? await Task.sleep(for: .milliseconds(100))
-        
-        withAnimation(.easeInOut(duration: 0.8)) {
-            isEyesOpen = true
-        }
-        
-        // アニメーション完了後にViewを削除
-        try? await Task.sleep(for: .milliseconds(800))
-        showBlinkEffect = false
     }
     
     /// 背景の惑星（ブロッホ球）をゆっくり自転させる（Swift Concurrency版）
