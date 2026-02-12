@@ -5,7 +5,7 @@ struct MainMenuView: View {
     
     // MARK: - Actions
     
-    let onPlayGame: () -> Void
+    let onSelectMode: (GameDifficulty) -> Void
     
     // MARK: - State
     
@@ -133,13 +133,22 @@ struct MainMenuView: View {
     private var menuButtons: some View {
         VStack(alignment: .leading, spacing: 24) {
             MenuButtonCard(
-                title: "Initialize Game",
-                subtitle: "Start a new quantum challenge",
-                icon: "gamecontroller.fill",
+                title: "Easy Mode",
+                subtitle: GameDifficulty.easy.description,
+                icon: "leaf.fill",
                 color: .cyan,
-                action: { triggerTransition(action: onPlayGame) }
+                action: { triggerTransition(action: { onSelectMode(.easy) }) }
             )
-            .id("btn_play")
+            .id("btn_easy")
+            
+            MenuButtonCard(
+                title: "Hard Mode",
+                subtitle: GameDifficulty.hard.description,
+                icon: "flame.fill",
+                color: .orange,
+                action: { triggerTransition(action: { onSelectMode(.hard) }) }
+            )
+            .id("btn_hard")
         }
     }
     
@@ -234,6 +243,6 @@ struct MenuButtonCard: View {
 
 #Preview("New Main Menu") {
     MainMenuView(
-        onPlayGame: {}
+        onSelectMode: { _ in }
     )
 }

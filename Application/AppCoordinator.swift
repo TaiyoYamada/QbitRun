@@ -6,7 +6,6 @@ import SwiftUI
 
 /// 画面遷移のルート定義
 enum AppRoute: Hashable {
-    case difficultySelect
     case game(difficulty: GameDifficulty)
     case result(score: ScoreEntry)
 }
@@ -34,10 +33,6 @@ final class AppCoordinator {
     
     // MARK: - Navigation Actions
     
-    /// 難易度選択画面へ遷移
-    func navigateToDifficultySelect() {
-        path.append(AppRoute.difficultySelect)
-    }
     
     /// ゲーム画面へ遷移
     /// - Parameter difficulty: 選択された難易度
@@ -62,10 +57,4 @@ final class AppCoordinator {
         path = NavigationPath()
     }
     
-    /// リトライ：難易度選択画面へ直接遷移
-    func retryFromResult() {
-        // パスをリセットしてから難易度選択へ
-        path = NavigationPath()
-        path.append(AppRoute.difficultySelect)
-    }
 }
