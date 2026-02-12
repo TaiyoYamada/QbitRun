@@ -9,8 +9,6 @@ enum AppRoute: Hashable {
     case difficultySelect
     case game(difficulty: GameDifficulty)
     case result(score: ScoreEntry)
-    case records
-    case help
 }
 
 /// アプリ全体のナビゲーションを管理するCoordinator
@@ -51,16 +49,6 @@ final class AppCoordinator {
     /// - Parameter score: ゲームスコア
     func navigateToResult(score: ScoreEntry) {
         path.append(AppRoute.result(score: score))
-    }
-    
-    /// 記録画面へ遷移
-    func navigateToRecords() {
-        path.append(AppRoute.records)
-    }
-    
-    /// ヘルプ画面へ遷移
-    func navigateToHelp() {
-        path.append(AppRoute.help)
     }
     
     /// 一つ前の画面へ戻る

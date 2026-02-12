@@ -6,8 +6,6 @@ struct MainMenuView: View {
     // MARK: - Actions
     
     let onPlayGame: () -> Void
-    let onShowRecords: () -> Void
-    let onShowHelp: () -> Void
     
     // MARK: - State
     
@@ -142,24 +140,6 @@ struct MainMenuView: View {
                 action: { triggerTransition(action: onPlayGame) }
             )
             .id("btn_play")
-
-            MenuButtonCard(
-                title: "Flight Log",
-                subtitle: "View your past records",
-                icon: "list.bullet.rectangle.portrait.fill",
-                color: .purple,
-                action: { triggerTransition(action: onShowRecords) }
-            )
-            .id("btn_log")
-
-            MenuButtonCard(
-                title: "Manual",
-                subtitle: "How to operate qubits",
-                icon: "questionmark.circle.fill",
-                color: .green,
-                action: { triggerTransition(action: onShowHelp) }
-            )
-            .id("btn_help")
         }
     }
     
@@ -254,8 +234,6 @@ struct MenuButtonCard: View {
 
 #Preview("New Main Menu") {
     MainMenuView(
-        onPlayGame: {},
-        onShowRecords: {},
-        onShowHelp: {}
+        onPlayGame: {}
     )
 }

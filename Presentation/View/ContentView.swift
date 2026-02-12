@@ -9,9 +9,7 @@ struct ContentView: View {
         NavigationStack(path: $coordinator.path) {
             // メインメニュー（ルートビュー）
             MainMenuView(
-                onPlayGame: { coordinator.navigateToDifficultySelect() },
-                onShowRecords: { coordinator.navigateToRecords() },
-                onShowHelp: { coordinator.navigateToHelp() }
+                onPlayGame: { coordinator.navigateToDifficultySelect() }
             )
             .navigationBarBackButtonHidden(true)
             .navigationDestination(for: AppRoute.self) { route in
@@ -52,17 +50,6 @@ struct ContentView: View {
                 onReturnToMenu: { coordinator.popToRoot() }
             )
             .navigationBarBackButtonHidden(true)
-            
-        case .records:
-            RecordsView(
-                scoreRepository: coordinator.scoreRepository,
-                onBack: { coordinator.goBack() }
-            )
-            .navigationBarBackButtonHidden(true)
-            
-        case .help:
-            HelpView(onBack: { coordinator.goBack() })
-                .navigationBarBackButtonHidden(true)
         }
     }
 }
