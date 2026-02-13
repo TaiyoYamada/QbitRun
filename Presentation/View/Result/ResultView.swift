@@ -29,7 +29,7 @@ struct ResultView: View {
     }
     
     var body: some View {
-        GlassEffectContainer {
+//        GlassEffectContainer {
             ZStack {
                 // MARK: - Layer 1: Background（回路アニメーション無効）
                 StandardBackgroundView(showGrid: true, circuitOpacity: 0)
@@ -94,7 +94,7 @@ struct ResultView: View {
                         .padding(.top, 8)
                     }
                     .padding(40)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 24))
+//                    .glassEffect(in: RoundedRectangle(cornerRadius: 24))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(
@@ -162,7 +162,7 @@ struct ResultView: View {
                     }
                 }
             }
-        }
+//        }
     }
 
     
@@ -204,7 +204,7 @@ struct ResultActionButton: View {
             Label(title, systemImage: icon)
                 .font(.custom("Optima-Bold", size: 16))
         }
-        .buttonStyle(GlassButtonStyle())
+//        .buttonStyle(GlassButtonStyle())
         .tint(color)
     }
 }

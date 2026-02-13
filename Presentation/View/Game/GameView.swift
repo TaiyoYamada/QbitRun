@@ -15,7 +15,6 @@ struct GameView: View {
     let onGameEnd: (ScoreEntry) -> Void
     
     var body: some View {
-        GlassEffectContainer {
             ZStack {
                 // MARK: - Layer 1: Background
                 // MARK: - Layer 1: Background
@@ -70,7 +69,7 @@ struct GameView: View {
                 // 回路ゲートが変更されたらViewModelを更新
                 syncCircuitToViewModel()
             }
-        }
+//        }
     }
 
     
@@ -89,7 +88,7 @@ struct GameView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .glassEffect(in: Capsule())
+//            .glassEffect(in: Capsule())
             .overlay(
                 Capsule()
                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
@@ -124,7 +123,7 @@ struct GameView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
+//            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.3), lineWidth: 1))
         }
@@ -169,7 +168,7 @@ struct GameView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .glassEffect(in: Capsule())
+//            .glassEffect(in: Capsule())
             .overlay(
                 Capsule()
                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
@@ -220,7 +219,7 @@ struct GameView: View {
                     gates: $circuitGates,
                     onRun: { runCircuit() }
                 )
-                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+//                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.2), lineWidth: 1)
