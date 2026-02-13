@@ -477,7 +477,7 @@ public final class BlochSphereView: UIView {
         let translation = gesture.translation(in: self)
         let sensitivity: Float = 0.01
         
-        cameraYaw += Float(translation.x) * sensitivity
+        cameraYaw -= Float(translation.x) * sensitivity
         cameraPitch += Float(translation.y) * sensitivity
         
         cameraPitch = max(-Float.pi / 2 + 0.1, min(Float.pi / 2 - 0.1, cameraPitch))
