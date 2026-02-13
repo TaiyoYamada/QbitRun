@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: MIT
+// Presentation/View/Menu/MainMenuView.swift
+
 import SwiftUI
 
-/// メインメニュー画面（Quantum Cockpit Style - Advanced）
+/// メインメニュー画面（Refined Quantum Style）
 struct MainMenuView: View {
 
     // MARK: - Actions
@@ -10,33 +13,36 @@ struct MainMenuView: View {
     @State private var showContent = false
     @State private var backgroundVector = BlochVector.plus
     @State private var rotationTask: Task<Void, Never>?
+    @State private var titleOffset: CGFloat = -200
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
+                // Layer 1: Original Background
                 settingsLayer
 
-                // 右下に大きく配置
+                // Layer 2: Floating Bloch Sphere (Right side / Background)
                 PositionedBlochSphere(geometry: geometry)
 
-                // Layer 3: Main UI
+                // Layer 3: Main UI (Modernized)
                 HStack {
-                    VStack(alignment: .leading, spacing: 30) {
-                        headerView
-
+                    VStack(alignment: .leading, spacing: 40) {
                         Spacer()
-                            .frame(height: 50)
-
+                        
+                        headerView
+                        
                         menuButtons
-
+                        
+                        Spacer()
                     }
-                    .padding(.leading, 60)
-//                    .frame(width: geometry.size.width * 0.5)
-
+                    .padding(.leading, geometry.size.width * 0.08)
+                    .frame(maxWidth: 500)
+                    // Ensure content doesn't overlook safe area on left
+                    
                     Spacer()
                 }
                 .opacity(showContent ? 1 : 0)
-                .offset(x: showContent ? 0 : -50)
+                .offset(x: showContent ? 0 : -30) // Gentle slide-in
             }
         }
         .task {
@@ -91,50 +97,90 @@ struct MainMenuView: View {
             y: geometry.size.height * 0.45
         )
         .opacity(0.8)
-        .blur(radius: 1)
     }
 
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("QUANTUM\nGATE")
-                .font(.custom("Optima-Bold", size: 64))
-                .foregroundStyle(.white)
-                .lineSpacing(0)
-                .shadow(color: .cyan.opacity(0.6), radius: 10, x: 0, y: 0)
-
-            Rectangle()
-                .fill(Color.cyan)
-                .frame(width: 60, height: 4)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("QUANTUM")
+                .font(.system(size: 40, weight: .thin, design: .rounded))
+                .tracking(4)
+                .foregroundStyle(.white.opacity(0.8))
+            
+            Text("GATE")
+                .font(.system(size: 80, weight: .bold, design: .rounded))
+                .tracking(2)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.white, .cyan],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .shadow(color: .cyan.opacity(0.5), radius: 20, x: 0, y: 0)
+                .overlay {
+                    // Shine Effect
+                    GeometryReader { geo in
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.clear, .white.opacity(0.5), .clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .rotationEffect(.degrees(20))
+                            .offset(x: titleOffset)
+                            .mask(
+                                Text("GATE")
+                                    .font(.system(size: 80, weight: .bold, design: .rounded))
+                                    .tracking(2)
+                            )
+                    }
+                    .frame(width: 300, height: 100)
+                }
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+                titleOffset = 400
+            }
         }
     }
 
     private var menuButtons: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            MenuButtonCard(
+        VStack(alignment: .leading, spacing: 24) {
+            GlassMenuButton(
                 title: "Easy Mode",
                 subtitle: GameDifficulty.easy.description,
                 icon: "leaf.fill",
-                color: .cyan,
-                action: { triggerTransition(action: { onSelectMode(.easy) }) }
+                accentColor: .cyan, // Changed back to Cyan/Orange to match original theme slightly better
+                action: { triggerTransition(difficulty: .easy) }
             )
-
-            MenuButtonCard(
+            
+            GlassMenuButton(
                 title: "Hard Mode",
                 subtitle: GameDifficulty.hard.description,
                 icon: "flame.fill",
-                color: .orange,
-                action: { triggerTransition(action: { onSelectMode(.hard) }) }
+                accentColor: .orange,
+                action: { triggerTransition(difficulty: .hard) }
             )
         }
     }
 
     // MARK: - Logic
-    private func triggerTransition(action: @escaping () -> Void) {
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        action()
+    private func triggerTransition(difficulty: GameDifficulty) {
+        let generator = UIImpactFeedbackGenerator(style: .soft)
+        generator.impactOccurred()
+        
+        // Buttons handle their own press animation, so just delay the action slightly
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            onSelectMode(difficulty)
+        }
     }
 
     private func startAppearanceAnimation() async {
+        // Reset title offset for animation loop
+        titleOffset = -200
+        
         withAnimation(.easeOut(duration: 0.8)) {
             showContent = true
         }
@@ -152,120 +198,80 @@ struct MainMenuView: View {
     }
 }
 
-// MARK: - Advanced Components
+// MARK: - Components
 
-struct MenuButtonCard: View {
+struct GlassMenuButton: View {
     let title: String
     let subtitle: String
     let icon: String
-    let color: Color
+    let accentColor: Color
     let action: () -> Void
-
-    @State private var isAnimating = false
-
+    
+    @State private var isHovered = false
+    @State private var isPressed = false
+    
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 24) {
-                // Icon Box with Rotating Ornament
+        Button(action: {
+            isPressed = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isPressed = false
+                action()
+            }
+        }) {
+            HStack(spacing: 20) {
+                // Icon Container
                 ZStack {
-                    // 背景の回転するリング
                     Circle()
-                        .stroke(color.opacity(0.3), style: StrokeStyle(lineWidth: 1, lineCap: .round, dash: [4, 8]))
-                        .rotationEffect(.degrees(isAnimating ? 360 : 0))
-                        .frame(width: 64, height: 64)
-
-                    // メインアイコンボックス
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(color.opacity(0.15))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(color.opacity(0.5), lineWidth: 1)
-                            )
-
-                        Image(systemName: icon)
-                            .font(.system(size: 24))
-                            .foregroundStyle(color)
-                            .symbolEffect(.pulse, options: .repeating)
-                    }
-                    .frame(width: 52, height: 52)
+                        .fill(accentColor.opacity(0.1))
+                        .frame(width: 50, height: 50)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 22))
+                        .foregroundStyle(accentColor)
+                        .symbolEffect(.bounce, value: isHovered)
                 }
-                .frame(width: 64, height: 64)
-
+                
                 // Text
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 26, weight: .bold))
-                        .tracking(1)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-
+                    
                     Text(subtitle)
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                 }
-
+                
                 Spacer()
-
+                
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 16, weight: .black))
-                    .foregroundStyle(color.opacity(0.8))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.3))
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .contentShape(Rectangle())
+            .padding(.horizontal, 24)
+            .padding(.vertical, 20)
+            .background(.ultraThinMaterial) // Glassmorphism
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.3), .white.opacity(0.05)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: accentColor.opacity(isHovered ? 0.3 : 0), radius: 15, x: 0, y: 0)
+            .scaleEffect(isPressed ? 0.96 : (isHovered ? 1.02 : 1.0))
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
         }
-        .buttonStyle(QuantumButtonStyle(color: color))
-        .onAppear {
-            withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
-                isAnimating = true
-            }
+        .buttonStyle(PlainButtonStyle())
+        .onHover { hovering in
+            isHovered = hovering
         }
-    }
-}
-
-struct QuantumButtonStyle: ButtonStyle {
-    let color: Color
-    @State private var scanPhase: Double = 0
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background {
-                ZStack {
-                    // ベースレイヤー（グラスエフェクト）
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(.ultraThinMaterial)
-                        .opacity(0.9)
-
-                    // エネルギー充填グラデーション
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(
-                            LinearGradient(
-                                colors: [color.opacity(0.1), color.opacity(0.02)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    // エッジを走る光のスキャン
-                    RoundedRectangle(cornerRadius: 14)
-                        .trim(from: scanPhase, to: scanPhase + 0.15)
-                        .stroke(color, lineWidth: 2)
-                        .blur(radius: 1)
-                }
-            }
-            .overlay {
-                // 枠線（常時表示）
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(color.opacity(0.2), lineWidth: 1)
-            }
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .shadow(color: color.opacity(configuration.isPressed ? 0.6 : 0.2), radius: configuration.isPressed ? 15 : 5)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
-            .onAppear {
-                withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
-                    scanPhase = 1.0
-                }
-            }
     }
 }
 
