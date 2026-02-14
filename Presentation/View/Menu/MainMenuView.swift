@@ -10,10 +10,9 @@ struct MainMenuView: View {
     let onSelectMode: (GameDifficulty) -> Void
 
     // MARK: - State
-    @State private var showContent = false
     @State private var backgroundVector = BlochVector.plus
     @State private var rotationTask: Task<Void, Never>?
-    @State private var titleOffset: CGFloat = -200
+    @State private var shimmerOffset: CGFloat = -200
 
     var body: some View {
         GeometryReader { geometry in
@@ -41,12 +40,10 @@ struct MainMenuView: View {
                     
                     Spacer()
                 }
-                .opacity(showContent ? 1 : 0)
-                .offset(x: showContent ? 0 : -30) // Gentle slide-in
+
             }
         }
         .task {
-            await startAppearanceAnimation()
             await startBackgroundRotation()
         }
         .onDisappear {
@@ -129,7 +126,7 @@ struct MainMenuView: View {
                                 )
                             )
                             .rotationEffect(.degrees(20))
-                            .offset(x: titleOffset)
+                            .offset(x: shimmerOffset)
                             .mask(
                                 Text("GATE")
                                     .font(.system(size: 80, weight: .bold, design: .rounded))
@@ -141,7 +138,7 @@ struct MainMenuView: View {
         }
         .onAppear {
             withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
-                titleOffset = 400
+                shimmerOffset = 400
             }
         }
     }
@@ -178,14 +175,6 @@ struct MainMenuView: View {
         }
     }
 
-    private func startAppearanceAnimation() async {
-        // Reset title offset for animation loop
-        titleOffset = -200
-        
-        withAnimation(.easeOut(duration: 0.8)) {
-            showContent = true
-        }
-    }
 
     private func startBackgroundRotation() async {
         var angle: Double = 0
