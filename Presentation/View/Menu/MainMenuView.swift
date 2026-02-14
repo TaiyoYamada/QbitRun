@@ -137,23 +137,26 @@ struct MainMenuView: View {
     }
 
     private var menuButtons: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            GlassMenuButton(
-                title: "Easy Mode",
-                subtitle: GameDifficulty.easy.description,
-                icon: "leaf.fill",
-                accentColor: .cyan, // Changed back to Cyan/Orange to match original theme slightly better
+        VStack(spacing: 24) {
+            QuantumModeCard(
+                title: "EASY MODE",
+                subtitle: "Start from |0⟩",
+                icon: "arrow.up",
+                accentColor: .cyan,
+                isRandomStart: false,
                 action: { triggerTransition(difficulty: .easy) }
             )
             
-            GlassMenuButton(
-                title: "Hard Mode",
-                subtitle: GameDifficulty.hard.description,
-                icon: "flame.fill",
+            QuantumModeCard(
+                title: "HARD MODE",
+                subtitle: "Random Start",
+                icon: "questionmark",
                 accentColor: .orange,
+                isRandomStart: true,
                 action: { triggerTransition(difficulty: .hard) }
             )
         }
+        .frame(width: 380) // Slightly wider for new card design
     }
 
     // MARK: - Logic
