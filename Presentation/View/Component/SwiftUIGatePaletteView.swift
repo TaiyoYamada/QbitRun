@@ -10,33 +10,34 @@ struct SwiftUIGatePaletteView: View {
     }
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 30) {
             ForEach(gates, id: \.self) { gate in
                 Button {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     onGateSelected(gate)
                 } label: {
                     Text(gate.symbol)
-                        .font(.custom("Optima-Bold", size: 28))
+//                        .font(.custom("Optima-Bold", size: 35))
+                        .font(.system(size: 35, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                        .frame(width: 56, height: 56)
+                        .frame(width: 67, height: 67)
                         .background(
                             ZStack {
                                 gate.swiftUIColor
                                 
                                 // Internal gradient/shine for gem-like effect
                                 LinearGradient(
-                                    colors: [.white.opacity(0.4), .clear],
+                                    colors: [.white.opacity(0.2), .clear],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             }
                         )
                         .clipShape(Circle())
-                        .shadow(color: gate.swiftUIColor.opacity(0.6), radius: 8, x: 0, y: 0)
+//                        .shadow(color: gate.swiftUIColor.opacity(0.7), radius: 3, x: 0, y: 0)
                         .overlay(
                             Circle()
-                                .stroke(.white.opacity(0.6), lineWidth: 1)
+                                .stroke(.white.opacity(0.7), lineWidth: 1)
                         )
                 }
                 .buttonStyle(GateButtonStyle())

@@ -10,7 +10,7 @@ struct SwiftUICircuitView: View {
         HStack(spacing: 12) {
             // 初期状態ラベル
             Text("|0⟩")
-                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .font(.system(size: 30, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             
             // ワイヤーとスロット
@@ -18,9 +18,9 @@ struct SwiftUICircuitView: View {
                 ForEach(0..<maxSlots, id: \.self) { index in
                     // ワイヤーセグメント
                     Rectangle()
-                        .fill(.white.opacity(0.4))
-                        .frame(width: 20, height: 3)
-                    
+                        .fill(.white.opacity(0.7))
+                        .frame(width: 23, height: 3)
+
                     // スロット
                     CircuitSlot(
                         gate: index < gates.count ? gates[index] : nil,
@@ -34,8 +34,8 @@ struct SwiftUICircuitView: View {
                     
                     // ワイヤーセグメント
                     Rectangle()
-                        .fill(.white.opacity(0.4))
-                        .frame(width: 20, height: 3)
+                        .fill(.white.opacity(0.7))
+                        .frame(width: 23, height: 3)
                 }
             }
             
@@ -45,9 +45,9 @@ struct SwiftUICircuitView: View {
                 onRun()
             }) {
                 Text("▶ Run")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 80, height: 40)
+                    .frame(width: 120, height: 60)
                     .background(gates.isEmpty ? Color.gray : Color(red: 0.3, green: 0.7, blue: 0.4))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
@@ -69,9 +69,9 @@ struct CircuitSlot: View {
         if let gate = gate {
             // ゲートが配置されている（タップで削除）
             Text(gate.symbol)
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: 25, weight: .bold))
                 .foregroundStyle(.white)
-                .frame(width: 50, height: 50)
+                .frame(width: 60, height: 60)
                 .background(gate.swiftUIColor)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .onTapGesture {
@@ -81,7 +81,7 @@ struct CircuitSlot: View {
             // 空のスロット
             RoundedRectangle(cornerRadius: 8)
                 .fill(.white.opacity(0.08))
-                .frame(width: 50, height: 50)
+                .frame(width: 60, height: 60)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(.white.opacity(0.2), lineWidth: 2)
