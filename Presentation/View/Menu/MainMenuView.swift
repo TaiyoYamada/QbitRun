@@ -51,16 +51,26 @@ struct MainMenuView: View {
                 .opacity(0.4)
 
             VStack {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.cyan.opacity(0.18), .clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(height: 300)
+
                 Spacer()
                 Rectangle()
                     .fill(
                         LinearGradient(
-                            colors: [.cyan.opacity(0.2), .clear],
+                            colors: [.cyan.opacity(0.18), .clear],
                             startPoint: .bottom,
                             endPoint: .top
                         )
                     )
-                    .frame(height: 200)
+                    .frame(height: 300)
             }
             .ignoresSafeArea()
         }
@@ -88,14 +98,9 @@ struct MainMenuView: View {
 
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("QUANTUM")
-                .font(.system(size: 90, weight: .thin, design: .rounded))
-                .tracking(4)
-                .foregroundStyle(.white.opacity(0.8))
-            
-            Text("GATE")
-                .font(.system(size: 130, weight: .bold, design: .rounded))
-                .tracking(2)
+            Text("Qbit")
+                .font(.system(size: 150, weight: .bold, design: .rounded))
+                .tracking(5)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [.white, .cyan],
@@ -103,34 +108,18 @@ struct MainMenuView: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .shadow(color: .cyan.opacity(0.5), radius: 20, x: 0, y: 0)
-//                .overlay {
-//                    // Shine Effect
-//                    GeometryReader { geo in
-//                        Rectangle()
-//                            .fill(
-//                                LinearGradient(
-//                                    colors: [.clear, .white.opacity(0.5), .clear],
-//                                    startPoint: .leading,
-//                                    endPoint: .trailing
-//                                )
-//                            )
-//                            .rotationEffect(.degrees(20))
-//                            .offset(x: shimmerOffset)
-//                            .mask(
-//                                Text("GATE")
-//                                    .font(.system(size: 120, weight: .bold, design: .rounded))
-//                                    .tracking(2)
-//                            )
-//                    }
-//                    .frame(width: 300, height: 100)
-//                }
+                .shadow(color: .cyan.opacity(0.6), radius: 30, x: 0, y: 0)
+
+            Text("Play")
+                .font(.system(size: 110, weight: .thin, design: .rounded))
+                .tracking(5)
+                .foregroundStyle(.white.opacity(0.8))
         }
-        .onAppear {
-            withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
-                shimmerOffset = 400
-            }
-        }
+//        .onAppear {
+//            withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+//                shimmerOffset = 400
+//            }
+//        }
     }
 
     private var menuButtons: some View {

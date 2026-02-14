@@ -28,9 +28,7 @@ struct QuantumModeCard: View {
             }
         }) {
             HStack(spacing: 20) {
-                // Icon / Visualizer Area
                 ZStack {
-                    // Tech Circle Background
                     Circle()
                         .strokeBorder(
                             accentColor.opacity(0.8),
@@ -61,13 +59,13 @@ struct QuantumModeCard: View {
                 // Text Area
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 22, weight: .bold, design: .monospaced))
+                        .font(.system(size: 30, weight: .bold, design: .monospaced))
                         .foregroundStyle(accentColor)
                         .shadow(color: accentColor.opacity(0.5), radius: 4)
                     
                     Text(subtitle)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.8))
+                        .font(.system(size: 17, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.9))
                 }
                 
                 Spacer()
@@ -75,7 +73,7 @@ struct QuantumModeCard: View {
                 // Tech Decor
                 Image(systemName: "chevron.right")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(accentColor.opacity(0.6))
+                    .foregroundStyle(accentColor.opacity(0.8))
             }
             .padding(24)
             .background(
