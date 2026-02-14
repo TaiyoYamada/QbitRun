@@ -157,12 +157,12 @@ public final class BlochSphereView: UIView {
         stateVectorNode.isHidden = true
         scene.rootNode.addChildNode(stateVectorNode)
         
-        let ghostVectorNode = createArrow(color: UIColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0), opacity: 0.45)
+        let ghostVectorNode = createArrow(color: UIColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0), opacity: 1.0)
         ghostVectorNode.isHidden = true
         scene.rootNode.addChildNode(ghostVectorNode)
         
         // Initialize Coordinator (with thread-safe callback)
-        coordinator = BlochSphereRenderCoordinator { [weak self] in
+        coordinator = BlochSphereRenderCoordinator {
             // Dispatch to main thread explicitly since this runs on render thread
             // No longer needed for axis labels, but might be useful for other updates
         }
@@ -390,7 +390,7 @@ public final class BlochSphereView: UIView {
         node.name = "axisLabel"
         
         // Scale down the large SCNText
-        let scale: Float = 0.04
+        let scale: Float = 0.02
         node.scale = SCNVector3(scale, scale, scale)
         
         // Center alignment

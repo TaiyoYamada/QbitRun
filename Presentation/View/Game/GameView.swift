@@ -113,7 +113,7 @@ struct GameView: View {
     // MARK: - ブロッホ球表示（統合ビュー）
     
     private func spheresSection(geometry: GeometryProxy) -> some View {
-        let size = min(geometry.size.width, geometry.size.height) * 0.9
+        let size = min(geometry.size.width, geometry.size.height) * 0.8
 
         return VStack() {
 
