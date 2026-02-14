@@ -185,16 +185,19 @@ public final class BlochSphereView: UIView {
         material.shininess = 30
         material.transparency = opacity
         
-        let cylinder = SCNCylinder(radius: 0.025, height: 1.0)
+        let headLength: CGFloat = 0.15
+        let shaftLength: CGFloat = 1.0 - headLength
+        
+        let cylinder = SCNCylinder(radius: 0.025, height: shaftLength)
         cylinder.firstMaterial = material
         let cylNode = SCNNode(geometry: cylinder)
-        cylNode.position = SCNVector3(0, 0.5, 0)
+        cylNode.position = SCNVector3(0, shaftLength / 2, 0)
         container.addChildNode(cylNode)
         
-        let cone = SCNCone(topRadius: 0, bottomRadius: 0.05, height: 0.15)
+        let cone = SCNCone(topRadius: 0, bottomRadius: 0.05, height: headLength)
         cone.firstMaterial = material
         let coneNode = SCNNode(geometry: cone)
-        coneNode.position = SCNVector3(0, 1.0, 0)
+        coneNode.position = SCNVector3(0, shaftLength + headLength / 2, 0)
         container.addChildNode(coneNode)
         
         return container
