@@ -10,8 +10,6 @@ struct MainMenuView: View {
     let onSelectMode: (GameDifficulty) -> Void
 
     // MARK: - State
-    @State private var backgroundVector = BlochVector.plus
-    @State private var rotationTask: Task<Void, Never>?
     @State private var shimmerOffset: CGFloat = -200
 
     var body: some View {
@@ -43,12 +41,7 @@ struct MainMenuView: View {
 
             }
         }
-        .task {
-            await startBackgroundRotation()
-        }
-        .onDisappear {
-            rotationTask?.cancel()
-        }
+
     }
 
     // MARK: - Subviews
@@ -81,12 +74,12 @@ struct MainMenuView: View {
         let size = min(geometry.size.width, geometry.size.height) * 1.5
 
         return BlochSphereViewRepresentable(
-            vector: backgroundVector,
-            animated: true,
+            vector: BlochVector.plus,
+            animated: false,
             showBackground: false,
             showAxes: true,
             showAxisLabels: false,
-            continuousOrbitAnimation: false
+            continuousOrbitAnimation: true
         )
         .frame(width: size, height: size)
         .position(
@@ -176,16 +169,7 @@ struct MainMenuView: View {
     }
 
 
-    private func startBackgroundRotation() async {
-        var angle: Double = 0
-        while !Task.isCancelled {
-            angle += 0.02
-            let y = sin(angle)
-            let z = cos(angle)
-            backgroundVector = BlochVector(x: 0, y: y, z: z)
-            try? await Task.sleep(for: .milliseconds(50))
-        }
-    }
+
 }
 
 #Preview("New Main Menu") {
