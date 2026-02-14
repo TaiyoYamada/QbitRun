@@ -12,6 +12,8 @@ struct QuantumModeCard: View {
     
     @State private var isHovered = false
     @State private var isPressed = false
+
+
     
     var body: some View {
         Button(action: {
@@ -52,6 +54,7 @@ struct QuantumModeCard: View {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(accentColor)
+                            .symbolEffect(.pulse, options: .repeating)
                     }
                 }
                 
@@ -83,11 +86,7 @@ struct QuantumModeCard: View {
                     // Tech Border
                     RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(
-                            LinearGradient(
-                                colors: [accentColor, accentColor.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
+                            accentColor.opacity(0.5),
                             lineWidth: 2
                         )
                 }
