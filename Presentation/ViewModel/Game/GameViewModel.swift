@@ -76,6 +76,20 @@ final class GameViewModel {
     /// 残りミス回数
     var remainingMisses: Int { gameEngine.remainingMisses }
     
+    /// 回路のゲート配列（Single Source of Truth）
+    var circuitGates: [QuantumGate] {
+        get { gameEngine.currentCircuit.gates }
+        set {
+            gameEngine.clearCircuit()
+            for gate in newValue {
+                gameEngine.addGate(gate)
+            }
+        }
+    }
+    
+    /// ゲートを追加可能か
+    var canAddGate: Bool { gameEngine.currentCircuit.gateCount < 5 }
+    
     // MARK: - ユーザー操作
     
     /// ゲームを開始

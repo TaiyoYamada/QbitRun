@@ -1,10 +1,8 @@
 import Foundation
-import CoreTransferable
-import UniformTypeIdentifiers
 
 /// 1量子ビットに作用する量子ゲート
 /// 各ゲートは2×2のユニタリ行列で表現される
-public enum QuantumGate: String, CaseIterable, Sendable, Codable {
+public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
     case x  // パウリX（NOT）ゲート
     case y  // パウリYゲート
     case z  // パウリZゲート
@@ -87,19 +85,5 @@ public enum QuantumGate: String, CaseIterable, Sendable, Codable {
         case .s: return "90°位相シフト"
         case .t: return "45°位相シフト"
         }
-    }
-}
-
-// MARK: - Transferable対応（SwiftUI D&D用）
-
-extension QuantumGate: Transferable {
-    public static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(contentType: .quantumGate)
-    }
-}
-
-extension UTType {
-    static var quantumGate: UTType {
-        UTType(exportedAs: "com.quantumgate.gate")
     }
 }

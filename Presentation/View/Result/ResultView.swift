@@ -29,7 +29,6 @@ struct ResultView: View {
     }
     
     var body: some View {
-//        GlassEffectContainer {
             ZStack {
                 // MARK: - Layer 1: Background（回路アニメーション無効）
                 StandardBackgroundView(showGrid: true, circuitOpacity: 0)
@@ -94,7 +93,6 @@ struct ResultView: View {
                         .padding(.top, 8)
                     }
                     .padding(40)
-//                    .glassEffect(in: RoundedRectangle(cornerRadius: 24))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
                             .stroke(
@@ -162,7 +160,6 @@ struct ResultView: View {
                     }
                 }
             }
-//        }
     }
 
     
@@ -177,38 +174,6 @@ struct ResultView: View {
         }
     }
 }
-
-/// Result画面専用のアクションボタン
-struct ResultActionButton: View {
-    let title: String
-    let icon: String
-    let color: Color
-    let action: () -> Void
-    let isProminent: Bool
-    
-    init(title: String, icon: String, color: Color, isProminent: Bool = false, action: @escaping () -> Void) {
-        self.title = title
-        self.icon = icon
-        self.color = color
-        self.isProminent = isProminent
-        self.action = action
-    }
-    
-    var body: some View {
-        Button(action: {
-            // Haptic
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
-            action()
-        }) {
-            Label(title, systemImage: icon)
-                .font(.custom("Optima-Bold", size: 16))
-        }
-//        .buttonStyle(GlassButtonStyle())
-        .tint(color)
-    }
-}
-
 
 // MARK: - プレビュー
 

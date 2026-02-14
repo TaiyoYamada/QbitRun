@@ -3,10 +3,9 @@ import SwiftUI
 /// ゲーム画面
 struct GameView: View {
 
-    @State private var viewModel = GameViewModel()
+    @Bindable private var viewModel = GameViewModel()
     @State private var showSuccessEffect = false
     @State private var showFailureEffect = false
-    @State private var circuitGates: [QuantumGate] = []
     
     /// ゲームの難易度
     let difficulty: GameDifficulty
@@ -16,7 +15,6 @@ struct GameView: View {
     
     var body: some View {
             ZStack {
-                // MARK: - Layer 1: Background
                 // MARK: - Layer 1: Background
                 StandardBackgroundView(showGrid: false, circuitOpacity: 0)
 
@@ -42,12 +40,10 @@ struct GameView: View {
                     
                     // ゲートパレット（タップで追加）
                     SwiftUIGatePaletteView { gate in
-                        if circuitGates.count < 5 {
-                            circuitGates.append(gate)
+                        if viewModel.canAddGate {
                             viewModel.addGate(gate)
                         }
                     }
-                    // Palette has its own padding/styling now, but we add safe area padding
                     .padding(.bottom, 8)
                 }
                 
@@ -65,11 +61,6 @@ struct GameView: View {
                     onGameEnd(score)
                 }
             }
-            .onChange(of: circuitGates) { _, newGates in
-                // 回路ゲートが変更されたらViewModelを更新
-                syncCircuitToViewModel()
-            }
-//        }
     }
 
     
@@ -88,11 +79,6 @@ struct GameView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-//            .glassEffect(in: Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-            )
             .clipShape(Capsule())
             .overlay(Capsule().stroke(.white.opacity(0.3), lineWidth: 1))
             
@@ -101,7 +87,7 @@ struct GameView: View {
             // タイマー - Optima Bold & Large
             Text(String(format: "%02d", viewModel.remainingTime))
                 .font(.custom("Optima-Bold", size: 56))
-                .presentationCornerRadius(8) // Just a modifier to create spacing logic if needed
+
                 .monospacedDigit()
                 .foregroundStyle(viewModel.isTimeLow ? Color(red: 1.0, green: 0.2, blue: 0.2) : .white)
                 .shadow(color: viewModel.isTimeLow ? .red.opacity(0.5) : .cyan.opacity(0.3), radius: 8)
@@ -123,7 +109,6 @@ struct GameView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-//            .glassEffect(in: RoundedRectangle(cornerRadius: 12))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.3), lineWidth: 1))
         }
@@ -168,12 +153,11 @@ struct GameView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-//            .glassEffect(in: Capsule())
+            .clipShape(Capsule())
             .overlay(
                 Capsule()
                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
             )
-            .clipShape(Capsule())
         }
         .padding(.vertical, 10)
     }
@@ -195,9 +179,8 @@ struct GameView: View {
                 Button(action: {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        circuitGates.removeAll()
+                        viewModel.clearCircuit()
                     }
-                    viewModel.clearCircuit()
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "trash")
@@ -216,22 +199,22 @@ struct GameView: View {
 
             // Circuit Area
                 SwiftUICircuitView(
-                    gates: $circuitGates,
+                    gates: $viewModel.circuitGates,
                     onRun: { runCircuit() }
                 )
-//                .glassEffect(in: RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.2), lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2).frame(height: 100) // Height constraint for stability
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                .frame(height: 100)
         }
     }
     
     // MARK: - 回路実行
     
     private func runCircuit() {
-        guard !circuitGates.isEmpty else { return }
+        guard !viewModel.circuitGates.isEmpty else { return }
         
         // 判定実行
         let result = viewModel.runCircuit()
@@ -241,9 +224,9 @@ struct GameView: View {
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
                 showSuccessEffect = false
-                // 正解したら回路をクリア(アニメーション付き)
+                // 正解したら回路をクリア（アニメーション付き）
                 withAnimation(.easeOut(duration: 0.2)) {
-                    circuitGates.removeAll()
+                    viewModel.clearCircuit()
                 }
             }
         } else {
@@ -252,39 +235,6 @@ struct GameView: View {
                 try? await Task.sleep(for: .milliseconds(100))
                 showFailureEffect = false
             }
-            // ゲームオーバーの場合はViewのonChangeで処理
-        }
-    }
-    
-    private func syncCircuitToViewModel() {
-        // ローカルの回路状態をViewModelに同期
-        viewModel.clearCircuit()
-        for gate in circuitGates {
-            viewModel.addGate(gate)
-        }
-    }
-}
-
-// MARK: - Effect Overlay
-
-struct EffectOverlayView: UIViewRepresentable {
-    @Binding var showSuccess: Bool
-    @Binding var showFailure: Bool
-    
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        view.isUserInteractionEnabled = false
-        view.backgroundColor = .clear
-        return view
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if showSuccess {
-            CircuitAnimator.showSuccessEffect(on: uiView)
-            CircuitAnimator.showStarsEffect(on: uiView)
-        }
-        if showFailure {
-            CircuitAnimator.showFailureEffect(on: uiView)
         }
     }
 }

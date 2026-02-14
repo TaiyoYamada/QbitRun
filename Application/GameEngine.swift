@@ -234,43 +234,7 @@ public final class GameEngine {
         }
     }
     
-    // MARK: - 正解判定
-    
-    /// 現在の状態がターゲットと一致するか判定
-    private func checkSolution(currentState: QuantumState) {
-        guard let problem = currentProblem else { return }
-        
-        let result = judgeService.judge(
-            playerCircuit: currentCircuit,
-            startState: problem.startState,
-            targetState: problem.targetState
-        )
-        
-        if result.isCorrect {
-            // 正解！
-            let bonus = calculateBonus()
-            score += baseScorePerProblem + bonus
-            totalBonus += bonus
-            problemsSolved += 1
-            
-            // 正解フラグを立てる（アニメーション用）
-            didSolveLastProblem = true
-            
-            // 回路をクリアして次の問題へ
-            currentCircuit.clear()
-            generateNewProblem()
-            // 新しい問題の開始状態に設定
-            if let newProblem = currentProblem {
-                currentVector = newProblem.startBlochVector
-            }
-            
-            // 少し後にフラグをリセット
-            Task {
-                try? await Task.sleep(for: .milliseconds(500))
-                self.didSolveLastProblem = false
-            }
-        }
-    }
+    // MARK: - ボーナス計算
     
     /// ボーナスを計算
     /// 最小ゲート数に近いほど高ボーナス

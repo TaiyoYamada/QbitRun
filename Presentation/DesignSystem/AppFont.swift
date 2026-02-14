@@ -1,9 +1,13 @@
 import SwiftUI
 
+// MARK: - アプリフォント定義
+
+/// アプリ全体で使用するフォントスタイルを集約したデザインシステム
 extension Font {
     // MARK: - フォント名
     
     private static let fontName = "Optima-Bold"
+    private static let fontNameRegular = "Optima-Regular"
     
     // MARK: - タイトル系
     
@@ -24,6 +28,9 @@ extension Font {
     /// 小さい本文
     static let appCaption = Font.custom(fontName, size: 14)
     
+    /// 極小テキスト
+    static let appCaptionSmall = Font.custom(fontNameRegular, size: 12)
+    
     // MARK: - ボタン系
     
     /// ボタン（大）
@@ -37,12 +44,26 @@ extension Font {
     
     // MARK: - ゲーム用
     
-    /// スコア表示
-    static let appScore = Font.custom(fontName, size: 32)
-    
     /// タイマー表示
-    static let appTimer = Font.custom(fontName, size: 60)
+    static let appTimer = Font.custom(fontName, size: 56)
+    
+    /// スコア表示（大）
+    static let appScoreLarge = Font.custom(fontName, size: 32)
+    
+    /// スコア表示（中）
+    static let appScore = Font.custom(fontName, size: 28)
+    
+    /// スコア表示（小）
+    static let appScoreSmall = Font.custom(fontName, size: 24)
     
     /// ゲートシンボル
     static let appGateSymbol = Font.custom(fontName, size: 24)
+    
+    // MARK: - リザルト用
+    
+    /// リザルトスコア（カウントアップ）
+    static let appResultScore = Font.custom(fontName, size: 72)
+    
+    /// リザルトランク
+    static let appResultRank = Font.custom(fontName, size: 48)
 }

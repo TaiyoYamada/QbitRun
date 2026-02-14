@@ -62,29 +62,3 @@ struct GateButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
-
-// MARK: - SwiftUI Color Extension
-
-extension QuantumGate {
-    var symbol: String {
-        switch self {
-        case .x: return "X"
-        case .y: return "Y"
-        case .z: return "Z"
-        case .h: return "H"
-        case .s: return "S"
-        case .t: return "T"
-        }
-    }
-    
-    var swiftUIColor: Color {
-        switch self {
-        case .x: return Color(red: 0.9, green: 0.3, blue: 0.3)
-        case .y: return Color(red: 0.3, green: 0.8, blue: 0.3)
-        case .z: return Color(red: 0.3, green: 0.5, blue: 0.9)
-        case .h: return Color(red: 0.9, green: 0.6, blue: 0.2)
-        case .s: return Color(red: 0.7, green: 0.3, blue: 0.8)
-        case .t: return Color(red: 0.2, green: 0.7, blue: 0.7)
-        }
-    }
-}
