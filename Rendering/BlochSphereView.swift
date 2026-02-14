@@ -82,16 +82,12 @@ public final class BlochSphereView: UIView {
         }
     }
     
-    /// Axis labels
-    private var axisLabels: [UILabel] = []
-    
     // MARK: - Initialization
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
         setupScene()
         setupGestures()
-        setupAxisLabels()
     }
     
     required init?(coder: NSCoder) {
@@ -100,7 +96,6 @@ public final class BlochSphereView: UIView {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
-        updateAxisLabelPositions()
     }
     
     // MARK: - Setup
@@ -169,9 +164,7 @@ public final class BlochSphereView: UIView {
         // Initialize Coordinator (with thread-safe callback)
         coordinator = BlochSphereRenderCoordinator { [weak self] in
             // Dispatch to main thread explicitly since this runs on render thread
-            DispatchQueue.main.async {
-                self?.updateAxisLabelPositions()
-            }
+            // No longer needed for axis labels, but might be useful for other updates
         }
         coordinator.stateVectorNode = stateVectorNode
         coordinator.ghostVectorNode = ghostVectorNode
@@ -317,19 +310,20 @@ public final class BlochSphereView: UIView {
         axesNode = SCNNode()
         let axisLength: CGFloat = 1.35
         let radius: CGFloat = 0.006
+        let labelDistance: CGFloat = 1.6
         
         // Physics Coordinates -> Visual Coordinates Mapping
         // X (Red)   -> (1, 0, 0)
         // Y (Green) -> (0, 0, -1)
         // Z (Blue)  -> (0, 1, 0) [Up]
         
-        let axes: [(SCNVector3, UIColor)] = [
-            (SCNVector3(0, 0, 1), UIColor.cyan),                           // +X (Cyan) -> Visual +Z (Front)
-            (SCNVector3(1, 0, 0), UIColor.purple),                         // +Y (Purple) -> Visual +X (Right)
-            (SCNVector3(0, 1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1)) // +Z (Deep Blue) -> Visual +Y (Up)
+        let axes: [(SCNVector3, UIColor, String, SCNVector3)] = [
+            (SCNVector3(0, 0, 1), UIColor.cyan, "x", SCNVector3(0, 0, labelDistance)),                      // +X (Cyan) -> Visual +Z (Front)
+            (SCNVector3(1, 0, 0), UIColor.purple, "y", SCNVector3(labelDistance, 0, 0)),                    // +Y (Purple) -> Visual +X (Right)
+            (SCNVector3(0, 1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1), "z", SCNVector3(0, labelDistance, 0)) // +Z (Deep Blue) -> Visual +Y (Up)
         ]
         
-        for (dir, color) in axes {
+        for (dir, color, labelText, labelPos) in axes {
             let cylinder = SCNCylinder(radius: radius, height: axisLength * 2)
             let mat = SCNMaterial()
             mat.lightingModel = .constant
@@ -372,8 +366,46 @@ public final class BlochSphereView: UIView {
             }
             
             axesNode.addChildNode(coneNode)
+            
+            // Add 3D Text Label
+            let textNode = createAxisLabelNode(text: labelText, color: color)
+            textNode.position = labelPos
+            axesNode.addChildNode(textNode)
         }
         scene.rootNode.addChildNode(axesNode)
+    }
+    
+    private func createAxisLabelNode(text: String, color: UIColor) -> SCNNode {
+        let textGeometry = SCNText(string: text, extrusionDepth: 0.0)
+        textGeometry.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+        textGeometry.flatness = 0.1
+        
+        let material = SCNMaterial()
+        material.lightingModel = .constant
+        material.diffuse.contents = color
+        material.isDoubleSided = true
+        textGeometry.firstMaterial = material
+        
+        let node = SCNNode(geometry: textGeometry)
+        node.name = "axisLabel"
+        
+        // Scale down the large SCNText
+        let scale: Float = 0.04
+        node.scale = SCNVector3(scale, scale, scale)
+        
+        // Center alignment
+        let (min, max) = node.boundingBox
+        let dx = min.x + 0.5 * (max.x - min.x)
+        let dy = min.y + 0.5 * (max.y - min.y)
+        let dz = min.z + 0.5 * (max.z - min.z)
+        node.pivot = SCNMatrix4MakeTranslation(dx, dy, dz)
+        
+        // Billboard constraint to always face camera
+        let billboard = SCNBillboardConstraint()
+        billboard.freeAxes = .all
+        node.constraints = [billboard]
+        
+        return node
     }
     
     // MARK: - Public Methods
@@ -414,70 +446,20 @@ public final class BlochSphereView: UIView {
     
     private func updateAxesVisibility() {
         axesNode?.isHidden = !showAxes
-        for label in axisLabels {
-            label.isHidden = !showAxes || !showAxisLabels
+        
+        // Toggle labels if axes are shown
+        if let axes = axesNode {
+            for child in axes.childNodes {
+                if child.name == "axisLabel" {
+                    child.isHidden = !showAxisLabels
+                }
+            }
         }
     }
     
     private func updateAxesOpacity() {
         axesNode?.opacity = axisOpacity
-        for label in axisLabels {
-            label.alpha = axisOpacity
-        }
-    }
-    
-    // MARK: - Axis Labels
-    
-    private func setupAxisLabels() {
-        let labelData: [(String, UIColor)] = [
-            ("x", UIColor.cyan),
-            ("y", UIColor.purple),
-            ("z", UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1))
-        ]
-        
-        for (text, color) in labelData {
-            let label = UILabel()
-            label.text = text
-            label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-            label.textColor = color
-            label.textAlignment = .center
-            label.sizeToFit()
-            addSubview(label)
-            axisLabels.append(label)
-        }
-    }
-    
-    private func updateAxisLabelPositions() {
-        guard axisLabels.count == 3 else { return }
-        
-        // Match positions to createAxesGeometry
-        // x -> +Z (Visual Front)
-        // y -> +X (Visual Right)
-        // z -> +Y (Visual Up)
-        let axisPositions: [SCNVector3] = [
-            SCNVector3(0, 0, 1.35),  // x
-            SCNVector3(1.35, 0, 0),  // y
-            SCNVector3(0, 1.35, 0)   // z
-        ]
-        
-        for (index, pos) in axisPositions.enumerated() {
-            let projectedPoint = scnView.projectPoint(pos)
-            
-            // Basic near/far clipping check
-            if projectedPoint.z > 0.99 || projectedPoint.z < 0 {
-                axisLabels[index].isHidden = true
-                continue
-            }
-            
-            let x = CGFloat(projectedPoint.x)
-            let y = CGFloat(projectedPoint.y)
-            
-            axisLabels[index].isHidden = (!showAxes || !showAxisLabels)
-            if !axisLabels[index].isHidden {
-                axisLabels[index].center = CGPoint(x: x, y: y)
-                axisLabels[index].alpha = axisOpacity
-            }
-        }
+        // Labels are children of axesNode, so they inherit opacity
     }
     
     // MARK: - Gestures
@@ -500,10 +482,9 @@ public final class BlochSphereView: UIView {
         
         updateCameraPosition()
         gesture.setTranslation(.zero, in: self)
-        
-        updateAxisLabelPositions()
     }
 }
+
 
 // MARK: - Render Coordinator
 
