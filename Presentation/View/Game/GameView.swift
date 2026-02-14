@@ -14,6 +14,7 @@ struct GameView: View {
     let onGameEnd: (ScoreEntry) -> Void
     
     var body: some View {
+        GeometryReader { geometry in
             ZStack {
                 // MARK: - Layer 1: Background
                 StandardBackgroundView(showGrid: false, circuitOpacity: 0)
@@ -28,23 +29,17 @@ struct GameView: View {
                     Spacer()
                     
                     // ブロッホ球表示エリア
-                    spheresSection
-                    
-                    Spacer()
-                    
+                    spheresSection(geometry: geometry)
+
                     // 回路表示エリア
                     circuitSection
-                        .padding(.horizontal, 24)
-                    
-                    Spacer()
-                    
+
                     // ゲートパレット（タップで追加）
                     SwiftUIGatePaletteView { gate in
                         if viewModel.canAddGate {
                             viewModel.addGate(gate)
                         }
                     }
-                    .padding(.bottom, 8)
                 }
                 
                 // MARK: - Layer 3: Overlay Effects
@@ -53,9 +48,10 @@ struct GameView: View {
                     showFailure: $showFailureEffect
                 )
             }
-            .onAppear {
-                viewModel.startGame(difficulty: difficulty)
-            }
+        }
+        .onAppear {
+            viewModel.startGame(difficulty: difficulty)
+        }
             .onChange(of: viewModel.finalScore) { _, newScore in
                 if let score = newScore {
                     onGameEnd(score)
@@ -116,50 +112,51 @@ struct GameView: View {
     
     // MARK: - ブロッホ球表示（統合ビュー）
     
-    private var spheresSection: some View {
-        VStack(spacing: 12) {
-            // 単一のブロッホ球で現在とターゲットを同時表示
-            BlochSphereViewRepresentable(
-                vector: viewModel.currentVector,
-                animated: true,
-                targetVector: viewModel.targetVector,  // ゴースト表示
-                showBackground: false
-            )
-            .frame(width: 400, height: 400)
-            
+    private func spheresSection(geometry: GeometryProxy) -> some View {
+        let size = min(geometry.size.width, geometry.size.height) * 0.9
+
+        return VStack() {
+
             // 凡例
             HStack(spacing: 32) {
                 // 現在の状態（赤）
-                HStack(spacing: 6) {
+                HStack(spacing: 10) {
                     Circle()
                         .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
-                        .frame(width: 12, height: 12)
+                        .frame(width: 30, height: 30)
                     Text("CURRENT")
-                        .font(.custom("Optima-Bold", size: 14))
+                        .font(.custom("Optima-Bold", size: 30))
                         .tracking(1)
                         .foregroundStyle(.white.opacity(0.8))
                 }
-                
+
                 // ターゲット状態（金）
-                HStack(spacing: 6) {
+                HStack(spacing: 10) {
                     Circle()
                         .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
-                        .frame(width: 12, height: 12)
+                        .frame(width: 30, height: 30)
                     Text("TARGET")
-                        .font(.custom("Optima-Bold", size: 14))
+                        .font(.custom("Optima-Bold", size: 30))
                         .tracking(1)
                         .foregroundStyle(.yellow.opacity(0.8))
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+//            .clipShape(Capsule())
+//            .overlay(
+//                Capsule()
+//                    .stroke(Color.white.opacity(0.2), lineWidth: 3)
+//            )
+
+            // 単一のブロッホ球で現在とターゲットを同時表示
+            BlochSphereViewRepresentable(
+                vector: viewModel.currentVector,
+                animated: true,
+                targetVector: viewModel.targetVector,
+                showBackground: false
             )
+            .frame(width: size, height: size)
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 5)
     }
     
     // MARK: - 回路表示
@@ -169,7 +166,7 @@ struct GameView: View {
             // Header for Circuit Panel
             HStack {
                 Text("QUANTUM CIRCUIT")
-                    .font(.custom("Optima-Bold", size: 14))
+                    .font(.custom("Optima-Bold", size: 30))
                     .tracking(1)
                     .foregroundStyle(.white.opacity(0.5))
                 
@@ -182,17 +179,14 @@ struct GameView: View {
                         viewModel.clearCircuit()
                     }
                 }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "trash")
-                        Text("CLEAR")
+                    Text("RESET")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.red.opacity(0.2))
+                        .clipShape(Capsule())
                     }
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.red.opacity(0.2))
-                    .clipShape(Capsule())
-                }
             }
             .padding(.bottom, 8)
             .padding(.horizontal, 4)

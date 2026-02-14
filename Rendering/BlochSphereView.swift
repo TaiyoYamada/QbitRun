@@ -60,6 +60,12 @@ public final class BlochSphereView: UIView {
             updateBackgroundInsets()
         }
     }
+    /// Axis opacity
+    public var axisOpacity: CGFloat = 1.0 {
+        didSet {
+            updateAxesOpacity()
+        }
+    }
     
     /// Show axes
     public var showAxes: Bool = true {
@@ -318,9 +324,9 @@ public final class BlochSphereView: UIView {
         // Z (Blue)  -> (0, 1, 0) [Up]
         
         let axes: [(SCNVector3, UIColor)] = [
-            (SCNVector3(1, 0, 0), UIColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 1)),   // +X
-            (SCNVector3(0, 0, -1), UIColor(red: 0.3, green: 0.8, blue: 0.3, alpha: 1)),  // +Y (mapped to -Z)
-            (SCNVector3(0, 1, 0), UIColor(red: 0.3, green: 0.4, blue: 0.9, alpha: 1))    // +Z (mapped to +Y)
+            (SCNVector3(0, 0, 1), UIColor.cyan),                           // +X (Cyan) -> Visual +Z (Front)
+            (SCNVector3(1, 0, 0), UIColor.purple),                         // +Y (Purple) -> Visual +X (Right)
+            (SCNVector3(0, 1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1)) // +Z (Deep Blue) -> Visual +Y (Up)
         ]
         
         for (dir, color) in axes {
@@ -360,6 +366,9 @@ public final class BlochSphereView: UIView {
             } else if dir.z < -0.5 { // -Z (Visual Back, Physics Y)
                 coneNode.position = SCNVector3(0, 0, -Float(axisLength))
                 coneNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
+            } else if dir.z > 0.5 { // +Z (Visual Front, Physics X)
+                coneNode.position = SCNVector3(0, 0, Float(axisLength))
+                coneNode.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
             }
             
             axesNode.addChildNode(coneNode)
@@ -410,13 +419,20 @@ public final class BlochSphereView: UIView {
         }
     }
     
+    private func updateAxesOpacity() {
+        axesNode?.opacity = axisOpacity
+        for label in axisLabels {
+            label.alpha = axisOpacity
+        }
+    }
+    
     // MARK: - Axis Labels
     
     private func setupAxisLabels() {
         let labelData: [(String, UIColor)] = [
-            ("x", UIColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 1)),
-            ("y", UIColor(red: 0.3, green: 0.8, blue: 0.3, alpha: 1)),
-            ("z", UIColor(red: 0.3, green: 0.4, blue: 0.9, alpha: 1))
+            ("x", UIColor.cyan),
+            ("y", UIColor.purple),
+            ("z", UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1))
         ]
         
         for (text, color) in labelData {
@@ -435,13 +451,13 @@ public final class BlochSphereView: UIView {
         guard axisLabels.count == 3 else { return }
         
         // Match positions to createAxesGeometry
-        // x -> +X
-        // y -> -Z
-        // z -> +Y
+        // x -> +Z (Visual Front)
+        // y -> +X (Visual Right)
+        // z -> +Y (Visual Up)
         let axisPositions: [SCNVector3] = [
-            SCNVector3(1.35, 0, 0),  // x
-            SCNVector3(0, 0, -1.35), // y (Visual Back)
-            SCNVector3(0, 1.35, 0)   // z (Visual Up)
+            SCNVector3(0, 0, 1.35),  // x
+            SCNVector3(1.35, 0, 0),  // y
+            SCNVector3(0, 1.35, 0)   // z
         ]
         
         for (index, pos) in axisPositions.enumerated() {
@@ -459,7 +475,7 @@ public final class BlochSphereView: UIView {
             axisLabels[index].isHidden = (!showAxes || !showAxisLabels)
             if !axisLabels[index].isHidden {
                 axisLabels[index].center = CGPoint(x: x, y: y)
-                axisLabels[index].alpha = 1.0
+                axisLabels[index].alpha = axisOpacity
             }
         }
     }
@@ -606,9 +622,11 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
         
         let rawV = vector.float3
         // Remap Physics Coordinates to Visual Coordinates
-        // Physics (x, y, z) -> Visual (x, z, -y)
-        // This ensures Physics Z (Up) maps to Visual Y (Up)
-        let v = simd_float3(rawV.x, rawV.z, -rawV.y)
+        // Physics (x, y, z) -> Visual (y, z, x)? No.
+        // Physics X -> Visual Z
+        // Physics Y -> Visual X
+        // Physics Z -> Visual Y
+        let v = simd_float3(rawV.y, rawV.z, rawV.x)
         
         let length = simd_length(v)
         
@@ -653,6 +671,7 @@ public struct BlochSphereViewRepresentable: UIViewRepresentable {
     public var onOrbitStop: ((BlochVector) -> Void)? = nil
     public var isInteractive: Bool = true
     public var animated: Bool = true
+    public var axisOpacity: CGFloat = 1.0
     
     public init(
         vector: BlochVector = .zero,
@@ -664,7 +683,8 @@ public struct BlochSphereViewRepresentable: UIViewRepresentable {
         continuousOrbitAnimation: Bool = false,
         backgroundPadding: CGFloat = 16,
         onOrbitStop: ((BlochVector) -> Void)? = nil,
-        isInteractive: Bool = true
+        isInteractive: Bool = true,
+        axisOpacity: CGFloat = 1.0
     ) {
         self.vector = vector
         self.animated = animated
@@ -676,11 +696,12 @@ public struct BlochSphereViewRepresentable: UIViewRepresentable {
         self.backgroundPadding = backgroundPadding
         self.onOrbitStop = onOrbitStop
         self.isInteractive = isInteractive
+        self.axisOpacity = axisOpacity
     }
-    
+        
     public func makeUIView(context: Context) -> BlochSphereView {
         let view = BlochSphereView()
-        updateView(view)
+        updateView(view) // Initial update
         return view
     }
     
@@ -697,6 +718,8 @@ public struct BlochSphereViewRepresentable: UIViewRepresentable {
         view.onOrbitStop = onOrbitStop
         view.isInteractive = isInteractive
         view.setTargetVector(targetVector)
+        view.setTargetVector(targetVector)
         view.setVector(vector, animated: animated)
+        view.axisOpacity = axisOpacity
     }
 }

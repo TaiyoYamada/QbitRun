@@ -75,7 +75,8 @@ struct MainMenuView: View {
             showBackground: false,
             showAxes: true,
             showAxisLabels: false,
-            continuousOrbitAnimation: true
+            continuousOrbitAnimation: true,
+            axisOpacity: 0.3
         )
         .frame(width: size, height: size)
         .position(
