@@ -157,6 +157,7 @@ struct GameView: View {
             .frame(width: size, height: size)
         }
         .padding(.vertical, 5)
+        .padding(.bottom, -80) // Negative margin asあああ
     }
     
     // MARK: - 回路表示
