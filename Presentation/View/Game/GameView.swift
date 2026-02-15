@@ -151,32 +151,98 @@ struct GameView: View {
     
     // MARK: - ヘッダー（Glassmorphism）
     
+    @State private var showInfoModal = false
+    
+    // ... (existing body part)
+    
+    // MARK: - ヘッダー（Glassmorphism）
+    
     private var headerSection: some View {
         ZStack {
-
-            Text(String(format: "%02d", viewModel.remainingTime))
-                .font(.system(size: 40, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(viewModel.isTimeLow ? Color(red: 1.0, green: 0.2, blue: 0.2) : .white)
-                .shadow(color: viewModel.isTimeLow ? .red.opacity(0.5) : .cyan.opacity(0.3), radius: 8)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
+            // Center: Circular Timer
+            ZStack {
+                // 1. Background Track
+                Circle()
+                    .stroke(Color.white.opacity(0.3), lineWidth: 8)
+                
+                // 2. Progress Fill (Clockwise depletion)
+                Circle()
+                    .trim(from: 1.0 - (CGFloat(viewModel.remainingTime) / 60.0), to: 1.0)
+                    .stroke(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color(.purple),
+                                Color(.cyan)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 1.0), value: viewModel.remainingTime) // Smooth transition
+                
+                // 3. Time Text
+                Text(String(format: "%d", viewModel.remainingTime))
+                    .font(.system(size: 53, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
+            }
+            .frame(width: 115, height: 115)
+            .background(
+                Circle()
+                    .fill(.black.opacity(0.2)) // Darker background for contrast
+            )
+            .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
 
             HStack {
-                // Left: Spacer for balance
-                Spacer()
-                    .frame(width: 40)
+                // Left: Points (Bordered Frame with Top-Left Label)
+                ZStack(alignment: .topLeading) {
+                    Text("\(viewModel.score)")
+                        .font(.system(size: 45, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.cyan)
+                        .frame(width: 145, height: 85, alignment: .trailing)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(Color.cyan.opacity(0.6), lineWidth: 5)
+                        )
+                    
+                    // Label at Top-Left of the border
+                    Text("SCORE")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 4)
+                        .background(Color.black.opacity(0.6))
+                        .clipShape(Capsule())
+                        .offset(x: 10, y: -20)
+                }
                 
                 Spacer()
 
-                Text("POINTS：\(viewModel.score)")
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
-                    .foregroundStyle(.cyan)
-
-                .padding(.horizontal, 30)
-                .padding(.vertical, 12)
-
+                // Right: Info Button
+                Button(action: {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    showInfoModal = true
+                }) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(8)
+                        .background(.thinMaterial)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 1))
+                }
             }
+            .padding(.horizontal, 24) // Outer padding for HStack
+        }
+        .sheet(isPresented: $showInfoModal) {
+            GateReferenceView()
+                .presentationDetents([.medium, .large])
         }
     }
     
