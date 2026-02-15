@@ -315,62 +315,80 @@ public final class BlochSphereView: UIView {
         let radius: CGFloat = 0.006
         let labelDistance: CGFloat = 1.6
         
-        // Physics Coordinates -> Visual Coordinates Mapping
-        // X (Red)   -> (1, 0, 0)
-        // Y (Green) -> (0, 0, -1)
-        // Z (Blue)  -> (0, 1, 0) [Up]
-        
         let axes: [(SCNVector3, UIColor, String, SCNVector3)] = [
-            (SCNVector3(0, 0, 1), UIColor.cyan, "x", SCNVector3(0, 0, labelDistance)),                      // +X (Cyan) -> Visual +Z (Front)
-            (SCNVector3(1, 0, 0), UIColor.purple, "y", SCNVector3(labelDistance, 0, 0)),                    // +Y (Purple) -> Visual +X (Right)
-            (SCNVector3(0, 1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1), "z", SCNVector3(0, labelDistance, 0)) // +Z (Deep Blue) -> Visual +Y (Up)
+            // +Z (Top) -> |0⟩
+            (SCNVector3(0, 1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1), "|0⟩", SCNVector3(0, labelDistance, 0)),
+            // -Z (Bottom) -> |1⟩
+            (SCNVector3(0, -1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1), "|1⟩", SCNVector3(0, -labelDistance, 0)),
+            
+            // +X (Front) -> |+⟩
+            (SCNVector3(0, 0, 1), UIColor.cyan, "|+⟩", SCNVector3(0, 0, labelDistance)),
+            // -X (Back) -> |-⟩
+            (SCNVector3(0, 0, -1), UIColor.cyan, "|-⟩", SCNVector3(0, 0, -labelDistance)),
+            
+            // +Y (Right) -> |i⟩
+            (SCNVector3(1, 0, 0), UIColor.purple, "|i⟩", SCNVector3(labelDistance, 0, 0)),
+            // -Y (Left) -> |-i⟩
+            (SCNVector3(-1, 0, 0), UIColor.purple, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
         ]
         
         for (dir, color, labelText, labelPos) in axes {
-            let cylinder = SCNCylinder(radius: radius, height: axisLength * 2)
+            // 1. Shaft (Half-axis from origin to tip)
+            // SCNCylinder is Y-aligned, centered at (0,0,0).
+            let cylinder = SCNCylinder(radius: radius, height: axisLength)
             let mat = SCNMaterial()
             mat.lightingModel = .constant
             mat.diffuse.contents = color
             cylinder.firstMaterial = mat
             
             let lineNode = SCNNode(geometry: cylinder)
+            // Move it so it starts at origin and goes outwards
+            // Default center is at (0,0,0). We want base at (0,0,0), top at (0, length, 0).
+            // So shift Y by length/2.
+            lineNode.position = SCNVector3(0, axisLength / 2.0, 0)
             
-            // Orient cylinder to match direction
-            if abs(dir.x) > 0.5 { // X-aligned
-                lineNode.eulerAngles = SCNVector3(0, 0, -Float.pi / 2)
-            } else if abs(dir.z) > 0.5 { // Z-aligned
-                lineNode.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
-            }
-            // Y-aligned is default
+            // Container for shaft to handle rotation easily
+            let shaftContainer = SCNNode()
+            shaftContainer.addChildNode(lineNode)
             
-            axesNode.addChildNode(lineNode)
-            
-            // Cone (Arrowhead) - Place at positive end
-            let cone = SCNCone(topRadius: 0, bottomRadius: 0.03, height: 0.12)
-            let coneMat = SCNMaterial()
-            coneMat.lightingModel = .constant
-            coneMat.diffuse.contents = color
-            cone.firstMaterial = coneMat
-            
-            let coneNode = SCNNode(geometry: cone)
-            
-            // Position cone at the end of the axis
-            if abs(dir.x) > 0.5 {
-                coneNode.position = SCNVector3(Float(axisLength), 0, 0)
-                coneNode.eulerAngles = SCNVector3(0, 0, -Float.pi / 2)
-            } else if dir.y > 0.5 { // +Y (Visual Up, Physics Z)
-                coneNode.position = SCNVector3(0, Float(axisLength), 0)
-            } else if dir.z < -0.5 { // -Z (Visual Back, Physics Y)
-                coneNode.position = SCNVector3(0, 0, -Float(axisLength))
-                coneNode.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
-            } else if dir.z > 0.5 { // +Z (Visual Front, Physics X)
-                coneNode.position = SCNVector3(0, 0, Float(axisLength))
-                coneNode.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
+            // 3. Rotate Container to match direction
+            // Default is +Y (0, 1, 0)
+            if dir.y > 0.9 { // +Y (Top)
+                // No rotation needed
+            } else if dir.y < -0.9 { // -Y (Bottom)
+                shaftContainer.eulerAngles = SCNVector3(Float.pi, 0, 0)
+            } else if dir.x > 0.9 { // +X (Right)
+                shaftContainer.eulerAngles = SCNVector3(0, 0, -Float.pi / 2)
+            } else if dir.x < -0.9 { // -X (Left)
+                shaftContainer.eulerAngles = SCNVector3(0, 0, Float.pi / 2)
+            } else if dir.z > 0.9 { // +Z (Front)
+                shaftContainer.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
+            } else if dir.z < -0.9 { // -Z (Back)
+                shaftContainer.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
             }
             
-            axesNode.addChildNode(coneNode)
+            // 2. Cone (Arrowhead) - Only for positive axes
+            // Directions are unit vectors along axes, so sum > 0 means positive axis.
+            if (dir.x + dir.y + dir.z) > 0.5 {
+                let cone = SCNCone(topRadius: 0, bottomRadius: 0.03, height: 0.12)
+                let coneMat = SCNMaterial()
+                coneMat.lightingModel = .constant
+                coneMat.diffuse.contents = color
+                cone.firstMaterial = coneMat
+                
+                let coneNode = SCNNode(geometry: cone)
+                // Cone is Y-aligned. Top point is at +Y/2. Base at -Y/2.
+                // We want it at the end of the shaft.
+                coneNode.position = SCNVector3(0, axisLength, 0)
+                
+                // Add cone to container AFTER rotation logic applied (since container is rotated)
+                shaftContainer.addChildNode(coneNode)
+            }
             
-            // Add 3D Text Label
+            axesNode.addChildNode(shaftContainer)
+            
+            // 4. Label
+
             let textNode = createAxisLabelNode(text: labelText, color: color)
             textNode.position = labelPos
             axesNode.addChildNode(textNode)
