@@ -55,10 +55,6 @@ struct GameView: View {
                         
                     }
                     .padding(.top, 20)
-                    .sheet(isPresented: $showInfoModal) {
-                        GateReferenceView()
-                            .presentationDetents([.medium, .large])
-                    }
                 }
                 
                 // MARK: - Layer 3: Overlay Effects
@@ -104,6 +100,14 @@ struct GameView: View {
                             showExitConfirmation = false
                         }
                     )
+                    .zIndex(100)
+                    .transition(.opacity)
+                }
+                
+                if showInfoModal {
+                    ReferenceModalView {
+                        showInfoModal = false
+                    }
                     .zIndex(100)
                     .transition(.opacity)
                 }
