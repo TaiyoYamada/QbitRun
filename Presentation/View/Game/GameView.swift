@@ -39,13 +39,31 @@ struct GameView: View {
                     // 回路表示エリア
                     circuitSection
 
-                    // ゲートパレット（タップで追加）
-                    SwiftUIGatePaletteView { gate in
-                        if viewModel.canAddGate && !showCountdown {
-                            viewModel.addGate(gate)
+                    // ゲートパレット（タップで追加） + 情報ボタン
+                    HStack(alignment: .center, spacing: 20) {
+                        SwiftUIGatePaletteView { gate in
+                            if viewModel.canAddGate && !showCountdown {
+                                viewModel.addGate(gate)
+                            }
                         }
+                        
+                        // Info Button (moved here)
+                        Button(action: {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            showInfoModal = true
+                        }) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.white.opacity(0.9))
+                                .shadow(color: .cyan.opacity(0.5), radius: 5)
+                        }
+                        .padding(.bottom, 10) // Adjustment for alignment
                     }
-                    .padding(.top, 30)
+                    .padding(.top, 20)
+                    .sheet(isPresented: $showInfoModal) {
+                        GateReferenceView()
+                            .presentationDetents([.medium, .large])
+                    }
                 }
                 
                 // MARK: - Layer 3: Overlay Effects
@@ -150,11 +168,11 @@ struct GameView: View {
     
     // MARK: - ヘッダー（Glassmorphism）
     
+    @Environment(\.dismiss) private var dismiss
+    @State private var showExitConfirmation = false
     @State private var showInfoModal = false
     
-    // ... (existing body part)
-    
-    // MARK: - ヘッダー（Glassmorphism）
+    // MARK: - Header Section
     
     private var headerSection: some View {
         ZStack {
@@ -194,24 +212,24 @@ struct GameView: View {
             .frame(width: 115, height: 115)
             .background(
                 Circle()
-                    .fill(.black.opacity(0.2)) // Darker background for contrast
+                    .fill(.black.opacity(0.2)) // Darker background
             )
             .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
 
             HStack {
-                // Left: Points (Bordered Frame with Top-Left Label)
+                // Left: Points
                 ZStack(alignment: .topLeading) {
                     Text("\(viewModel.score)")
-                        .font(.system(size: 45, weight: .bold, design: .monospaced))
+                        .font(.system(size: 32, weight: .bold, design: .monospaced))
                         .foregroundStyle(.cyan)
-                        .frame(width: 145, height: 85, alignment: .trailing)
+                        .frame(width: 140, height: 90, alignment: .trailing)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 12)
                         .background(.ultraThinMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(Color.cyan.opacity(0.6), lineWidth: 5)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.cyan.opacity(0.6), lineWidth: 2)
                         )
                     
                     // Label at Top-Left of the border
@@ -226,25 +244,24 @@ struct GameView: View {
                 
                 Spacer()
 
-                // Right: Info Button
+                // Right: Home Button (Exit)
                 Button(action: {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    showInfoModal = true
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    showExitConfirmation = true
                 }) {
-                    Image(systemName: "info.circle.fill")
-                        .font(.system(size: 32))
+                    Image(systemName: "house.fill")
+                        .font(.system(size: 40))
                         .foregroundStyle(.white.opacity(0.8))
-                        .padding(8)
-                        .background(.thinMaterial)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 1))
                 }
             }
-            .padding(.horizontal, 24) // Outer padding for HStack
         }
-        .sheet(isPresented: $showInfoModal) {
-            GateReferenceView()
-                .presentationDetents([.medium, .large])
+        .alert("End Game?", isPresented: $showExitConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("End Game", role: .destructive) {
+                dismiss()
+            }
+        } message: {
+            Text("Are you sure you want to return to the menu?")
         }
     }
     
