@@ -47,8 +47,19 @@ struct SwiftUICircuitView: View {
                 Text("▶ Run")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(.white)
+                    .shadow(color: .black, radius: 3)
                     .frame(width: 120, height: 60)
-                    .background(gates.isEmpty ? Color.gray : Color(red: 0.3, green: 0.7, blue: 0.4))
+                    .background {
+                        if gates.isEmpty {
+                            Color.gray
+                        } else {
+                            LinearGradient(
+                                colors: [.cyan, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        }
+                    }
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .disabled(gates.isEmpty)

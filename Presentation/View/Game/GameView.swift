@@ -72,9 +72,20 @@ struct GameView: View {
                     Color.black.opacity(0.3).ignoresSafeArea()
                     
                     Text(countdownValue > 0 ? "\(countdownValue)" : "START!")
-                        .font(.system(size: countdownValue > 0 ? 140 : 110, weight: .bold, design: .rounded))
-                        .foregroundStyle(countdownValue > 0 ? .white : .purple)
-//                        .shadow(color: (countdownValue > 0 ? Color.cyan : Color.white).opacity(0.9), radius: 15)
+                        .font(.system(size: countdownValue > 0 ? 140 : 110,
+                                      weight: .bold,
+                                      design: .rounded))
+                        .foregroundStyle(
+                            countdownValue > 0
+                            ? AnyShapeStyle(.white)
+                            : AnyShapeStyle(
+                                LinearGradient(
+                                    colors: [.white, .cyan, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                              )
+                        )
                         .scaleEffect(countdownScale)
                         .opacity(countdownOpacity)
                 }
@@ -401,16 +412,21 @@ struct GameView: View {
                     }
                 }) {
                     Text("RESET")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(.red.opacity(0.8))
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(Color.white.opacity(0.7))
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(.ultraThinMaterial)
                         .clipShape(Capsule())
-                    }
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.red.opacity(0.6), lineWidth: 3)
+                        )
+                }
 
                 Spacer()
             }
+            .padding(.leading, 55)
             .padding(.bottom, 15)
 
             SwiftUICircuitView(
