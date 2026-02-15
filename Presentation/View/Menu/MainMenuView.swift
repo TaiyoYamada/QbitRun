@@ -99,8 +99,8 @@ struct MainMenuView: View {
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Qbit")
-                .font(.system(size: 150, weight: .bold, design: .rounded))
-                .tracking(5)
+                .font(.system(size: 160, weight: .bold, design: .rounded))
+                .tracking(7)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [.white, .cyan],
@@ -111,8 +111,8 @@ struct MainMenuView: View {
                 .shadow(color: .cyan.opacity(0.6), radius: 30, x: 0, y: 0)
 
             Text("Play")
-                .font(.system(size: 110, weight: .thin, design: .rounded))
-                .tracking(5)
+                .font(.system(size: 115, weight: .thin, design: .rounded))
+                .tracking(7)
                 .foregroundStyle(.white.opacity(0.8))
         }
 //        .onAppear {

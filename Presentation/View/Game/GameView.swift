@@ -251,11 +251,11 @@ struct GameView: View {
                 // Left: Points
                 ZStack(alignment: .topLeading) {
                     Text("\(viewModel.score)")
-                        .font(.system(size: 38, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(.cyan)
-                        .frame(width: 140, height: 90, alignment: .trailing)
+                        .frame(width: 140, height: 85, alignment: .trailing)
                         .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, 5)
                         .background(.ultraThinMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
@@ -375,7 +375,7 @@ struct GameView: View {
                     }
                 }
                 .padding(.trailing, 40)
-                .offset(x: 50, y: 100)
+                .offset(x: 55, y: 100)
             }
         }
         .padding(.bottom, -100)
