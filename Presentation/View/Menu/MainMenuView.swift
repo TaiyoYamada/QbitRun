@@ -12,6 +12,7 @@ struct MainMenuView: View {
 
     // MARK: - State
     @State private var shimmerOffset: CGFloat = -200
+    @State private var showSettings = false // [NEW]
 
     var body: some View {
         GeometryReader { geometry in
@@ -34,6 +35,41 @@ struct MainMenuView: View {
                     }
                     .padding(.leading, geometry.size.width * 0.05)
                     Spacer()
+                }
+                
+                // Settings Button (Top Right)
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            audioManager.playSFX(.button)
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                showSettings = true
+                            }
+                        }) {
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                        .padding(.top, 40)
+                        .padding(.trailing, 40)
+                    }
+                    Spacer()
+                }
+                
+                // Settings Overlay
+                if showSettings {
+                    SettingsView(
+                        audioManager: audioManager,
+                        onDismiss: {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                showSettings = false
+                            }
+                        }
+                    )
+                    .zIndex(100)
+                    .transition(.opacity)
                 }
 
             }

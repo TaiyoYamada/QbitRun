@@ -305,23 +305,23 @@ struct GameView: View {
                     // 現在の状態（赤）
                     HStack(spacing: 15) {
                         Circle()
-                            .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
-                            .frame(width: 37, height: 37)
+                            .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
+                            .frame(width: 30, height: 30)
                         Text("CURRENT")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .tracking(2)
-                            .foregroundStyle(.white.opacity(0.9))
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .tracking(3)
+                            .foregroundStyle(.white.opacity(0.8))
                     }
 
                     // ターゲット状態（金）
                     HStack(spacing: 15) {
                         Circle()
-                            .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
-                            .frame(width: 37, height: 37)
+                            .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.8))
+                            .frame(width: 30, height: 30)
                         Text("TARGET")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .tracking(2)
-                            .foregroundStyle(.yellow.opacity(0.9))
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .tracking(3)
+                            .foregroundStyle(.yellow.opacity(0.8))
                     }
                 }
                 .padding(.vertical, 15)
@@ -405,28 +405,28 @@ struct GameView: View {
         VStack(spacing: 0) {
             HStack {
                 Button(action: {
-                    audioManager.playSFX(.reset)
+                    audioManager.playSFX(.clear)
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         viewModel.clearCircuit()
                     }
                 }) {
-                    Text("RESET")
+                    Text("CLEAR")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.8))
+                        .foregroundStyle(.white.opacity(0.7))
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
                         .background(.ultraThinMaterial)
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
-                                .stroke(Color.red.opacity(0.6), lineWidth: 3)
+                                .stroke(Color.purple.opacity(0.3), lineWidth: 5)
                         )
                 }
 
                 Spacer()
             }
-            .padding(.leading, 55)
+            .padding(.leading, 50)
             .padding(.bottom, 15)
 
             SwiftUICircuitView(

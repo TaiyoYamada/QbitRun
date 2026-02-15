@@ -21,7 +21,7 @@ final class AudioManager {
         case success = "sfx_success"
         case miss = "sfx_miss"
         case set = "sfx_set"
-        case reset = "sfx_reset"
+        case clear = "sfx_clear"
         case button = "sfx_button"
         case combo = "sfx_combo" // Optional
     }
@@ -32,14 +32,19 @@ final class AudioManager {
     private var sfxPlayers: [SFX: AVAudioPlayer] = [:]
     
     /// BGMの音量 (0.0 - 1.0)
-    var bgmVolume: Float = 0.5 {
+    var bgmVolume: Float = UserDefaults.standard.float(forKey: "bgmVolume") == 0 ? 0.5 : UserDefaults.standard.float(forKey: "bgmVolume") {
         didSet {
             bgmPlayer?.volume = bgmVolume
+            UserDefaults.standard.set(bgmVolume, forKey: "bgmVolume")
         }
     }
     
     /// SFXの音量 (0.0 - 1.0)
-    var sfxVolume: Float = 1.0
+    var sfxVolume: Float = UserDefaults.standard.float(forKey: "sfxVolume") == 0 ? 1.0 : UserDefaults.standard.float(forKey: "sfxVolume") {
+        didSet {
+            UserDefaults.standard.set(sfxVolume, forKey: "sfxVolume")
+        }
+    }
     
     // MARK: - Initialization
     
