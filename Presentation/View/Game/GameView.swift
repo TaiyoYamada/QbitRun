@@ -31,7 +31,6 @@ struct GameView: View {
                     headerSection
                         .padding(.vertical, 10)
                         .padding(.horizontal, 24)
-                        .opacity(showCountdown ? 0 : 1) // HUD hidden during countdown
                         .animation(.easeIn(duration: 0.5), value: showCountdown)
                     
                     // ブロッホ球表示エリア
@@ -164,17 +163,9 @@ struct GameView: View {
                 .padding(.vertical, 10)
 
             HStack {
-                // Left: Life
-                HStack(spacing: 8) {
-                    ForEach(0..<3, id: \.self) { index in
-                        Image(systemName: index < viewModel.remainingMisses ? "heart.fill" : "heart")
-                            .font(.system(size: 20))
-                            .foregroundStyle(index < viewModel.remainingMisses ? Color.red : Color.gray.opacity(0.3))
-                            .shadow(color: index < viewModel.remainingMisses ? .red.opacity(0.8) : .clear, radius: 4, x: 0, y: 0)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                // Left: Spacer for balance
+                Spacer()
+                    .frame(width: 40)
                 
                 Spacer()
 

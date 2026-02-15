@@ -309,20 +309,10 @@ public final class GameEngine {
     
     /// お手つき処理を実行（Runボタン用）
     /// - Returns: ゲームオーバーかどうか
+    /// お手つき処理を実行（Runボタン用）
+    /// - Returns: ゲームオーバーかどうか（常にfalse）
     public func handleWrongAnswer() -> Bool {
-        missCount += 1
-        
-        // 3回ミスでゲームオーバー
-        if missCount >= maxMisses {
-            endGame()
-            return true
-        }
-        
+        // ミスしてもゲームオーバーにはならない
         return false
-    }
-    
-    /// 残りミス回数
-    public var remainingMisses: Int {
-        max(0, maxMisses - missCount)
     }
 }
