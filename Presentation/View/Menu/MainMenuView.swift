@@ -13,6 +13,7 @@ struct MainMenuView: View {
     // MARK: - State
     @State private var shimmerOffset: CGFloat = -200
     @State private var showSettings = false // [NEW]
+    @State private var isNavigating = false // [NEW] Prevent double tap
 
     var body: some View {
         GeometryReader { geometry in
@@ -75,6 +76,7 @@ struct MainMenuView: View {
             }
         }
         .onAppear {
+            isNavigating = false // Reset navigation state
             audioManager.playBGM(.menu)
         }
 
@@ -187,6 +189,9 @@ struct MainMenuView: View {
 
     // MARK: - Logic
     private func triggerTransition(difficulty: GameDifficulty) {
+        if isNavigating { return } // Prevent double tap
+        isNavigating = true
+        
         audioManager.playSFX(.click) // [NEW]
         let generator = UIImpactFeedbackGenerator(style: .soft)
         generator.impactOccurred()

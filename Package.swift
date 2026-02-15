@@ -8,13 +8,13 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "QuantumGateGame",
+    name: "QbitPlay",
     platforms: [
         .iOS("18.0")
     ],
     products: [
         .iOSApplication(
-            name: "QuantumGateGame",
+            name: "QbitPlay",
             targets: ["AppModule"],
             bundleIdentifier: "----.QuantumGateGame",
             teamIdentifier: "HJC5DQ3PVM",

@@ -24,6 +24,7 @@ struct GameView: View {
     @State private var showInfoModal = false
     
     @State private var showComboEffect = false
+    @State private var comboAnimationTask: Task<Void, Never>? // [NEW] Track animation task
 
     // MARK: - Body
     var body: some View {
@@ -127,16 +128,7 @@ struct GameView: View {
         }
         .onChange(of: viewModel.comboCount) { _, newCount in
             if newCount >= 2 {
-                // Reset to restart animation
-                showComboEffect = false
-                
-                // Allow a brief moment for the reset to propagate, then trigger animation
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(50))
-                    withAnimation(.spring(response: 0.2, dampingFraction: 0.2)) {
-                        showComboEffect = true
-                    }
-                }
+                triggerComboAnimation()
             }
         }
     }
@@ -464,6 +456,32 @@ struct GameView: View {
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
                 showFailureEffect = false
+            }
+        }
+    }
+    
+    // MARK: - Animation Logic
+    
+    private func triggerComboAnimation() {
+        comboAnimationTask?.cancel()
+        
+        comboAnimationTask = Task { @MainActor in
+            withAnimation(.none) {
+                showComboEffect = false
+            }
+
+            try? await Task.sleep(for: .milliseconds(50))
+            if Task.isCancelled { return }
+
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.2)) {
+                showComboEffect = true
+            }
+
+            try? await Task.sleep(for: .seconds(0.7))
+            if Task.isCancelled { return }
+
+            withAnimation(.easeOut(duration: 0.2)) {
+                showComboEffect = false
             }
         }
     }
