@@ -17,12 +17,6 @@ public struct ProblemGenerator: Sendable {
     ]
     
     // MARK: - 問題生成
-    
-    /// 難易度に応じた問題を生成
-    /// - Parameters:
-    ///   - gameDifficulty: ゲーム難易度（Easy/Hard）
-    ///   - problemNumber: 問題番号（0から増加）
-    ///   - lastProblemKey: 前回の問題キー（同じ問題の連続を防ぐ）
     public func generateProblem(gameDifficulty: GameDifficulty, problemNumber: Int, lastProblemKey: String? = nil) -> (problem: Problem, problemKey: String) {
         return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, lastProblemKey: lastProblemKey)
     }

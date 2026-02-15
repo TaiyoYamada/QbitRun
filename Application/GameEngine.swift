@@ -14,7 +14,7 @@ public final class GameEngine {
     // MARK: - 定数
     
     /// ゲーム時間（60秒）
-    private let gameDuration: TimeInterval = 60
+    private let gameDuration: TimeInterval = 2
     
     /// 1問あたりの基本スコア
     private let baseScorePerProblem = 100
