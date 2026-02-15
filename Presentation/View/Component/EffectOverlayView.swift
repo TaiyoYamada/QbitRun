@@ -17,8 +17,7 @@ struct EffectOverlayView: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {
         if showSuccess {
-            CircuitAnimator.showSuccessEffect(on: uiView)
-            CircuitAnimator.showStarsEffect(on: uiView)
+            CircuitAnimator.showQuantumSuccessEffect(on: uiView)
         }
         if showFailure {
             CircuitAnimator.showFailureEffect(on: uiView)
