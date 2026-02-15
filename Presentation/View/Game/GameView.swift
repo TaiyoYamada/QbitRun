@@ -3,7 +3,14 @@ import SwiftUI
 /// ゲーム画面
 struct GameView: View {
 
+    // MARK: - Dependencies
     @Bindable private var viewModel = GameViewModel()
+    @Environment(\.dismiss) private var dismiss
+    
+    let difficulty: GameDifficulty
+    let onGameEnd: (ScoreEntry) -> Void
+
+    // MARK: - Local State
     @State private var countdownValue: Int = 3
     @State private var showCountdown: Bool = true
     @State private var countdownScale: CGFloat = 0.5
@@ -12,16 +19,14 @@ struct GameView: View {
     @State private var showSuccessEffect = false
     @State private var showFailureEffect = false
     
-    /// ゲームの難易度
-    let difficulty: GameDifficulty
-    
-    /// ゲーム終了時のコールバック
-    let onGameEnd: (ScoreEntry) -> Void
+    @State private var showExitConfirmation = false
+    @State private var showInfoModal = false
 
-
+    // MARK: - Body
     var body: some View {
         GeometryReader { geometry in
             ZStack {
+                // MARK: - Layer 1: Background
                 UnifiedBackgroundView()
 
                 // MARK: - Layer 2: Main Content
@@ -47,7 +52,7 @@ struct GameView: View {
                             }
                         }
                         
-                        // Info Button (moved here)
+                        // Info Button
                         Button(action: {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             showInfoModal = true
@@ -57,7 +62,7 @@ struct GameView: View {
                                 .foregroundStyle(.white.opacity(0.9))
                                 .shadow(color: .cyan.opacity(0.5), radius: 5)
                         }
-                        .padding(.bottom, 10) // Adjustment for alignment
+                        .padding(.bottom, 10)
                     }
                     .padding(.top, 20)
                     .sheet(isPresented: $showInfoModal) {
@@ -77,11 +82,27 @@ struct GameView: View {
                     Color.black.opacity(0.3).ignoresSafeArea()
                     
                     Text(countdownValue > 0 ? "\(countdownValue)" : "START!")
-                        .font(.system(size: countdownValue > 0 ? 120 : 100, weight: .bold, design: .rounded))
-                        .foregroundStyle(countdownValue > 0 ? .white : .cyan)
-                        .shadow(color: (countdownValue > 0 ? Color.white : Color.cyan).opacity(0.8), radius: 20)
+                        .font(.system(size: countdownValue > 0 ? 140 : 110, weight: .bold, design: .rounded))
+                        .foregroundStyle(countdownValue > 0 ? .white : .purple)
+//                        .shadow(color: (countdownValue > 0 ? Color.cyan : Color.white).opacity(0.9), radius: 15)
                         .scaleEffect(countdownScale)
                         .opacity(countdownOpacity)
+                }
+                
+                // MARK: - Layer 5: Custom Modal Overlay
+                if showExitConfirmation {
+                    ExitConfirmationView(
+                        title: "END GAME？",
+                        message: "Return to the main menu?\nCurrent progress will be lost.",
+                        onConfirm: {
+                            dismiss()
+                        },
+                        onCancel: {
+                            showExitConfirmation = false
+                        }
+                    )
+                    .zIndex(100)
+                    .transition(.opacity)
                 }
             }
         }
@@ -166,12 +187,6 @@ struct GameView: View {
     }
 
     
-    // MARK: - ヘッダー（Glassmorphism）
-    
-    @Environment(\.dismiss) private var dismiss
-    @State private var showExitConfirmation = false
-    @State private var showInfoModal = false
-    
     // MARK: - Header Section
     
     private var headerSection: some View {
@@ -250,18 +265,10 @@ struct GameView: View {
                     showExitConfirmation = true
                 }) {
                     Image(systemName: "house.fill")
-                        .font(.system(size: 40))
+                        .font(.system(size: 45))
                         .foregroundStyle(.white.opacity(0.8))
                 }
             }
-        }
-        .alert("End Game?", isPresented: $showExitConfirmation) {
-            Button("Cancel", role: .cancel) { }
-            Button("End Game", role: .destructive) {
-                dismiss()
-            }
-        } message: {
-            Text("Are you sure you want to return to the menu?")
         }
     }
     
@@ -296,11 +303,6 @@ struct GameView: View {
                         .foregroundStyle(.yellow.opacity(0.8))
                 }
             }
-//            .clipShape(Capsule())
-//            .overlay(
-//                Capsule()
-//                    .stroke(Color.white.opacity(0.2), lineWidth: 3)
-//            )
 
             // 単一のブロッホ球で現在とターゲットを同時表示
             BlochSphereViewRepresentable(
@@ -379,4 +381,3 @@ struct GameView: View {
 #Preview("ゲーム画面", traits: .landscapeLeft) {
     GameView(difficulty: .easy, onGameEnd: { _ in })
 }
-
