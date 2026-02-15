@@ -90,14 +90,17 @@ public final class GameEngine {
     
     // MARK: - ゲーム制御
     /// ゲームを開始
-    public func start(difficulty: GameDifficulty = .easy) {
+    /// - Parameters:
+    ///   - difficulty: ゲームの難易度
+    ///   - startTimer: タイマーをすぐに開始するかどうか
+    public func start(difficulty: GameDifficulty = .easy, startTimer: Bool = true) {
         guard state == .ready else { return }
         
         // 難易度を設定
         self.gameDifficulty = difficulty
         
         // 状態をリセット
-        state = .playing
+        state = .playing // プレイ中扱いにするが、タイマーは回さない
         remainingTime = Int(gameDuration)
         score = 0
         problemsSolved = 0
@@ -117,7 +120,15 @@ public final class GameEngine {
             currentVector = .zero
         }
         
-        // タイマーを開始
+        // タイマーを開始（オプション）
+        if startTimer {
+            self.startTimer()
+        }
+    }
+    
+    /// タイマーループを開始（カウントダウン後に呼ぶ）
+    public func startGameLoop() {
+        guard state == .playing, timerTask == nil else { return }
         startTimer()
     }
     

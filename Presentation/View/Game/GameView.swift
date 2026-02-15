@@ -4,6 +4,11 @@ import SwiftUI
 struct GameView: View {
 
     @Bindable private var viewModel = GameViewModel()
+    @State private var countdownValue: Int = 3
+    @State private var showCountdown: Bool = true
+    @State private var countdownScale: CGFloat = 0.5
+    @State private var countdownOpacity: Double = 0.0
+    
     @State private var showSuccessEffect = false
     @State private var showFailureEffect = false
     
@@ -12,7 +17,8 @@ struct GameView: View {
     
     /// ゲーム終了時のコールバック
     let onGameEnd: (ScoreEntry) -> Void
-    
+
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -25,16 +31,19 @@ struct GameView: View {
                     headerSection
                         .padding(.vertical, 10)
                         .padding(.horizontal, 24)
+                        .opacity(showCountdown ? 0 : 1) // HUD hidden during countdown
+                        .animation(.easeIn(duration: 0.5), value: showCountdown)
                     
                     // ブロッホ球表示エリア
                     spheresSection(geometry: geometry)
+                        .opacity(showCountdown ? 0 : 1)
 
                     // 回路表示エリア
                     circuitSection
 
                     // ゲートパレット（タップで追加）
                     SwiftUIGatePaletteView { gate in
-                        if viewModel.canAddGate {
+                        if viewModel.canAddGate && !showCountdown {
                             viewModel.addGate(gate)
                         }
                     }
@@ -46,16 +55,98 @@ struct GameView: View {
                     showSuccess: $showSuccessEffect,
                     showFailure: $showFailureEffect
                 )
+                
+                // MARK: - Layer 4: Countdown Overlay
+                if showCountdown {
+                    Color.black.opacity(0.3).ignoresSafeArea()
+                    
+                    Text(countdownValue > 0 ? "\(countdownValue)" : "START!")
+                        .font(.system(size: countdownValue > 0 ? 120 : 100, weight: .bold, design: .rounded))
+                        .foregroundStyle(countdownValue > 0 ? .white : .cyan)
+                        .shadow(color: (countdownValue > 0 ? Color.white : Color.cyan).opacity(0.8), radius: 20)
+                        .scaleEffect(countdownScale)
+                        .opacity(countdownOpacity)
+                }
             }
         }
         .onAppear {
-            viewModel.startGame(difficulty: difficulty)
+            viewModel.prepareGame(difficulty: difficulty)
+            startCountdown()
         }
-            .onChange(of: viewModel.finalScore) { _, newScore in
-                if let score = newScore {
-                    onGameEnd(score)
-                }
+        .onChange(of: viewModel.finalScore) { _, newScore in
+            if let score = newScore {
+                onGameEnd(score)
             }
+        }
+    }
+    
+    // MARK: - Countdown Logic
+    
+    private func startCountdown() {
+        showCountdown = true
+        countdownValue = 3
+        
+        Task {
+            // Count 3, 2, 1
+            for i in (1...3).reversed() {
+                countdownValue = i
+                await animateCountdownStep()
+            }
+            
+            // START!
+            countdownValue = 0
+            await animateStartStep()
+            
+            // End Countdown
+            withAnimation(.easeOut(duration: 0.5)) {
+                showCountdown = false
+            }
+            
+            // Start Game Timer
+            viewModel.startGameLoop()
+        }
+    }
+    
+    @MainActor
+    private func animateCountdownStep() async {
+        countdownScale = 0.5
+        countdownOpacity = 0.0
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            countdownScale = 1.2
+            countdownOpacity = 1.0
+        }
+        
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        
+        try? await Task.sleep(for: .milliseconds(600))
+        
+        withAnimation(.easeIn(duration: 0.2)) {
+            countdownScale = 1.5
+            countdownOpacity = 0.0
+        }
+        
+        try? await Task.sleep(for: .milliseconds(200))
+    }
+    
+    @MainActor
+    private func animateStartStep() async {
+        countdownScale = 0.5
+        countdownOpacity = 0.0
+        
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            countdownScale = 1.5
+            countdownOpacity = 1.0
+        }
+        
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        
+        try? await Task.sleep(for: .milliseconds(800))
+        
+        withAnimation(.easeOut(duration: 0.3)) {
+            countdownScale = 2.0
+            countdownOpacity = 0.0
+        }
     }
 
     
@@ -175,12 +266,10 @@ struct GameView: View {
                 gates: $viewModel.circuitGates,
                 onRun: { runCircuit() }
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
-            )
             .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 0)
         }
+        .opacity(showCountdown ? 0.5 : 1) // Dimmed during countdown
+        .disabled(showCountdown) // Disable interaction during countdown
     }
     
     // MARK: - 回路実行

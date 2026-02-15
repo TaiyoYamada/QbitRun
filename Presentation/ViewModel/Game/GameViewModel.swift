@@ -1,23 +1,4 @@
-// SPDX-License-Identifier: MIT
-// Presentation/Game/GameViewModel.swift
-// ゲーム画面のViewModel
-
 import SwiftUI
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ViewModel とは？
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// MVVM (Model-View-ViewModel) パターンの中間層
-//
-// 責務:
-// - Viewに表示するためのデータを保持
-// - Viewからのユーザー操作を受け取りApplication層に委譲
-// - Application層の状態変化をViewに橋渡し
-//
-// @Observable を使うとSwiftUI Viewが自動的に更新される
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// ゲーム画面のViewModel
 @Observable
@@ -92,10 +73,21 @@ final class GameViewModel {
     
     // MARK: - ユーザー操作
     
-    /// ゲームを開始
+    /// ゲームを開始（カウントダウン前準備）
+    /// - Parameter difficulty: ゲームの難易度
+    func prepareGame(difficulty: GameDifficulty = .easy) {
+        gameEngine.start(difficulty: difficulty, startTimer: false)
+    }
+    
+    /// ゲームの計測を開始（カウントダウン終了後）
+    func startGameLoop() {
+        gameEngine.startGameLoop()
+    }
+    
+    /// ゲームを開始（即時）
     /// - Parameter difficulty: ゲームの難易度
     func startGame(difficulty: GameDifficulty = .easy) {
-        gameEngine.start(difficulty: difficulty)
+        gameEngine.start(difficulty: difficulty, startTimer: true)
     }
     
     /// ゲートを追加
