@@ -49,8 +49,6 @@ public final class CircuitAnimator {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             emitter.removeFromSuperlayer()
         }
-        
-        // 4. 背景パルス -> 削除
     }
     
     /// 量子パーティクル画像（光る円）
