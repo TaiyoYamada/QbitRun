@@ -20,6 +20,9 @@ final class AudioManager {
         case click = "sfx_click"
         case success = "sfx_success"
         case miss = "sfx_miss"
+        case set = "sfx_set"
+        case reset = "sfx_reset"
+        case button = "sfx_button"
         case combo = "sfx_combo" // Optional
     }
     

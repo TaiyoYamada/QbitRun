@@ -50,6 +50,7 @@ struct GameView: View {
                     HStack(alignment: .center, spacing: 20) {
                         SwiftUIGatePaletteView { gate in
                             if viewModel.canAddGate && !showCountdown {
+                                audioManager.playSFX(.set)
                                 viewModel.addGate(gate)
                             }
                         }
@@ -269,7 +270,7 @@ struct GameView: View {
 
                 HStack(spacing: 40) {
                     Button(action: {
-                        audioManager.playSFX(.click)
+                        audioManager.playSFX(.button)
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showInfoModal = true
                     }) {
@@ -279,7 +280,7 @@ struct GameView: View {
                     }
                     
                     Button(action: {
-                        audioManager.playSFX(.click)
+                        audioManager.playSFX(.button)
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         showExitConfirmation = true
                     }) {
@@ -404,7 +405,7 @@ struct GameView: View {
         VStack(spacing: 0) {
             HStack {
                 Button(action: {
-                    audioManager.playSFX(.click)
+                    audioManager.playSFX(.reset)
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         viewModel.clearCircuit()
