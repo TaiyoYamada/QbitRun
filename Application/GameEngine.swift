@@ -274,9 +274,15 @@ public final class GameEngine {
         // 基本スコア
         let baseScore = (gameDifficulty == .hard) ? 100 : 50
         
-        // コンボボーナス: (コンボ数 - 1) * 10 * (Hardなら2倍)
-        let comboMultiplier = (gameDifficulty == .hard) ? 20 : 10
-        let comboBonus = max(0, comboCount - 1) * comboMultiplier
+        // シグモイド関数によるコンボボーナス計算
+        // Bonus = MaxBonus / (1 + e^(-k * (x - x0)))
+        let maxBonus: Double = (gameDifficulty == .hard) ? 500.0 : 250.0
+        let k: Double = 0.5         // 傾き（急峻さ）
+        let midpoint: Double = 7.0  // 変曲点（このコンボ数でMaxの半分になる）
+        let x = Double(comboCount)
+        
+        let sigmoidValue = 1.0 / (1.0 + exp(-k * (x - midpoint)))
+        let comboBonus = Int(maxBonus * sigmoidValue)
         
         // UI表示用に保持
         lastComboBonus = comboBonus

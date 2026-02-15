@@ -207,13 +207,10 @@ struct GameView: View {
     
     private var headerSection: some View {
         ZStack {
-            // Center: Circular Timer
             ZStack {
-                // 1. Background Track
                 Circle()
                     .stroke(Color.white.opacity(0.3), lineWidth: 8)
-                
-                // 2. Progress Fill (Clockwise depletion)
+
                 Circle()
                     .trim(from: 1.0 - (CGFloat(viewModel.remainingTime) / 60.0), to: 1.0)
                     .stroke(
