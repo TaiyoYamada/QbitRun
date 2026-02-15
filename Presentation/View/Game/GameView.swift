@@ -119,7 +119,16 @@ struct GameView: View {
         }
         .onChange(of: viewModel.comboCount) { _, newCount in
             if newCount >= 2 {
-                showComboEffect = true
+                // Reset to restart animation
+                showComboEffect = false
+                
+                // Allow a brief moment for the reset to propagate, then trigger animation
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(50))
+                    withAnimation(.spring(response: 0.2, dampingFraction: 0.2)) {
+                        showComboEffect = true
+                    }
+                }
             }
         }
     }
@@ -242,7 +251,7 @@ struct GameView: View {
                 // Left: Points
                 ZStack(alignment: .topLeading) {
                     Text("\(viewModel.score)")
-                        .font(.system(size: 32, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 38, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(.cyan)
                         .frame(width: 140, height: 90, alignment: .trailing)
                         .padding(.horizontal, 20)
@@ -257,6 +266,7 @@ struct GameView: View {
                     // Label at Top-Left of the border
                     Text("SCORE")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .tracking(2)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 4)
                         .background(Color.black.opacity(0.6))
@@ -325,16 +335,27 @@ struct GameView: View {
             // Persistent Combo Display
             if viewModel.comboCount >= 2 {
                 VStack(alignment: .trailing, spacing: 0) {
+                    let comboColors: [Color] = {
+                        if viewModel.comboCount < 5 {
+                            return [.purple.opacity(0.8)]
+                        } else if viewModel.comboCount < 10 {
+                            return [.white, .cyan, .blue]
+                        } else {
+                            return [.purple, .blue, .cyan]
+                        }
+                    }()
+                    
                     Text("\(viewModel.comboCount) COMBO")
                         .font(.system(size: 50, weight: .black, design: .rounded))
+                        .tracking(2)
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.yellow, .orange, .red],
+                                colors: comboColors,
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
-                        .shadow(color: .orange.opacity(0.8), radius: 5, x: 0, y: 0)
+                        .shadow(color: comboColors.last?.opacity(0.8) ?? .orange.opacity(0.8), radius: 5, x: 0, y: 0)
                         .scaleEffect(showComboEffect ? 1.3 : 1.0)
                         .animation(.spring(response: 0.2, dampingFraction: 0.2), value: showComboEffect)
 
