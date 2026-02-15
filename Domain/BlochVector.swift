@@ -8,8 +8,7 @@ import simd
 public struct BlochVector: Sendable, Equatable {
     /// 内部の3Dベクトル（simd_double3）
     public let vector: simd_double3
-    
-    // MARK: - イニシャライザ
+
     
     /// x, y, z座標から作成（自動正規化）
     public init(x: Double, y: Double, z: Double) {

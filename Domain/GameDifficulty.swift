@@ -22,12 +22,4 @@ public enum GameDifficulty: String, CaseIterable, Sendable, Codable {
         case .hard: return "Random start"
         }
     }
-    
-    /// 絵文字
-    public var emoji: String {
-        switch self {
-        case .easy: return "🌱"
-        case .hard: return "🔥"
-        }
-    }
 }

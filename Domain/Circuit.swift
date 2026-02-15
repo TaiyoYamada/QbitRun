@@ -11,7 +11,6 @@ public struct Circuit: Sendable {
     // MARK: - イニシャライザ
     
     /// 空の回路を作成
-    /// - Parameter maxGates: 最大ゲート数（デフォルト6）
     public init(maxGates: Int = 6) {
         self.gates = []
         self.maxGates = maxGates

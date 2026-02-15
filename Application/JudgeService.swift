@@ -6,9 +6,7 @@ import Foundation
 public struct JudgeService: Sendable {
     
     // MARK: - 定数
-    
-    /// 正解とみなすフィデリティの閾値
-    /// 0.95 = 95%以上の忠実度で正解
+
     private let fidelityThreshold: Double = 0.95
     
     // MARK: - 判定

@@ -1,18 +1,15 @@
 import Foundation
 
 public enum GameState: Sendable {
-    case ready      // 開始待ち
-    case playing    // プレイ中
-    case paused     // 一時停止
-    case finished   // 終了
+    case ready
+    case playing
+    case paused
+    case finished
 }
 
 @Observable
 @MainActor
 public final class GameEngine {
-    
-    // MARK: - 定数
-    
     /// ゲーム時間（60秒）
     private let gameDuration: TimeInterval = 60
     
@@ -93,9 +90,6 @@ public final class GameEngine {
     
     // MARK: - ゲーム制御
     /// ゲームを開始
-    /// - Parameters:
-    ///   - difficulty: ゲームの難易度
-    ///   - startTimer: タイマーをすぐに開始するかどうか
     public func start(difficulty: GameDifficulty = .easy, startTimer: Bool = true) {
         guard state == .ready else { return }
         
@@ -275,10 +269,9 @@ public final class GameEngine {
         let baseScore = (gameDifficulty == .hard) ? 100 : 50
         
         // シグモイド関数によるコンボボーナス計算
-        // Bonus = MaxBonus / (1 + e^(-k * (x - x0)))
         let maxBonus: Double = (gameDifficulty == .hard) ? 500.0 : 250.0
-        let k: Double = 0.5         // 傾き（急峻さ）
-        let midpoint: Double = 7.0  // 変曲点（このコンボ数でMaxの半分になる）
+        let k: Double = 0.5 // 傾き（急峻さ）
+        let midpoint: Double = 7.0 // 変曲点（このコンボ数でMaxの半分になる）
         let x = Double(comboCount)
         
         let sigmoidValue = 1.0 / (1.0 + exp(-k * (x - midpoint)))
@@ -308,7 +301,6 @@ public final class GameEngine {
     }
     
     /// お手つき処理を実行（Runボタン用）
-    /// - Returns: ゲームオーバーかどうか（常にfalse）
     public func handleWrongAnswer() -> Bool {
         // コンボリセット
         comboCount = 0

@@ -54,17 +54,6 @@ struct GameView: View {
                             }
                         }
                         
-                        // Info Button
-                        Button(action: {
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            showInfoModal = true
-                        }) {
-                            Image(systemName: "info.circle.fill")
-                                .font(.system(size: 40, weight: .regular, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.9))
-                                .shadow(color: .cyan.opacity(0.5), radius: 5)
-                        }
-                        .padding(.bottom, 10)
                     }
                     .padding(.top, 20)
                     .sheet(isPresented: $showInfoModal) {
@@ -240,7 +229,7 @@ struct GameView: View {
             .frame(width: 115, height: 115)
             .background(
                 Circle()
-                    .fill(.black.opacity(0.2)) // Darker background
+                    .fill(.black.opacity(0.2))
             )
             .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
 
@@ -260,7 +249,6 @@ struct GameView: View {
                                 .stroke(Color.cyan.opacity(0.6), lineWidth: 2)
                         )
                     
-                    // Label at Top-Left of the border
                     Text("SCORE")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .tracking(2)
@@ -273,14 +261,24 @@ struct GameView: View {
                 
                 Spacer()
 
-                // Right: Home Button (Exit)
-                Button(action: {
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    showExitConfirmation = true
-                }) {
-                    Image(systemName: "house.fill")
-                        .font(.system(size: 45, weight: .regular, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.8))
+                HStack(spacing: 30) {
+                    Button(action: {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        showInfoModal = true
+                    }) {
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 50, weight: .regular, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+                    
+                    Button(action: {
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        showExitConfirmation = true
+                    }) {
+                        Image(systemName: "door.left.hand.open")
+                            .font(.system(size: 50, weight: .regular, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
                 }
             }
         }
