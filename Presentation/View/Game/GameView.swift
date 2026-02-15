@@ -23,7 +23,8 @@ struct GameView: View {
         GeometryReader { geometry in
             ZStack {
                 // MARK: - Layer 1: Background
-                StandardBackgroundView(showGrid: false, circuitOpacity: 0)
+                // MARK: - Layer 1: Background
+                UnifiedBackgroundView()
 
                 // MARK: - Layer 2: Main Content
                 VStack(spacing: 5) {
