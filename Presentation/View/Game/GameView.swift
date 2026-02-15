@@ -71,7 +71,8 @@ struct GameView: View {
                 if showCountdown {
                     Color.black.opacity(0.3).ignoresSafeArea()
                     
-                    Text(countdownValue > 0 ? "\(countdownValue)" : "START!")
+                    Text(countdownValue > 0 ? "\(countdownValue)" : "START！")
+                        .tracking(2)
                         .font(.system(size: countdownValue > 0 ? 140 : 110,
                                       weight: .bold,
                                       design: .rounded))
@@ -86,6 +87,7 @@ struct GameView: View {
                                 )
                               )
                         )
+                        .shadow(color: .white.opacity(0.5), radius: 30)
                         .scaleEffect(countdownScale)
                         .opacity(countdownOpacity)
                 }
@@ -145,7 +147,6 @@ struct GameView: View {
                 await animateCountdownStep()
             }
             
-            // START!
             countdownValue = 0
             await animateStartStep()
             
