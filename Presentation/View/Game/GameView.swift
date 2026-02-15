@@ -41,7 +41,6 @@ struct GameView: View {
                     
                     // ブロッホ球表示エリア
                     spheresSection(geometry: geometry)
-                        .opacity(showCountdown ? 0 : 1)
 
                     // 回路表示エリア
                     circuitSection
@@ -261,7 +260,7 @@ struct GameView: View {
                 
                 Spacer()
 
-                HStack(spacing: 30) {
+                HStack(spacing: 40) {
                     Button(action: {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showInfoModal = true
@@ -287,37 +286,49 @@ struct GameView: View {
     // MARK: - ブロッホ球表示（統合ビュー）
     
     private func spheresSection(geometry: GeometryProxy) -> some View {
-        let size = min(geometry.size.width, geometry.size.height) * 0.8
+        let size = min(geometry.size.width, geometry.size.height) * 0.85
 
         return ZStack(alignment: .topTrailing) {
             VStack() {
 
-                // 凡例
-                HStack(spacing: 32) {
+                VStack(alignment: .leading,spacing: 20) {
                     // 現在の状態（赤）
-                    HStack(spacing: 10) {
+                    HStack(spacing: 15) {
                         Circle()
                             .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
-                            .frame(width: 30, height: 30)
+                            .frame(width: 37, height: 37)
                         Text("CURRENT")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .tracking(1)
-                            .foregroundStyle(.white.opacity(0.8))
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .tracking(2)
+                            .foregroundStyle(.white.opacity(0.9))
                     }
 
                     // ターゲット状態（金）
-                    HStack(spacing: 10) {
+                    HStack(spacing: 15) {
                         Circle()
                             .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
-                            .frame(width: 30, height: 30)
+                            .frame(width: 37, height: 37)
                         Text("TARGET")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .tracking(1)
-                            .foregroundStyle(.yellow.opacity(0.8))
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .tracking(2)
+                            .foregroundStyle(.yellow.opacity(0.9))
                     }
                 }
+                .padding(.vertical, 15)
+                .padding(.horizontal, 20)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(.ultraThinMaterial)
+                )
+//                .overlay(
+//                    RoundedRectangle(cornerRadius: 20)
+//                        .stroke(Color.white.opacity(0.5), lineWidth: 1)
+//                )
+                .offset(
+                    x: -geometry.size.width * 0.32,
+                    y: geometry.size.height * 0.1
+                )
 
-                // 単一のブロッホ球で現在とターゲットを同時表示
                 BlochSphereViewRepresentable(
                     vector: viewModel.currentVector,
                     animated: true,
@@ -325,6 +336,7 @@ struct GameView: View {
                     showBackground: false
                 )
                 .frame(width: size, height: size)
+                .opacity(showCountdown ? 0 : 1)
             }
             
             // Persistent Combo Display
@@ -373,7 +385,8 @@ struct GameView: View {
                 .offset(x: 55, y: 100)
             }
         }
-        .padding(.bottom, -100)
+        .padding(.top, -60)
+        .padding(.bottom, -110)
     }
     
     // MARK: - 回路表示
