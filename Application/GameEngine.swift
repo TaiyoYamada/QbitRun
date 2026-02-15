@@ -266,14 +266,14 @@ public final class GameEngine {
         comboCount += 1
         
         // 基本スコア
-        let baseScore = (gameDifficulty == .hard) ? 100 : 50
-        
+        let baseScore = (gameDifficulty == .hard) ? 200 : 100
+
         // シグモイド関数によるコンボボーナス計算
         let bonus: Int
         if comboCount >= 2 {
-            let maxBonus: Double = (gameDifficulty == .hard) ? 600.0 : 300.0
+            let maxBonus: Double = (gameDifficulty == .hard) ? 300.0 : 150.0
             let k: Double = 0.5 // 傾き（急峻さ）
-            let midpoint: Double = 10.0 // 変曲点（このコンボ数でMaxの半分になる）
+            let midpoint: Double = 8.0 // 変曲点（このコンボ数でMaxの半分になる）
             let x = Double(comboCount)
             
             let sigmoidValue = 1.0 / (1.0 + exp(-k * (x - midpoint)))
