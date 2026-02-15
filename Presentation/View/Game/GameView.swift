@@ -244,30 +244,19 @@ struct GameView: View {
             .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
 
             HStack {
-                // Left: Points
-                ZStack(alignment: .topLeading) {
-                    Text("\(viewModel.score)")
-                        .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.cyan)
-                        .frame(width: 140, height: 85, alignment: .trailing)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 5)
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.cyan.opacity(0.6), lineWidth: 2)
-                        )
-                    
-                    Text("SCORE")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .tracking(2)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 4)
-                        .background(Color.black.opacity(0.6))
-                        .clipShape(Capsule())
-                        .offset(x: 10, y: -20)
-                }
+                Text("\(viewModel.score)")
+                    .font(.system(size: 47, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.cyan)
+                    .frame(width: 160, height: 100, alignment: .trailing)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 5)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 60))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 60)
+                            .stroke(Color.cyan.opacity(0.7), lineWidth: 5)
+                    )
+
                 
                 Spacer()
 
@@ -277,7 +266,7 @@ struct GameView: View {
                         showInfoModal = true
                     }) {
                         Image(systemName: "info.circle.fill")
-                            .font(.system(size: 50, weight: .regular, design: .rounded))
+                            .font(.system(size: 60, weight: .regular, design: .rounded))
                             .foregroundStyle(.white.opacity(0.8))
                     }
                     
@@ -286,7 +275,7 @@ struct GameView: View {
                         showExitConfirmation = true
                     }) {
                         Image(systemName: "door.left.hand.open")
-                            .font(.system(size: 50, weight: .regular, design: .rounded))
+                            .font(.system(size: 60, weight: .regular, design: .rounded))
                             .foregroundStyle(.white.opacity(0.8))
                     }
                 }

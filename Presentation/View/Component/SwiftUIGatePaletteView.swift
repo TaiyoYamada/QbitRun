@@ -42,15 +42,10 @@ struct SwiftUIGatePaletteView: View {
                 .buttonStyle(GateButtonStyle())
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 50)
         .padding(.vertical, 16)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(.white.opacity(0.1), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+        .background(.white.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 80))
     }
 }
 

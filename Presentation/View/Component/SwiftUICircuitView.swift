@@ -64,10 +64,10 @@ struct SwiftUICircuitView: View {
             }
             .disabled(gates.isEmpty)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 25)
         .padding(.vertical, 20)
-        .background(.white.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 15))
     }
 }
 
