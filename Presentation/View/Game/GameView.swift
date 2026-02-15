@@ -21,6 +21,8 @@ struct GameView: View {
     
     @State private var showExitConfirmation = false
     @State private var showInfoModal = false
+    
+    @State private var showComboEffect = false
 
     // MARK: - Body
     var body: some View {
@@ -113,6 +115,11 @@ struct GameView: View {
         .onChange(of: viewModel.finalScore) { _, newScore in
             if let score = newScore {
                 onGameEnd(score)
+            }
+        }
+        .onChange(of: viewModel.comboCount) { _, newCount in
+            if newCount >= 2 {
+                showComboEffect = true
             }
         }
     }
@@ -277,41 +284,78 @@ struct GameView: View {
     private func spheresSection(geometry: GeometryProxy) -> some View {
         let size = min(geometry.size.width, geometry.size.height) * 0.8
 
-        return VStack() {
+        return ZStack(alignment: .topTrailing) {
+            VStack() {
 
-            // 凡例
-            HStack(spacing: 32) {
-                // 現在の状態（赤）
-                HStack(spacing: 10) {
-                    Circle()
-                        .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
-                        .frame(width: 30, height: 30)
-                    Text("CURRENT")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .tracking(1)
-                        .foregroundStyle(.white.opacity(0.8))
+                // 凡例
+                HStack(spacing: 32) {
+                    // 現在の状態（赤）
+                    HStack(spacing: 10) {
+                        Circle()
+                            .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
+                            .frame(width: 30, height: 30)
+                        Text("CURRENT")
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .tracking(1)
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+
+                    // ターゲット状態（金）
+                    HStack(spacing: 10) {
+                        Circle()
+                            .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
+                            .frame(width: 30, height: 30)
+                        Text("TARGET")
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .tracking(1)
+                            .foregroundStyle(.yellow.opacity(0.8))
+                    }
                 }
 
-                // ターゲット状態（金）
-                HStack(spacing: 10) {
-                    Circle()
-                        .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
-                        .frame(width: 30, height: 30)
-                    Text("TARGET")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .tracking(1)
-                        .foregroundStyle(.yellow.opacity(0.8))
-                }
+                // 単一のブロッホ球で現在とターゲットを同時表示
+                BlochSphereViewRepresentable(
+                    vector: viewModel.currentVector,
+                    animated: true,
+                    targetVector: viewModel.targetVector,
+                    showBackground: false
+                )
+                .frame(width: size, height: size)
             }
+            
+            // Persistent Combo Display
+            if viewModel.comboCount >= 2 {
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("\(viewModel.comboCount) COMBO")
+                        .font(.system(size: 50, weight: .black, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange, .red],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(color: .orange.opacity(0.8), radius: 5, x: 0, y: 0)
+                        .scaleEffect(showComboEffect ? 1.3 : 1.0)
+                        .animation(.spring(response: 0.2, dampingFraction: 0.2), value: showComboEffect)
 
-            // 単一のブロッホ球で現在とターゲットを同時表示
-            BlochSphereViewRepresentable(
-                vector: viewModel.currentVector,
-                animated: true,
-                targetVector: viewModel.targetVector,
-                showBackground: false
-            )
-            .frame(width: size, height: size)
+                    if showComboEffect {
+                        Text("+\(viewModel.lastComboBonus) pts")
+                            .font(.system(size: 35, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 2)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .onAppear {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                                    withAnimation {
+                                        showComboEffect = false
+                                    }
+                                }
+                            }
+                    }
+                }
+                .padding(.trailing, 40)
+                .offset(x: 50, y: 100)
+            }
         }
         .padding(.bottom, -100)
     }

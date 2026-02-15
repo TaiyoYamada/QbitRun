@@ -14,7 +14,7 @@ public final class GameEngine {
     // MARK: - 定数
     
     /// ゲーム時間（60秒）
-    private let gameDuration: TimeInterval = 2
+    private let gameDuration: TimeInterval = 60
     
     /// 1問あたりの基本スコア
     private let baseScorePerProblem = 100
@@ -36,8 +36,11 @@ public final class GameEngine {
     /// 解いた問題数
     public private(set) var problemsSolved: Int = 0
     
-    /// 獲得したボーナス合計
-    public private(set) var totalBonus: Int = 0
+    /// 現在のコンボ数
+    public private(set) var comboCount: Int = 0
+    
+    /// コンボによる直前の加点（UI表示用）
+    public private(set) var lastComboBonus: Int = 0
     
     /// お手つき回数
     public private(set) var missCount: Int = 0
@@ -104,7 +107,8 @@ public final class GameEngine {
         remainingTime = Int(gameDuration)
         score = 0
         problemsSolved = 0
-        totalBonus = 0
+        comboCount = 0
+        lastComboBonus = 0
         missCount = 0
         currentCircuit = Circuit()
         didSolveLastProblem = false
@@ -153,7 +157,8 @@ public final class GameEngine {
         remainingTime = Int(gameDuration)
         score = 0
         problemsSolved = 0
-        totalBonus = 0
+        comboCount = 0
+        lastComboBonus = 0
         missCount = 0
         currentCircuit = Circuit()
         currentProblem = nil
@@ -171,7 +176,6 @@ public final class GameEngine {
         finalScoreEntry = ScoreEntry(
             score: score,
             problemsSolved: problemsSolved,
-            bonusPoints: totalBonus,
             difficulty: gameDifficulty
         )
     }
@@ -245,28 +249,6 @@ public final class GameEngine {
         }
     }
     
-    // MARK: - ボーナス計算
-    
-    /// ボーナスを計算
-    /// 最小ゲート数に近いほど高ボーナス
-    private func calculateBonus() -> Int {
-        guard let problem = currentProblem else { return 0 }
-        
-        let gatesUsed = currentCircuit.gateCount
-        let minGates = problem.minimumGates
-        
-        if gatesUsed <= minGates {
-            // 最適解または最適解より短い場合
-            return 50
-        } else if gatesUsed == minGates + 1 {
-            return 25
-        } else if gatesUsed == minGates + 2 {
-            return 10
-        }
-        
-        return 0
-    }
-    
     // MARK: - Run判定用メソッド
     
     /// 現在の状態がターゲットと一致するか判定（Runボタン用）
@@ -286,9 +268,21 @@ public final class GameEngine {
     public func handleCorrectAnswer() {
         guard currentProblem != nil else { return }
         
-        let bonus = calculateBonus()
-        score += baseScorePerProblem + bonus
-        totalBonus += bonus
+        // コンボ加算
+        comboCount += 1
+        
+        // 基本スコア
+        let baseScore = (gameDifficulty == .hard) ? 100 : 50
+        
+        // コンボボーナス: (コンボ数 - 1) * 10 * (Hardなら2倍)
+        let comboMultiplier = (gameDifficulty == .hard) ? 20 : 10
+        let comboBonus = max(0, comboCount - 1) * comboMultiplier
+        
+        // UI表示用に保持
+        lastComboBonus = comboBonus
+        
+        // スコア加算
+        score += baseScore + comboBonus
         problemsSolved += 1
         
         didSolveLastProblem = true
@@ -308,10 +302,12 @@ public final class GameEngine {
     }
     
     /// お手つき処理を実行（Runボタン用）
-    /// - Returns: ゲームオーバーかどうか
-    /// お手つき処理を実行（Runボタン用）
     /// - Returns: ゲームオーバーかどうか（常にfalse）
     public func handleWrongAnswer() -> Bool {
+        // コンボリセット
+        comboCount = 0
+        lastComboBonus = 0
+        
         // ミスしてもゲームオーバーにはならない
         return false
     }

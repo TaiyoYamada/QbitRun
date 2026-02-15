@@ -13,8 +13,7 @@ public struct ScoreEntry: Sendable, Codable, Identifiable, Hashable, Equatable {
     /// 解いた問題数
     public let problemsSolved: Int
     
-    /// ボーナスポイント合計
-    public let bonusPoints: Int
+    // Deleted: public let bonusPoints: Int
     
     /// 達成日時
     public let date: Date
@@ -28,14 +27,14 @@ public struct ScoreEntry: Sendable, Codable, Identifiable, Hashable, Equatable {
         id: UUID = UUID(),
         score: Int,
         problemsSolved: Int,
-        bonusPoints: Int = 0,
+        // Deleted: bonusPoints: Int = 0,
         date: Date = Date(),
         difficulty: GameDifficulty = .easy
     ) {
         self.id = id
         self.score = score
         self.problemsSolved = problemsSolved
-        self.bonusPoints = bonusPoints
+        // Deleted: self.bonusPoints = bonusPoints
         self.date = date
         self.difficulty = difficulty
     }

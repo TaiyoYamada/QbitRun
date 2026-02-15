@@ -27,6 +27,12 @@ final class GameViewModel {
     /// 解いた問題数
     var problemsSolved: Int { gameEngine.problemsSolved }
     
+    /// 現在のコンボ数
+    var comboCount: Int { gameEngine.comboCount }
+    
+    /// 直前のコンボボーナス
+    var lastComboBonus: Int { gameEngine.lastComboBonus }
+    
     /// 現在のブロッホベクトル
     var currentVector: BlochVector { gameEngine.currentVector }
     

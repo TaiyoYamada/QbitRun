@@ -190,7 +190,7 @@ struct ResultView: View {
 
 #Preview("リザルト画面 (Rank 1)") {
     ResultView(
-        score: ScoreEntry(score: 5000, problemsSolved: 20, bonusPoints: 1000),
+        score: ScoreEntry(score: 5000, problemsSolved: 20),
         scoreRepository: ScoreRepository(defaults: UserDefaults(suiteName: "Preview_Rank1")!),
         onPlayAgain: { },
         onReturnToMenu: { }
@@ -210,7 +210,7 @@ struct ResultView: View {
     }
     
     return ResultView(
-        score: ScoreEntry(score: 5000, problemsSolved: 20, bonusPoints: 1000),
+        score: ScoreEntry(score: 5000, problemsSolved: 20),
         scoreRepository: repo,
         onPlayAgain: { },
         onReturnToMenu: { }
