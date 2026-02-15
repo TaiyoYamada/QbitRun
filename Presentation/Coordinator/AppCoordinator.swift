@@ -25,10 +25,14 @@ final class AppCoordinator {
     /// スコアリポジトリ
     let scoreRepository: ScoreRepository
     
+    /// オーディオマネージャー
+    let audioManager: AudioManager
+    
     // MARK: - Initialization
     
-    init(scoreRepository: ScoreRepository = ScoreRepository()) {
+    init(scoreRepository: ScoreRepository = ScoreRepository(), audioManager: AudioManager = AudioManager()) {
         self.scoreRepository = scoreRepository
+        self.audioManager = audioManager
     }
     
     // MARK: - Navigation Actions

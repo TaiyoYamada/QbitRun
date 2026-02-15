@@ -9,6 +9,7 @@ struct GameView: View {
     
     let difficulty: GameDifficulty
     let onGameEnd: (ScoreEntry) -> Void
+    let audioManager: AudioManager // [NEW]
 
     // MARK: - Local State
     @State private var countdownValue: Int = 3
@@ -114,6 +115,7 @@ struct GameView: View {
             }
         }
         .onAppear {
+            audioManager.playBGM(.game) // [NEW]
             viewModel.prepareGame(difficulty: difficulty)
             startCountdown()
         }
@@ -267,6 +269,7 @@ struct GameView: View {
 
                 HStack(spacing: 40) {
                     Button(action: {
+                        audioManager.playSFX(.click)
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showInfoModal = true
                     }) {
@@ -276,6 +279,7 @@ struct GameView: View {
                     }
                     
                     Button(action: {
+                        audioManager.playSFX(.click)
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         showExitConfirmation = true
                     }) {
@@ -400,6 +404,7 @@ struct GameView: View {
         VStack(spacing: 0) {
             HStack {
                 Button(action: {
+                    audioManager.playSFX(.click)
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         viewModel.clearCircuit()
@@ -442,6 +447,7 @@ struct GameView: View {
         let result = viewModel.runCircuit()
         
         if result.isCorrect {
+            audioManager.playSFX(.success) // [NEW]
             showSuccessEffect = true
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
@@ -452,6 +458,7 @@ struct GameView: View {
                 }
             }
         } else {
+            audioManager.playSFX(.miss) // [NEW]
             showFailureEffect = true
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(100))
@@ -462,5 +469,5 @@ struct GameView: View {
 }
 
 #Preview("ゲーム画面", traits: .landscapeLeft) {
-    GameView(difficulty: .easy, onGameEnd: { _ in })
+    GameView(difficulty: .easy, onGameEnd: { _ in }, audioManager: AudioManager())
 }

@@ -16,14 +16,18 @@ struct ResultView: View {
     /// メニューに戻る
     let onReturnToMenu: () -> Void
     
+    /// オーディオマネージャー
+    let audioManager: AudioManager // [NEW]
+    
     // アニメーション用State
     @State private var showContent = false
     @State private var scoreCount = 0
     
     // MARK: - 初期化
     
-    init(score: ScoreEntry, scoreRepository: ScoreRepository, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
+    init(score: ScoreEntry, scoreRepository: ScoreRepository, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
         self._viewModel = State(initialValue: ResultViewModel(score: score, scoreRepository: scoreRepository))
+        self.audioManager = audioManager
         self.onPlayAgain = onPlayAgain
         self.onReturnToMenu = onReturnToMenu
     }
@@ -97,6 +101,7 @@ struct ResultView: View {
                         
                         // Action Button
                         Button(action: {
+                            audioManager.playSFX(.click)
                             let generator = UIImpactFeedbackGenerator(style: .medium)
                             generator.impactOccurred()
                             onReturnToMenu()
@@ -135,6 +140,7 @@ struct ResultView: View {
                 }
             }
             .task {
+                audioManager.playBGM(.result) // [NEW]
                 // データロードとアニメーション開始
                 await viewModel.loadResults()
                 
@@ -192,6 +198,7 @@ struct ResultView: View {
     ResultView(
         score: ScoreEntry(score: 5000, problemsSolved: 20),
         scoreRepository: ScoreRepository(defaults: UserDefaults(suiteName: "Preview_Rank1")!),
+        audioManager: AudioManager(),
         onPlayAgain: { },
         onReturnToMenu: { }
     )
@@ -212,6 +219,7 @@ struct ResultView: View {
     return ResultView(
         score: ScoreEntry(score: 5000, problemsSolved: 20),
         scoreRepository: repo,
+        audioManager: AudioManager(),
         onPlayAgain: { },
         onReturnToMenu: { }
     )

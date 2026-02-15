@@ -11,7 +11,8 @@ struct ContentView: View {
             MainMenuView(
                 onSelectMode: { difficulty in
                     coordinator.navigateToGame(difficulty: difficulty)
-                }
+                },
+                audioManager: coordinator.audioManager // [NEW]
             )
             .navigationBarBackButtonHidden(true)
             .navigationDestination(for: AppRoute.self) { route in
@@ -31,7 +32,8 @@ struct ContentView: View {
                 difficulty: difficulty,
                 onGameEnd: { score in
                     coordinator.navigateToResult(score: score)
-                }
+                },
+                audioManager: coordinator.audioManager // [NEW]
             )
             .navigationBarBackButtonHidden(true)
             
@@ -39,6 +41,7 @@ struct ContentView: View {
             ResultView(
                 score: score,
                 scoreRepository: coordinator.scoreRepository,
+                audioManager: coordinator.audioManager, // [NEW]
                 onPlayAgain: {
                     coordinator.popToRoot()
                     coordinator.navigateToGame(difficulty: score.difficulty)

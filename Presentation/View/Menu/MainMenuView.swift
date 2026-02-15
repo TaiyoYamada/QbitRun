@@ -8,6 +8,7 @@ struct MainMenuView: View {
 
     // MARK: - Actions
     let onSelectMode: (GameDifficulty) -> Void
+    let audioManager: AudioManager // [NEW]
 
     // MARK: - State
     @State private var shimmerOffset: CGFloat = -200
@@ -36,6 +37,9 @@ struct MainMenuView: View {
                 }
 
             }
+        }
+        .onAppear {
+            audioManager.playBGM(.menu)
         }
 
     }
@@ -147,6 +151,7 @@ struct MainMenuView: View {
 
     // MARK: - Logic
     private func triggerTransition(difficulty: GameDifficulty) {
+        audioManager.playSFX(.click) // [NEW]
         let generator = UIImpactFeedbackGenerator(style: .soft)
         generator.impactOccurred()
         
@@ -163,6 +168,7 @@ struct MainMenuView: View {
 
 #Preview("New Main Menu") {
     MainMenuView(
-        onSelectMode: { _ in }
+        onSelectMode: { _ in },
+        audioManager: AudioManager()
     )
 }
