@@ -22,15 +22,13 @@ struct GameView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // MARK: - Layer 1: Background
-                // MARK: - Layer 1: Background
                 UnifiedBackgroundView()
 
                 // MARK: - Layer 2: Main Content
                 VStack(spacing: 5) {
                     // タイマーとスコア
                     headerSection
-                        .padding(.vertical, 10)
+                        .padding(.bottom, 10)
                         .padding(.horizontal, 24)
                         .animation(.easeIn(duration: 0.5), value: showCountdown)
                     
@@ -171,7 +169,10 @@ struct GameView: View {
                     .trim(from: 1.0 - (CGFloat(viewModel.remainingTime) / 60.0), to: 1.0)
                     .stroke(
                         LinearGradient(
-                            gradient: Gradient(colors: [
+                            gradient: Gradient(colors: viewModel.isTimeLow ? [
+                                Color(red: 1.0, green: 0.2, blue: 0.2), // Red
+                                Color(red: 0.8, green: 0.0, blue: 0.0)  // Dark Red
+                            ] : [
                                 Color(.purple),
                                 Color(.cyan)
                             ]),
@@ -187,7 +188,7 @@ struct GameView: View {
                 Text(String(format: "%d", viewModel.remainingTime))
                     .font(.system(size: 53, weight: .heavy, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(viewModel.isTimeLow ? Color(red: 1.0, green: 0.2, blue: 0.2) : .white)
                     .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
             }
             .frame(width: 115, height: 115)
