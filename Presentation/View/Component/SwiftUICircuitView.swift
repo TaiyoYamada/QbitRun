@@ -10,7 +10,7 @@ struct SwiftUICircuitView: View {
         HStack(spacing: 12) {
             // 初期状態ラベル
             Text("|0⟩")
-                .font(.system(size: 30, weight: .bold, design: .monospaced))
+                .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
             
             // ワイヤーとスロット

@@ -44,13 +44,13 @@ struct QuantumModeCard: View {
                     if isRandomStart {
                         // Hard Mode: Random / Chaos
                         Image(systemName: "questionmark")
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(accentColor)
                             .symbolEffect(.pulse, options: .repeating)
                     } else {
                         // Easy Mode: Fixed |0>
                         Image(systemName: "arrow.up")
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(accentColor)
                             .symbolEffect(.pulse, options: .repeating)
                     }
@@ -59,12 +59,12 @@ struct QuantumModeCard: View {
                 // Text Area
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundStyle(accentColor)
                         .shadow(color: accentColor.opacity(0.5), radius: 4)
                     
                     Text(subtitle)
-                        .font(.system(size: 17, weight: .medium, design: .monospaced))
+                        .font(.system(size: 17, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.9))
                 }
                 
@@ -72,7 +72,7 @@ struct QuantumModeCard: View {
                 
                 // Tech Decor
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(accentColor.opacity(0.8))
             }
             .padding(24)

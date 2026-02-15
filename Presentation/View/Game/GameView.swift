@@ -58,7 +58,7 @@ struct GameView: View {
                             showInfoModal = true
                         }) {
                             Image(systemName: "info.circle.fill")
-                                .font(.system(size: 40))
+                                .font(.system(size: 40, weight: .regular, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.9))
                                 .shadow(color: .cyan.opacity(0.5), radius: 5)
                         }
@@ -235,7 +235,7 @@ struct GameView: View {
                 // Left: Points
                 ZStack(alignment: .topLeading) {
                     Text("\(viewModel.score)")
-                        .font(.system(size: 32, weight: .bold, design: .monospaced))
+                        .font(.system(size: 32, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(.cyan)
                         .frame(width: 140, height: 90, alignment: .trailing)
                         .padding(.horizontal, 20)
@@ -249,7 +249,7 @@ struct GameView: View {
                     
                     // Label at Top-Left of the border
                     Text("SCORE")
-                        .font(.system(size: 30, weight: .bold))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 4)
                         .background(Color.black.opacity(0.6))
@@ -265,7 +265,7 @@ struct GameView: View {
                     showExitConfirmation = true
                 }) {
                     Image(systemName: "house.fill")
-                        .font(.system(size: 45))
+                        .font(.system(size: 45, weight: .regular, design: .rounded))
                         .foregroundStyle(.white.opacity(0.8))
                 }
             }
@@ -287,7 +287,7 @@ struct GameView: View {
                         .fill(Color(red: 0.9, green: 0.2, blue: 0.2))
                         .frame(width: 30, height: 30)
                     Text("CURRENT")
-                        .font(.custom("Optima-Bold", size: 30))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
                         .tracking(1)
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -298,7 +298,7 @@ struct GameView: View {
                         .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.7))
                         .frame(width: 30, height: 30)
                     Text("TARGET")
-                        .font(.custom("Optima-Bold", size: 30))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
                         .tracking(1)
                         .foregroundStyle(.yellow.opacity(0.8))
                 }
@@ -328,7 +328,7 @@ struct GameView: View {
                     }
                 }) {
                     Text("RESET")
-                        .font(.system(size: 30, weight: .bold))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundStyle(.red.opacity(0.8))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)

@@ -38,7 +38,7 @@ struct ResultView: View {
                     
                     // Header: "MISSION ACCOMPLISHED"
                     Text("MISSION COMPLETE")
-                        .font(.custom("Optima-Bold", size: 48))
+                        .font(.system(size: 48, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .shadow(color: .cyan.opacity(0.8), radius: 10, x: 0, y: 0)
                         .scaleEffect(showContent ? 1.0 : 0.8)
@@ -48,12 +48,12 @@ struct ResultView: View {
                     // Score Card (Glassmorphism)
                     VStack(spacing: 16) {
                         Text("TOTAL SCORE")
-                            .font(.custom("Optima-Bold", size: 16))
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
                             .tracking(2)
                             .foregroundStyle(.white.opacity(0.7))
                         
                         Text("\(scoreCount)")
-                            .font(.custom("Optima-Bold", size: 80))
+                            .font(.system(size: 80, weight: .bold, design: .rounded).monospacedDigit())
                             .monospacedDigit()
                             .foregroundStyle(
                                 LinearGradient(
@@ -71,7 +71,7 @@ struct ResultView: View {
                                 Image(systemName: "trophy.fill")
                                     .foregroundStyle(.yellow)
                                 Text("RANK #\(rank)")
-                                    .font(.custom("Optima-Bold", size: 24))
+                                    .font(.system(size: 24, weight: .bold, design: .rounded))
                                     .foregroundStyle(.yellow)
                             }
                             .padding(.horizontal, 20)
@@ -81,7 +81,7 @@ struct ResultView: View {
                             .overlay(Capsule().stroke(.yellow.opacity(0.5), lineWidth: 1))
                         } else {
                              Text("Keep Trying for Top 5!")
-                                .font(.custom("Optima-Regular", size: 14))
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.5))
                         }
                         
@@ -166,10 +166,10 @@ struct ResultView: View {
     private func detailItem(label: String, value: String) -> some View {
         VStack(spacing: 4) {
             Text(label)
-                .font(.custom("Optima-Regular", size: 12))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.6))
             Text(value)
-                .font(.custom("Optima-Bold", size: 24))
+                .font(.system(size: 24, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
         }
     }

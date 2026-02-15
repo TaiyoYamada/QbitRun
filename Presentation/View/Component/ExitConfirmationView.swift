@@ -59,7 +59,7 @@ struct ExitConfirmationView: View {
                         }
                     }) {
                         Text("CANCEL")
-                            .font(.system(size: 28, weight: .bold, design: .monospaced))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.9))
                             .padding(.vertical, 15)
                             .frame(maxWidth: .infinity)
@@ -76,7 +76,7 @@ struct ExitConfirmationView: View {
                         onConfirm()
                     }) {
                         Text("EXIT GAME")
-                            .font(.system(size: 28, weight: .bold, design: .monospaced))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                             .padding(.vertical, 15)
                             .frame(maxWidth: .infinity)

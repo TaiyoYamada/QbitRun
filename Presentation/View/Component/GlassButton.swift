@@ -21,7 +21,7 @@ struct GlassButton: View {
             action()
         }) {
             Text(title)
-                .font(.custom("Optima-Bold", size: fontSize))
+                .font(.system(size: fontSize, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .frame(width: width, height: height)
                 .background(

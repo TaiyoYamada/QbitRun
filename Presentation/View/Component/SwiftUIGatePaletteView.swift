@@ -17,7 +17,6 @@ struct SwiftUIGatePaletteView: View {
                     onGateSelected(gate)
                 } label: {
                     Text(gate.symbol)
-//                        .font(.custom("Optima-Bold", size: 35))
                         .font(.system(size: 35, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .frame(width: 67, height: 67)
