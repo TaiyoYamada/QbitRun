@@ -347,7 +347,7 @@ struct GameView: View {
                 bonus: viewModel.lastComboBonus,
                 isVisible: $showComboEffect
             )
-            .offset(x: 55, y: 100)
+            .offset(x: 10, y: 110)
         }
         .padding(.top, -60)
         .padding(.bottom, -110)
@@ -443,7 +443,7 @@ struct GameView: View {
             }
 
             // Keep visible for duration
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(for: .milliseconds(700))
             if Task.isCancelled { return }
 
             // Hide effect

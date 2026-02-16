@@ -28,8 +28,11 @@ final class AudioManager {
     
     // MARK: - Properties
     
+    // MARK: - Properties
+    
     private var bgmPlayer: AVAudioPlayer?
-    private var sfxPlayers: [SFX: AVAudioPlayer] = [:]
+    // SFXPool: 同時再生を可能にするため、各SFXタイプごとに複数のプレイヤーを保持する
+    private var sfxPlayers: [SFX: [AVAudioPlayer]] = [:]
     
     /// BGMの音量 (0.0 - 1.0)
     var bgmVolume: Float = UserDefaults.standard.float(forKey: "bgmVolume") == 0 ? 0.5 : UserDefaults.standard.float(forKey: "bgmVolume") {
@@ -98,9 +101,6 @@ final class AudioManager {
     func stopBGM(fadeOut: TimeInterval = 0.5) {
         if let player = bgmPlayer, player.isPlaying {
             player.setVolume(0, fadeDuration: fadeOut)
-            // フェードアウト後に停止するのは非同期処理が必要だが、
-            // シンプルにするため、次の再生時に上書きされることを期待するか、
-            // タイマーで停止させる。ここでは即時停止しないが、実用的には十分。
         }
     }
     
@@ -108,36 +108,56 @@ final class AudioManager {
     
     /// 効果音をプリロードする
     private func preloadSFX() {
-        // SFXファイルを事前にロードしておく（遅延防止）
-        // 現状はファイルがないため、実装のみ
+        // 一般的なSFXを事前にいくつか作っておく
+        for sfx in [SFX.click, .set, .combo, .miss, .success] {
+            preparePlayer(for: sfx)
+        }
+    }
+    
+    /// プレイヤーを準備してプールに追加する
+    @discardableResult
+    private func preparePlayer(for sfx: SFX) -> AVAudioPlayer? {
+        guard let url = Bundle.main.url(forResource: sfx.rawValue, withExtension: "mp3") ??
+                          Bundle.main.url(forResource: sfx.rawValue, withExtension: "wav") else {
+            return nil
+        }
+        
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = sfxVolume
+            player.prepareToPlay()
+            
+            if sfxPlayers[sfx] != nil {
+                sfxPlayers[sfx]?.append(player)
+            } else {
+                sfxPlayers[sfx] = [player]
+            }
+            return player
+        } catch {
+            print("Failed to load SFX \(sfx): \(error)")
+            return nil
+        }
     }
     
     /// 効果音を再生する
     /// - Parameter sfx: 再生する効果音の種類
     func playSFX(_ sfx: SFX) {
-        guard let url = Bundle.main.url(forResource: sfx.rawValue, withExtension: "mp3") ??
-                          Bundle.main.url(forResource: sfx.rawValue, withExtension: "wav") else {
-            // ファイルがない場合はログのみ（クラッシュさせない）
-            // print("SFX file not found: \(sfx.rawValue)") 
-            return
+        // 利用可能な（再生中でない）プレイヤーを探す
+        var playerToUse: AVAudioPlayer?
+        
+        if let players = sfxPlayers[sfx] {
+            playerToUse = players.first(where: { !$0.isPlaying })
         }
         
-        do {
-            // SFXは重なる可能性があるため、毎回新しいプレイヤーを作ると重い。
-            // 簡易的に毎回生成するが、本格的な音ゲーならPoolを作るべき。
-            let player = try AVAudioPlayer(contentsOf: url)
-            player.volume = sfxVolume
-            player.play()
-            // 参照を保持しないと再生されない可能性があるが、AVAudioPlayerは即時解放されると止まることがある。
-            // ここでは簡易実装として一時的な辞書に入れるか、fire-and-forgetで動くか確認。
-            // 確実に鳴らすために辞書に保持する（同時再生数制限なしの簡易版）
-             
-             // 既存のプレイヤーがあれば止める（連打対応：同じ音は重ねない、または重ねる設計次第）
-             // ここでは「重ねて鳴らす」ために、一時的な配列管理が必要だが、
-             // シンプルに「最新の1つ」を保持する形にする（連打で音が消えるのを防ぐには工夫が必要）
-             sfxPlayers[sfx] = player
-        } catch {
-            print("Failed to play SFX: \(error)")
+        // 利用可能なものがなければ新しく作る
+        if playerToUse == nil {
+            playerToUse = preparePlayer(for: sfx)
         }
+        
+        guard let player = playerToUse else { return }
+        
+        player.volume = sfxVolume
+        player.currentTime = 0
+        player.play()
     }
 }
