@@ -270,7 +270,7 @@ public final class GameEngine {
         switch gameDifficulty {
         case .easy: baseScore = 100
         case .hard: baseScore = 500
-        case .expert: baseScore = 1500
+        case .expert: baseScore = 3000
         }
 
         // シグモイド関数によるコンボボーナス計算
@@ -278,8 +278,8 @@ public final class GameEngine {
         if comboCount >= 2 {
             let maxBonus: Double
             switch gameDifficulty {
-            case .easy: maxBonus = 750.0
-            case .hard: maxBonus = 3000.0
+            case .easy: maxBonus = 500.0
+            case .hard: maxBonus = 2500.0
             case .expert: maxBonus = 6000.0
             }
             let k: Double = 0.5 // 傾き（急峻さ）
@@ -289,7 +289,7 @@ public final class GameEngine {
             switch gameDifficulty {
             case .easy: midpoint = 10.0
             case .hard: midpoint = 8.0
-            case .expert: midpoint = 5.0
+            case .expert: midpoint = 4.0
             }
             let x = Double(comboCount)
             
