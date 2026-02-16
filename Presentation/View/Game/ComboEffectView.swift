@@ -42,14 +42,6 @@ struct ComboEffectView: View {
             )
             .rotationEffect(.degrees(isVisible ? -5 : 5))
             .animation(.spring(response: 0.3, dampingFraction: 0.5), value: isVisible)
-            .onAppear {
-                // 自動的に消える
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        isVisible = false
-                    }
-                }
-            }
         }
     }
 }

@@ -342,50 +342,12 @@ struct GameView: View {
             }
             
             // Persistent Combo Display
-            if viewModel.comboCount >= 2 {
-                VStack(alignment: .trailing, spacing: 0) {
-                    let comboColors: [Color] = {
-                        if viewModel.comboCount < 5 {
-                            return [.purple.opacity(0.8)]
-                        } else if viewModel.comboCount < 10 {
-                            return [.white, .cyan, .blue]
-                        } else {
-                            return [.purple, .blue, .cyan]
-                        }
-                    }()
-                    
-                    Text("\(viewModel.comboCount) COMBO")
-                        .font(.system(size: 50, weight: .black, design: .rounded))
-                        .tracking(2)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: comboColors,
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .shadow(color: comboColors.last?.opacity(0.8) ?? .orange.opacity(0.8), radius: 5, x: 0, y: 0)
-                        .scaleEffect(showComboEffect ? 1.3 : 1.0)
-                        .animation(.spring(response: 0.2, dampingFraction: 0.2), value: showComboEffect)
-
-                    if showComboEffect {
-                        Text("+\(viewModel.lastComboBonus) pts")
-                            .font(.system(size: 35, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.5), radius: 2)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                            .onAppear {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                                    withAnimation {
-                                        showComboEffect = false
-                                    }
-                                }
-                            }
-                    }
-                }
-                .padding(.trailing, 40)
-                .offset(x: 55, y: 100)
-            }
+            ComboEffectView(
+                comboCount: viewModel.comboCount,
+                bonus: viewModel.lastComboBonus,
+                isVisible: $showComboEffect
+            )
+            .offset(x: 55, y: 100)
         }
         .padding(.top, -60)
         .padding(.bottom, -110)
@@ -466,21 +428,26 @@ struct GameView: View {
         comboAnimationTask?.cancel()
         
         comboAnimationTask = Task { @MainActor in
+            // Reset state if needed (though binding should handle it)
             withAnimation(.none) {
                 showComboEffect = false
             }
-
+            
+            // Small delay to ensure state reset is processed if it was already true
             try? await Task.sleep(for: .milliseconds(50))
             if Task.isCancelled { return }
 
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.2)) {
+            // Show effect
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
                 showComboEffect = true
             }
 
-            try? await Task.sleep(for: .seconds(0.7))
+            // Keep visible for duration
+            try? await Task.sleep(for: .seconds(1.5))
             if Task.isCancelled { return }
 
-            withAnimation(.easeOut(duration: 0.2)) {
+            // Hide effect
+            withAnimation(.easeOut(duration: 0.3)) {
                 showComboEffect = false
             }
         }
