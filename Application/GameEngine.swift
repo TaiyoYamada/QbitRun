@@ -269,8 +269,8 @@ public final class GameEngine {
         let baseScore: Int
         switch gameDifficulty {
         case .easy: baseScore = 100
-        case .hard: baseScore = 200
-        case .expert: baseScore = 1000
+        case .hard: baseScore = 500
+        case .expert: baseScore = 1500
         }
 
         // シグモイド関数によるコンボボーナス計算
@@ -278,12 +278,19 @@ public final class GameEngine {
         if comboCount >= 2 {
             let maxBonus: Double
             switch gameDifficulty {
-            case .easy: maxBonus = 100.0
-            case .hard: maxBonus = 500.0
-            case .expert: maxBonus = 2000.0
+            case .easy: maxBonus = 750.0
+            case .hard: maxBonus = 3000.0
+            case .expert: maxBonus = 6000.0
             }
             let k: Double = 0.5 // 傾き（急峻さ）
-            let midpoint: Double = 8.0 // 変曲点（このコンボ数でMaxの半分になる）
+            
+            // 変曲点（このコンボ数でMaxの半分になる）
+            let midpoint: Double
+            switch gameDifficulty {
+            case .easy: midpoint = 10.0
+            case .hard: midpoint = 8.0
+            case .expert: midpoint = 5.0
+            }
             let x = Double(comboCount)
             
             let sigmoidValue = 1.0 / (1.0 + exp(-k * (x - midpoint)))
