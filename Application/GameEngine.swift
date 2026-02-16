@@ -271,7 +271,7 @@ public final class GameEngine {
         // シグモイド関数によるコンボボーナス計算
         let bonus: Int
         if comboCount >= 2 {
-            let maxBonus: Double = (gameDifficulty == .hard) ? 300.0 : 100.0
+            let maxBonus: Double = (gameDifficulty == .hard) ? 350.0 : 100.0
             let k: Double = 0.5 // 傾き（急峻さ）
             let midpoint: Double = 8.0 // 変曲点（このコンボ数でMaxの半分になる）
             let x = Double(comboCount)
