@@ -245,9 +245,9 @@ struct GameView: View {
 
             HStack {
                 Text("\(viewModel.score)")
-                    .font(.system(size: 47, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.system(size: 45, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(.cyan)
-                    .frame(width: 160, height: 100, alignment: .trailing)
+                    .frame(width: 170, height: 110, alignment: .trailing)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 5)
                     .background(.ultraThinMaterial)

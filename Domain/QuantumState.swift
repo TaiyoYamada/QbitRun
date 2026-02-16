@@ -116,8 +116,91 @@ public struct QuantumState: Sendable, Equatable {
             imaginary: sin(7 * Double.pi / 4) / 2.0.squareRoot()
         )
     )
+    // MARK: - Expert用状態（X軸回転）
     
-    // MARK: - 確率計算
+    /// Rx(π/4)|0⟩ 状態（X軸周りに45度回転）
+    /// H → T → H |0⟩ で到達
+    /// 確率振幅: α = cos(π/8), β = -i sin(π/8)
+    public static let rx45 = QuantumState(
+        alpha: Complex(real: cos(Double.pi / 8), imaginary: 0),
+        beta: Complex(real: 0, imaginary: -sin(Double.pi / 8))
+    )
+
+    /// Rx(3π/4)|0⟩ 状態（X軸周りに135度回転）
+    /// H → T → T → T → H |0⟩ で到達
+    public static let rx135 = QuantumState(
+        alpha: Complex(real: cos(3 * Double.pi / 8), imaginary: 0),
+        beta: Complex(real: 0, imaginary: -sin(3 * Double.pi / 8))
+    )
+    
+    /// Rx(-π/4)|0⟩ 状態（X軸周りに-45度回転）
+    /// 確率振幅: α = cos(π/8), β = i sin(π/8)
+    public static let rx_45 = QuantumState(
+        alpha: Complex(real: cos(Double.pi / 8), imaginary: 0),
+        beta: Complex(real: 0, imaginary: sin(Double.pi / 8))
+    )
+    
+    /// Rx(-3π/4)|0⟩ 状態（X軸周りに-135度回転）
+    public static let rx_135 = QuantumState(
+        alpha: Complex(real: cos(3 * Double.pi / 8), imaginary: 0),
+        beta: Complex(real: 0, imaginary: sin(3 * Double.pi / 8))
+    )
+    
+    // MARK: - Expert用状態（Y軸回転）
+    
+    /// Ry(π/4)|0⟩ 状態（Y軸周りに45度回転）
+    /// S → H → T → H → S† |0⟩ で到達
+    /// 確率振幅: α = cos(π/8), β = sin(π/8)
+    public static let ry45 = QuantumState(
+        alpha: Complex(real: cos(Double.pi / 8), imaginary: 0),
+        beta: Complex(real: sin(Double.pi / 8), imaginary: 0)
+    )
+    
+    /// Ry(-π/4)|0⟩ 状態（Y軸周りに-45度回転）
+    public static let ry_45 = QuantumState(
+        alpha: Complex(real: cos(Double.pi / 8), imaginary: 0),
+        beta: Complex(real: -sin(Double.pi / 8), imaginary: 0)
+    )
+    
+    /// Ry(3π/4)|0⟩ 状態（Y軸周りに135度回転）
+    public static let ry135 = QuantumState(
+        alpha: Complex(real: cos(3 * Double.pi / 8), imaginary: 0),
+        beta: Complex(real: sin(3 * Double.pi / 8), imaginary: 0)
+    )
+    
+    /// Ry(-3π/4)|0⟩ 状態（Y軸周りに-135度回転）
+    public static let ry_135 = QuantumState(
+        alpha: Complex(real: cos(3 * Double.pi / 8), imaginary: 0),
+        beta: Complex(real: -sin(3 * Double.pi / 8), imaginary: 0)
+    )
+    
+    // MARK: - Expert用状態（対角回転・中間位相）
+    // X/Y軸回転の状態にTゲート（Z軸45度回転）を適用したもの
+    
+    /// T Rx(π/4)|0⟩
+    public static let rx45_t = rx45.applying([.t])
+    
+    /// T Rx(-π/4)|0⟩
+    public static let rx_45_t = rx_45.applying([.t])
+    
+    /// T Rx(3π/4)|0⟩
+    public static let rx135_t = rx135.applying([.t])
+    
+    /// T Rx(-3π/4)|0⟩
+    public static let rx_135_t = rx_135.applying([.t])
+    
+    /// T Ry(π/4)|0⟩
+    public static let ry45_t = ry45.applying([.t])
+    
+    /// T Ry(-π/4)|0⟩
+    public static let ry_45_t = ry_45.applying([.t])
+    
+    /// T Ry(3π/4)|0⟩
+    public static let ry135_t = ry135.applying([.t])
+    
+    /// T Ry(-3π/4)|0⟩
+    public static let ry_135_t = ry_135.applying([.t])
+    
     
     /// |0⟩ を観測する確率
     public var probabilityZero: Double {

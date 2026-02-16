@@ -16,6 +16,14 @@ public struct ProblemGenerator: Sendable {
         .t45, .t135, .t225, .t315       // 45度刻みの位相
     ]
     
+    /// Expertモード用の追加状態
+    private let expertStates: [QuantumState] = [
+        .rx45, .rx_45, .rx135, .rx_135,
+        .ry45, .ry_45, .ry135, .ry_135,
+        .rx45_t, .rx_45_t, .rx135_t, .rx_135_t,
+        .ry45_t, .ry_45_t, .ry135_t, .ry_135_t
+    ]
+    
     // MARK: - 問題生成
     public func generateProblem(gameDifficulty: GameDifficulty, problemNumber: Int, lastProblemKey: String? = nil) -> (problem: Problem, problemKey: String) {
         return generateRandomProblem(gameDifficulty: gameDifficulty, problemNumber: problemNumber, lastProblemKey: lastProblemKey)
@@ -37,12 +45,24 @@ public struct ProblemGenerator: Sendable {
             // Easy: 常に |0⟩ から開始
             startState = .zero
         case .hard:
-            // Hard: ランダムな状態から開始
+            // Hard: ランダムな状態から開始（基本状態のみ）
             startState = availableStates.randomElement()!
+        case .expert:
+            // Expert: 基本状態 + 複雑な状態からランダムに開始
+            let allStates = availableStates + expertStates
+            startState = allStates.randomElement()!
         }
         
         // 終了状態をランダムに選択
-        let targetState = availableStates.randomElement()!
+        let targetState: QuantumState
+        if gameDifficulty == .expert {
+            // Expert: 基本状態 + 複雑な状態から選択
+            let allStates = availableStates + expertStates
+            targetState = allStates.randomElement()!
+        } else {
+            // Easy/Hard: 基本状態のみ
+            targetState = availableStates.randomElement()!
+        }
         
         // 同じ状態は避ける
         if startState.fidelity(with: targetState) > 0.99 {

@@ -170,7 +170,7 @@ struct MainMenuView: View {
                 title: "EASY MODE",
                 subtitle: "Start from |0⟩",
                 icon: "arrow.up",
-                accentColor: .cyan,
+                accentColor: .white,
                 isRandomStart: false,
                 action: { triggerTransition(difficulty: .easy) }
             )
@@ -179,9 +179,18 @@ struct MainMenuView: View {
                 title: "HARD MODE",
                 subtitle: "Random Start",
                 icon: "questionmark",
-                accentColor: .purple,
+                accentColor: .cyan,
                 isRandomStart: true,
                 action: { triggerTransition(difficulty: .hard) }
+            )
+            
+            QuantumModeCard(
+                title: "EXPERT MODE",
+                subtitle: "Advanced States",
+                icon: "sparkles",
+                accentColor: .purple,
+                isRandomStart: true,
+                action: { triggerTransition(difficulty: .expert) }
             )
         }
         .frame(width: 450)

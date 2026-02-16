@@ -266,12 +266,22 @@ public final class GameEngine {
         comboCount += 1
         
         // 基本スコア
-        let baseScore = (gameDifficulty == .hard) ? 200 : 100
+        let baseScore: Int
+        switch gameDifficulty {
+        case .easy: baseScore = 200
+        case .hard: baseScore = 500
+        case .expert: baseScore = 1000
+        }
 
         // シグモイド関数によるコンボボーナス計算
         let bonus: Int
         if comboCount >= 2 {
-            let maxBonus: Double = (gameDifficulty == .hard) ? 350.0 : 100.0
+            let maxBonus: Double
+            switch gameDifficulty {
+            case .easy: maxBonus = 300.0
+            case .hard: maxBonus = 1000.0
+            case .expert: maxBonus = 2000.0
+            }
             let k: Double = 0.5 // 傾き（急峻さ）
             let midpoint: Double = 8.0 // 変曲点（このコンボ数でMaxの半分になる）
             let x = Double(comboCount)
