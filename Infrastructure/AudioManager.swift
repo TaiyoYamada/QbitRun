@@ -18,6 +18,8 @@ final class AudioManager {
         case set = "sfx_set"
         case clear = "sfx_clear"
         case button = "sfx_button"
+        case cancel = "sfx_cancel"
+        case start = "sfx_start"
         case combo = "sfx_combo"
     }
 

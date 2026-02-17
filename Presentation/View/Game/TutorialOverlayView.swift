@@ -46,6 +46,7 @@ struct TypewriterText: View {
 struct TutorialOverlayView: View {
     @Bindable var viewModel: GameViewModel
     let spotlightFrames: [CGRect]
+    let audioManager: AudioManager
 
     var body: some View {
         VStack {
@@ -80,6 +81,7 @@ struct TutorialOverlayView: View {
             Spacer()
 
             Button(action: {
+                audioManager.playSFX(.button)
                 viewModel.advanceTutorialStep()
             }) {
                 HStack(spacing: 15) {

@@ -60,6 +60,7 @@ struct GameView: View {
                             allDisabled: viewModel.isTutorialActive && (viewModel.currentTutorialStep.targetGate == nil || !viewModel.tutorialGateEnabled)
                         ) { gate in
                             if viewModel.isTutorialActive {
+                                audioManager.playSFX(.set)
                                 viewModel.handleTutorialGateTap(gate)
                             } else if viewModel.canAddGate && !showCountdown {
                                 audioManager.playSFX(.set)
@@ -105,9 +106,11 @@ struct GameView: View {
                         title: "END GAME？",
                         message: "Return to the main menu?\nCurrent progress will be lost.",
                         onConfirm: {
+                            audioManager.playSFX(.button)
                             dismiss()
                         },
                         onCancel: {
+                            audioManager.playSFX(.cancel)
                             showExitConfirmation = false
                         }
                     )
@@ -117,6 +120,7 @@ struct GameView: View {
 
                 if showInfoModal {
                     ReferenceModalView {
+                        audioManager.playSFX(.cancel)
                         showInfoModal = false
                     }
                     .zIndex(100)
@@ -126,7 +130,8 @@ struct GameView: View {
                 if viewModel.isTutorialActive {
                     TutorialOverlayView(
                         viewModel: viewModel,
-                        spotlightFrames: tutorialSpotlightFrames
+                        spotlightFrames: tutorialSpotlightFrames,
+                        audioManager: audioManager
                     )
                     .zIndex(200)
                     .transition(.opacity)
@@ -259,6 +264,7 @@ struct GameView: View {
             }
 
             countdownValue = 0
+//            audioManager.playSFX(.start)
             await animateStartStep()
 
             withAnimation(.easeOut(duration: 0.5)) {

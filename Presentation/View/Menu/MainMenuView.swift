@@ -73,6 +73,7 @@ struct MainMenuView: View {
                     SettingsView(
                         audioManager: audioManager,
                         onDismiss: {
+                            audioManager.playSFX(.cancel)
                             withAnimation(.easeOut(duration: 0.2)) {
                                 showSettings = false
                             }
@@ -89,6 +90,7 @@ struct MainMenuView: View {
                             showTutorialConfirmation = false
                         },
                         onCancel: {
+                            audioManager.playSFX(.cancel)
                             showTutorialConfirmation = false
                         }
                     )
