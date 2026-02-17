@@ -1,58 +1,42 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Result/ResultView.swift
-// ゲーム終了画面（SwiftUI版）
 
 import SwiftUI
 
-/// ゲーム終了後のリザルト画面
 struct ResultView: View {
-    
-    /// ViewModel
+
     @State private var viewModel: ResultViewModel
-    
-    /// もう一度プレイ
+
     let onPlayAgain: () -> Void
-    
-    /// メニューに戻る
+
     let onReturnToMenu: () -> Void
-    
-    /// オーディオマネージャー
-    let audioManager: AudioManager // [NEW]
-    
-    // アニメーション用State
+
+    let audioManager: AudioManager
+
     @State private var showContent = false
     @State private var scoreCount = 0
-    
-    // MARK: - 初期化
-    
+
     init(score: ScoreEntry, scoreRepository: ScoreRepository, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
         self._viewModel = State(initialValue: ResultViewModel(score: score, scoreRepository: scoreRepository))
         self.audioManager = audioManager
         self.onPlayAgain = onPlayAgain
         self.onReturnToMenu = onReturnToMenu
     }
-    
+
     var body: some View {
             ZStack {
-                // MARK: - Layer 1: Unified Background
                 UnifiedBackgroundView()
-                
-                // MARK: - Layer 2: Main Content
+
                 VStack(spacing: 0) {
-                    
+
                     Spacer()
-                    
-                    // Main Card Container
+
                     VStack(spacing: 32) {
-                        
-                        // Title
+
                         Text("MISSION COMPLETE")
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                             .tracking(4)
                             .foregroundStyle(.white.opacity(0.8))
                             .shadow(color: .cyan.opacity(0.5), radius: 10)
-                        
-                        // Score Card
+
                         VStack(spacing: 20) {
                             Text("TOTAL SCORE")
                                .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -66,14 +50,13 @@ struct ResultView: View {
                                 .contentTransition(.numericText())
                                 .scaleEffect(showContent ? 1.0 : 0.8)
                                 .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: showContent)
-                            
+
                             Divider()
                                 .background(Color.white.opacity(0.1))
                                 .padding(.horizontal, 40)
-                            
+
                             HStack(spacing: 40) {
                                 detailItem(label: "PROBLEMS", value: "\(viewModel.score.problemsSolved)")
-                                // Future: Add Rank or Bonus here
                             }
                         }
                         .padding(.vertical, 40)
@@ -98,8 +81,7 @@ struct ResultView: View {
                                 )
                         )
                         .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
-                        
-                        // Action Button
+
                         Button(action: {
                             audioManager.playSFX(.click)
                             let generator = UIImpactFeedbackGenerator(style: .medium)
@@ -129,33 +111,31 @@ struct ResultView: View {
                         }
                         .padding(.horizontal, 40)
                     }
-                    .buttonStyle(ScaleButtonStyle()) // Add scale effect on press
-                    .frame(maxWidth: 500) // Constrain width for iPad/Mac
+                    .buttonStyle(ScaleButtonStyle())
+                    .frame(maxWidth: 500)
                     .padding(20)
                     .scaleEffect(showContent ? 1.0 : 0.95)
                     .opacity(showContent ? 1.0 : 0)
                     .animation(.easeOut(duration: 0.4), value: showContent)
-                    
+
                     Spacer()
                 }
             }
             .task {
-                audioManager.playBGM(.result) // [NEW]
-                // データロードとアニメーション開始
+                audioManager.playBGM(.result)
                 await viewModel.loadResults()
-                
+
                 withAnimation {
                     showContent = true
                 }
-                
-                // スコアのカウントアップ
+
                 let totalScore = viewModel.score.score
                 if totalScore > 0 {
                     let duration = 1.5
                     let steps = 30
                     let stepDelay = duration / Double(steps)
                     let stepValue = totalScore / steps
-                    
+
                     for i in 0...steps {
                         try? await Task.sleep(nanoseconds: UInt64(stepDelay * 1_000_000_000))
                         if i == steps {
@@ -174,7 +154,6 @@ struct ResultView: View {
             }
     }
 
-    
     private func detailItem(label: String, value: String) -> some View {
         VStack(spacing: 6) {
             Text(label)
@@ -188,11 +167,6 @@ struct ResultView: View {
         }
     }
 }
-
-
-
-
-// MARK: - プレビュー
 
 #Preview("リザルト画面 (Rank 1)") {
     ResultView(
@@ -208,14 +182,13 @@ struct ResultView: View {
 #Preview("リザルト画面 (Rank 3)") {
     let defaults = UserDefaults(suiteName: "Preview_Rank3")!
     let repo = ScoreRepository(defaults: defaults)
-    
-    // 事前にいくつかスコアを入れておく（非同期なのでTaskで実行）
+
     Task {
         await repo.clearAllScores()
         await repo.saveScore(ScoreEntry(score: 6000, problemsSolved: 25))
         await repo.saveScore(ScoreEntry(score: 5500, problemsSolved: 22))
     }
-    
+
     return ResultView(
         score: ScoreEntry(score: 5000, problemsSolved: 20),
         scoreRepository: repo,

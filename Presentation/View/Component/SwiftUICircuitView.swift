@@ -1,27 +1,22 @@
 import SwiftUI
 
-/// 回路ビュー（シンプル版）
 struct SwiftUICircuitView: View {
     @Binding var gates: [QuantumGate]
     let maxSlots: Int = 5
     let onRun: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 12) {
-            // 初期状態ラベル
             Text("|0⟩")
                 .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
-            
-            // ワイヤーとスロット
+
             HStack(spacing: 0) {
                 ForEach(0..<maxSlots, id: \.self) { index in
-                    // ワイヤーセグメント
                     Rectangle()
                         .fill(.white.opacity(0.7))
                         .frame(width: 23, height: 3)
 
-                    // スロット
                     CircuitSlot(
                         gate: index < gates.count ? gates[index] : nil,
                         onRemove: {
@@ -31,15 +26,13 @@ struct SwiftUICircuitView: View {
                             }
                         }
                     )
-                    
-                    // ワイヤーセグメント
+
                     Rectangle()
                         .fill(.white.opacity(0.7))
                         .frame(width: 23, height: 3)
                 }
             }
-            
-            // Runボタン
+
             Button(action: {
                 UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                 onRun()
@@ -71,14 +64,12 @@ struct SwiftUICircuitView: View {
     }
 }
 
-/// 回路スロット
 struct CircuitSlot: View {
     let gate: QuantumGate?
     let onRemove: () -> Void
-    
+
     var body: some View {
         if let gate = gate {
-            // ゲートが配置されている（タップで削除）
             Text(gate.symbol)
                 .font(.system(size: 25, weight: .bold))
                 .foregroundStyle(.white)
@@ -89,7 +80,6 @@ struct CircuitSlot: View {
                     onRemove()
                 }
         } else {
-            // 空のスロット
             RoundedRectangle(cornerRadius: 8)
                 .fill(.white.opacity(0.08))
                 .frame(width: 60, height: 60)

@@ -1,20 +1,17 @@
 import SwiftUI
 
-/// グラスモーフィズムボタン（回転するグラデーションボーダー）
 struct GlassButton: View {
     let title: String
     let action: () -> Void
-    
-    /// ボタンのサイズ
+
     var width: CGFloat = 220
     var height: CGFloat = 60
     var fontSize: CGFloat = 24
-    
-    /// ボーダーアニメーションを有効にするか
+
     var animated: Bool = true
-    
+
     @State private var borderRotation: Double = 0
-    
+
     var body: some View {
         Button(action: {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -25,7 +22,6 @@ struct GlassButton: View {
                 .foregroundStyle(.white)
                 .frame(width: width, height: height)
                 .background(
-                    // グラスモーフィズム背景
                     RoundedRectangle(cornerRadius: 20)
                         .fill(.white.opacity(0.15))
                         .background(
@@ -34,7 +30,6 @@ struct GlassButton: View {
                         )
                 )
                 .overlay(
-                    // 回転するグラデーションボーダー
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(
                             AngularGradient(

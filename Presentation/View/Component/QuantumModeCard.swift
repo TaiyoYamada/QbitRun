@@ -1,26 +1,23 @@
 
 import SwiftUI
 
-/// A "Solid Tech" style button for mode selection
 struct QuantumModeCard: View {
     let title: String
     let subtitle: String
-    let icon: String // SystemImage name
+    let icon: String
     let accentColor: Color
-    let isRandomStart: Bool // To toggle between Fixed/Random visualization
+    let isRandomStart: Bool
     let action: () -> Void
-    
+
     @State private var isHovered = false
     @State private var isPressed = false
 
-
-    
     var body: some View {
         Button(action: {
             isPressed = true
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
-            
+
             Task {
                 try? await Task.sleep(for: .milliseconds(150))
                 isPressed = false
@@ -39,38 +36,33 @@ struct QuantumModeCard: View {
                         )
                         .frame(width: 60, height: 60)
                         .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 10)
-                    
-                    // Central Icon
+
                     if isRandomStart {
-                        // Hard Mode: Random / Chaos
                         Image(systemName: "questionmark")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(accentColor)
                             .symbolEffect(.pulse, options: .repeating)
                     } else {
-                        // Easy Mode: Fixed |0>
                         Image(systemName: "arrow.up")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(accentColor)
                             .symbolEffect(.pulse, options: .repeating)
                     }
                 }
-                
-                // Text Area
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundStyle(accentColor)
                         .shadow(color: accentColor.opacity(0.5), radius: 4)
-                    
+
                     Text(subtitle)
                         .font(.system(size: 17, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.9))
                 }
-                
+
                 Spacer()
-                
-                // Tech Decor
+
                 Image(systemName: "chevron.right")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(accentColor.opacity(0.8))
@@ -78,10 +70,8 @@ struct QuantumModeCard: View {
             .padding(24)
             .background(
                 ZStack {
-                    // Solid Matte Black Background
                     Color.black.opacity(0.9)
-                    
-                    // Tech Border
+
                     RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(
                             accentColor.opacity(0.5),
@@ -114,7 +104,7 @@ struct QuantumModeCard: View {
                 isRandomStart: false,
                 action: {}
             )
-            
+
             QuantumModeCard(
                 title: "HARD MODE",
                 subtitle: "Random Start State",

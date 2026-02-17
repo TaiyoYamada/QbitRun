@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct SettingsView: View {
-    
+
     @Bindable var audioManager: AudioManager
     let onDismiss: () -> Void
-    
+
     @State private var animateIn = false
-    
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea()
@@ -32,8 +32,7 @@ struct SettingsView: View {
                         value: $audioManager.bgmVolume,
                         icon: "music.note"
                     )
-                    
-                    // SFX Volume
+
                     VolumeSlider(
                         label: "SE",
                         value: $audioManager.sfxVolume,
@@ -95,7 +94,7 @@ struct VolumeSlider: View {
     let label: String
     @Binding var value: Float
     let icon: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {

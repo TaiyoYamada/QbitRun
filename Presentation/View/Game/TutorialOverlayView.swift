@@ -1,18 +1,15 @@
 import SwiftUI
 import simd
 
-// MARK: - Event Bus (Simple version)
 extension Notification.Name {
     static let tutorialGateTapped = Notification.Name("tutorialGateTapped")
 }
-
-// MARK: - Sci-Fi UI Components
 
 struct TypewriterText: View {
     let text: String
     @State private var displayedText: String = ""
     @State private var charIndex: Int = 0
-    
+
     var body: some View {
         Text(displayedText)
             .font(.system(size: 18, weight: .medium, design: .monospaced))
@@ -26,14 +23,14 @@ struct TypewriterText: View {
                 startTyping(text)
             }
     }
-    
+
     private func startTyping(_ newText: String) {
         displayedText = ""
         charIndex = 0
-        
+
         Task {
             for char in newText {
-                if newText != text { break } // Cancel if text changed
+                if newText != text { break }
                 displayedText.append(char)
                 let randomDelay = UInt64(Double.random(in: 0.01...0.05) * 1_000_000_000)
                 try? await Task.sleep(nanoseconds: randomDelay)
@@ -43,12 +40,11 @@ struct TypewriterText: View {
 }
 
 struct TutorialOverlayView: View {
-    @Bindable var viewModel: GameViewModel // Passed from parent
-    let spotlightFrames: [CGRect] // Holes to cut out
-    
+    @Bindable var viewModel: GameViewModel
+    let spotlightFrames: [CGRect]
+
     var body: some View {
         VStack {
-            // Top Information
             VStack(spacing: 20) {
                 Text(viewModel.currentTutorialStep.title)
                     .font(.system(size: 45, weight: .bold, design: .rounded))
@@ -71,7 +67,6 @@ struct TutorialOverlayView: View {
 
             Spacer()
 
-            // Next/Launch Button
             Button(action: {
                 viewModel.advanceTutorialStep()
             }) {
@@ -79,7 +74,7 @@ struct TutorialOverlayView: View {
                     Text(viewModel.currentTutorialStep == .finish ? "INITIALIZE_GAME" : "NEXT_STEP")
                         .font(.system(size: 30, weight: .bold, design: .monospaced))
                 }
-                .foregroundStyle(viewModel.showTutorialNextButton ? .black : .white.opacity(0.3)) // Dim text when disabled
+                .foregroundStyle(viewModel.showTutorialNextButton ? .black : .white.opacity(0.3))
                 .padding(.horizontal, 30)
                 .padding(.vertical, 15)
                 .background(
@@ -88,7 +83,7 @@ struct TutorialOverlayView: View {
                             Color.cyan
                             Color.white.opacity(0.2)
                         } else {
-                            Color.gray.opacity(0.3) // Gray background
+                            Color.gray.opacity(0.3)
                         }
                     }
                 )
@@ -101,7 +96,7 @@ struct TutorialOverlayView: View {
             }
             .disabled(!viewModel.showTutorialNextButton)
             .animation(.easeIn, value: viewModel.showTutorialNextButton)
-            .padding(.bottom, 70) // Adjust based on palette position
+            .padding(.bottom, 70)
         }
     }
 }

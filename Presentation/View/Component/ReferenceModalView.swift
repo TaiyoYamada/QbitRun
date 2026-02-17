@@ -1,35 +1,27 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Component/ReferenceModalView.swift
 
 import SwiftUI
 
 struct ReferenceModalView: View {
-    
-    // MARK: - Properties
+
     var onDismiss: () -> Void
-    
+
     @State private var animateIn = false
-    
-    // MARK: - Body
+
     var body: some View {
         ZStack {
-            // Dimmed Background
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
                 .onTapGesture {
                     dismissModal()
                 }
-            
-            // Modal Content
+
             VStack(spacing: 20) {
-                // Header
                 Text("GATE REFERENCE")
                     .font(.system(size: 38, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(color: .white.opacity(0.5), radius: 3)
                     .padding(.top, 25)
-                
-                // Content (Grid Layout)
+
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     gateRow(gate: .x, name: "Pauli-X", description: "Bit Flip\n|0⟩ ↔ |1⟩")
                     gateRow(gate: .y, name: "Pauli-Y", description: "Bit & Phase Flip\n180° Y-Rot")
@@ -39,8 +31,7 @@ struct ReferenceModalView: View {
                     gateRow(gate: .t, name: "T Gate", description: "45° Phase Shift\n√S Gate")
                 }
                 .padding(.horizontal)
-                
-                // Footer (Close Button)
+
                 Button(action: {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     dismissModal()
@@ -59,7 +50,7 @@ struct ReferenceModalView: View {
                 .padding(.horizontal, 30)
                 .padding(.bottom, 25)
             }
-            .background(.thinMaterial) // Glassmorphism
+            .background(.thinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 30))
             .overlay(
                 RoundedRectangle(cornerRadius: 30)
@@ -76,9 +67,7 @@ struct ReferenceModalView: View {
             }
         }
     }
-    
-    // MARK: - Actions
-    
+
     private func dismissModal() {
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             animateIn = false
@@ -87,13 +76,10 @@ struct ReferenceModalView: View {
             onDismiss()
         }
     }
-    
-    // MARK: - Helper Views
-    
+
     @ViewBuilder
     private func gateRow(gate: QuantumGate, name: String, description: String) -> some View {
         HStack(alignment: .center, spacing: 12) {
-            // Icon
             Text(gate.symbol)
                 .font(.system(size: 20, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
@@ -101,13 +87,12 @@ struct ReferenceModalView: View {
                 .background(gate.swiftUIColor)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(color: gate.swiftUIColor.opacity(0.5), radius: 3, x: 0, y: 2)
-            
-            // Description
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(name)
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                
+
                 Text(description)
                     .font(.system(size: 12, weight: .regular, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
@@ -117,7 +102,7 @@ struct ReferenceModalView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
-        .frame(height: 80) // Fixed height for uniformity
+        .frame(height: 80)
         .background(Color.black.opacity(0.2))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
@@ -129,9 +114,8 @@ struct ReferenceModalView: View {
 
 #Preview {
     ZStack {
-        // Background for preview context
         Color.blue.opacity(0.3).ignoresSafeArea()
-        
+
         ReferenceModalView(onDismiss: {})
     }
 }

@@ -1,12 +1,8 @@
 import SwiftUI
 import UIKit
 
-// MARK: - QuantumGate UI拡張
-
-/// QuantumGateのUI表示に必要なプロパティを集約
 extension QuantumGate {
-    
-    /// ゲートの表示記号
+
     var symbol: String {
         switch self {
         case .x: return "X"
@@ -17,8 +13,7 @@ extension QuantumGate {
         case .t: return "T"
         }
     }
-    
-    /// SwiftUI用カラー
+
     var swiftUIColor: Color {
         switch self {
         case .x: return Color(red: 0.9, green: 0.3, blue: 0.3)
@@ -29,8 +24,7 @@ extension QuantumGate {
         case .t: return Color(red: 0.2, green: 0.7, blue: 0.7)
         }
     }
-    
-    /// UIKit用カラー
+
     var color: UIColor {
         switch self {
         case .x: return UIColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 1.0)

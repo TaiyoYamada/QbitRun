@@ -1,24 +1,17 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Component/ExitConfirmationView.swift
 
 import SwiftUI
 
-/// カスタム終了確認モーダル
-/// ゲームの「量子」の世界観に合わせたデザイン
 struct ExitConfirmationView: View {
-    
-    // MARK: - Properties
+
     let title: String
     let message: String
     let onConfirm: () -> Void
     let onCancel: () -> Void
-    
+
     @State private var animateIn = false
-    
-    // MARK: - Body
+
     var body: some View {
         ZStack {
-            // Dimmed Background
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
                 .onTapGesture {
@@ -29,10 +22,8 @@ struct ExitConfirmationView: View {
                         onCancel()
                     }
                 }
-            
-            // Modal Content
+
             VStack(spacing: 40) {
-                // Text
                 VStack(spacing: 10) {
                     Text(title)
                         .font(.system(size: 45, weight: .bold, design: .rounded))
@@ -45,10 +36,8 @@ struct ExitConfirmationView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
-                
-                // Buttons
+
                 HStack(spacing: 25) {
-                    // Cancel Button
                     Button(action: {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -69,8 +58,7 @@ struct ExitConfirmationView: View {
                                 Capsule().stroke(.white.opacity(0.3), lineWidth: 3)
                             )
                     }
-                    
-                    // Exit Button (Destructive)
+
                     Button(action: {
                         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                         onConfirm()

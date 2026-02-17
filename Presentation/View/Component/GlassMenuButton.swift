@@ -1,18 +1,15 @@
 import SwiftUI
 
-// MARK: - グラスモーフィズムメニューボタン
-
-/// メインメニューで使用されるグラスモーフィズムスタイルのボタン
 struct GlassMenuButton: View {
     let title: String
     let subtitle: String
     let icon: String
     let accentColor: Color
     let action: () -> Void
-    
+
     @State private var isHovered = false
     @State private var isPressed = false
-    
+
     var body: some View {
         Button(action: {
             isPressed = true
@@ -23,38 +20,36 @@ struct GlassMenuButton: View {
             }
         }) {
             HStack(spacing: 20) {
-                // Icon Container
                 ZStack {
                     Circle()
                         .fill(accentColor.opacity(0.1))
                         .frame(width: 50, height: 50)
-                    
+
                     Image(systemName: icon)
                         .font(.system(size: 22))
                         .foregroundStyle(accentColor)
                         .symbolEffect(.bounce, value: isHovered)
                 }
-                
-                // Text
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                    
+
                     Text(subtitle)
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.white.opacity(0.3))
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 20)
-            .background(.ultraThinMaterial) // Glassmorphism
+            .background(.ultraThinMaterial)
             .cornerRadius(20)
             .overlay(
                 RoundedRectangle(cornerRadius: 20)

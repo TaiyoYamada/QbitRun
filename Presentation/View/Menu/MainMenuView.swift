@@ -1,21 +1,16 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Menu/MainMenuView.swift
 
 import SwiftUI
 
-/// メインメニュー画面（Refined Quantum Style）
 struct MainMenuView: View {
 
-    // MARK: - Actions
-    let onSelectMode: (GameDifficulty, Bool, Bool) -> Void // (Difficulty, isTutorial, isReview)
-    let audioManager: AudioManager // [NEW]
+    let onSelectMode: (GameDifficulty, Bool, Bool) -> Void
+    let audioManager: AudioManager
 
-    // MARK: - State
     @AppStorage("hasCompletedTutorial") private var hasCompletedTutorial: Bool = false
     @State private var shimmerOffset: CGFloat = -200
-    @State private var showTutorialConfirmation = false // [NEW]
-    @State private var showSettings = false // [NEW]
-    @State private var isNavigating = false // [NEW] Prevent double tap
+    @State private var showTutorialConfirmation = false
+    @State private var showSettings = false
+    @State private var isNavigating = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -27,7 +22,7 @@ struct MainMenuView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 100) {
                         Spacer()
-                        
+
                         headerView
                             .offset(y: -geometry.size.height * 0.05)
 
@@ -39,13 +34,11 @@ struct MainMenuView: View {
                     .padding(.leading, geometry.size.width * 0.05)
                     Spacer()
                 }
-                
-                // Top Right Buttons
+
                 VStack {
                     HStack(spacing: 20) {
                         Spacer()
-                        
-                        // Tutorial Button
+
                         Button(action: {
                             audioManager.playSFX(.button)
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -58,8 +51,7 @@ struct MainMenuView: View {
                                 .foregroundStyle(.white.opacity(0.8))
                         }
                         .padding(.top, 40)
-                        
-                        // Settings Button
+
                         Button(action: {
                             audioManager.playSFX(.button)
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -76,8 +68,7 @@ struct MainMenuView: View {
                     }
                     Spacer()
                 }
-                
-                // Settings Overlay
+
                 if showSettings {
                     SettingsView(
                         audioManager: audioManager,
@@ -108,13 +99,11 @@ struct MainMenuView: View {
             }
         }
         .onAppear {
-            isNavigating = false // Reset navigation state
+            isNavigating = false
             audioManager.playBGM(.menu)
         }
 
     }
-
-    // MARK: - Subviews
 
     private var settingsLayer: some View {
         ZStack {
@@ -201,7 +190,7 @@ struct MainMenuView: View {
                 isRandomStart: false,
                 action: { triggerTransition(difficulty: .easy) }
             )
-            
+
             QuantumModeCard(
                 title: "HARD MODE",
                 subtitle: "Random Start",
@@ -217,7 +206,7 @@ struct MainMenuView: View {
                     .font(.system(size: 30))
                     .foregroundStyle(.white.opacity(0.8)) : nil
             )
-            
+
             QuantumModeCard(
                 title: "EXPERT MODE",
                 subtitle: "Advanced States",
@@ -237,34 +226,33 @@ struct MainMenuView: View {
         .frame(width: 450)
     }
 
-    // MARK: - Logic
     private func triggerTransition(difficulty: GameDifficulty) {
-        if isNavigating { return } // Prevent double tap
+        if isNavigating { return }
         isNavigating = true
-        
+
         audioManager.playSFX(.click)
         let generator = UIImpactFeedbackGenerator(style: .soft)
         generator.impactOccurred()
-        
+
         Task {
             try? await Task.sleep(for: .milliseconds(150))
-            
+
             let isTutorial = (difficulty == .easy && !hasCompletedTutorial)
             onSelectMode(difficulty, isTutorial, false)
         }
     }
-    
+
     private func startTutorial() {
         if isNavigating { return }
         isNavigating = true
-        
+
         audioManager.playSFX(.click)
         let generator = UIImpactFeedbackGenerator(style: .soft)
         generator.impactOccurred()
-        
+
         Task {
             try? await Task.sleep(for: .milliseconds(150))
-            onSelectMode(.easy, true, true) // Force tutorial mode + Review Mode
+            onSelectMode(.easy, true, true)
         }
     }
 

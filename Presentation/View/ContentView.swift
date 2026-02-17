@@ -1,13 +1,10 @@
 import SwiftUI
 
-/// ルートコンテンツビュー
 struct ContentView: View {
-    /// ナビゲーションCoordinator
     @State private var coordinator = AppCoordinator()
-    
+
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            // メインメニュー（ルートビュー）
             MainMenuView(
                 onSelectMode: { difficulty, isTutorial, isReview in
                     coordinator.navigateToGame(difficulty: difficulty, isTutorial: isTutorial, isReview: isReview)
@@ -21,12 +18,11 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
     }
-    
-    /// ルートに対応するViewを返す
+
     @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
-            
+
         case .game(let difficulty, let isTutorial, let isReview):
             GameView(
                 difficulty: difficulty,
@@ -38,12 +34,12 @@ struct ContentView: View {
                 audioManager: coordinator.audioManager
             )
             .navigationBarBackButtonHidden(true)
-            
+
         case .result(let score):
             ResultView(
                 score: score,
                 scoreRepository: coordinator.scoreRepository,
-                audioManager: coordinator.audioManager, // [NEW]
+                audioManager: coordinator.audioManager,
                 onPlayAgain: {
                     coordinator.popToRoot()
                     coordinator.navigateToGame(difficulty: score.difficulty, isTutorial: false)

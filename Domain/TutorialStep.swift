@@ -1,8 +1,6 @@
 import Foundation
 import simd
 
-// MARK: - Tutorial Steps
-
 public enum TutorialStep: CaseIterable, Equatable, Sendable {
     case intro
     case xGate
@@ -12,7 +10,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
     case sGate
     case tGate
     case finish
-    
+
     var title: String {
         switch self {
         case .intro: return "GAME SYSTEM CHECK"
@@ -25,7 +23,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .finish: return "READY TO LAUNCH"
         }
     }
-    
+
     var instruction: String {
         switch self {
         case .intro:
@@ -53,7 +51,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         return "Calibration complete.\nYou can now control a qubit on the Bloch sphere."
         }
     }
-    
+
     var targetGate: QuantumGate? {
         switch self {
         case .intro, .finish: return nil
@@ -65,16 +63,16 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .tGate: return .t
         }
     }
-    
+
     var initialVector: BlochVector {
         switch self {
         case .intro, .finish: return .zero
-        case .xGate: return .zero // |0> -> |1> (Visible change)
-        case .yGate: return .plus // |+> -> |-> (Visible change on X axis)
-        case .zGate: return .plus // |+> -> |-> (Visible change on equator)
-        case .hGate: return .zero // |0> -> |+> (Visible change)
-        case .sGate: return .plus // |+> -> |i> (Visible 90 deg rotation)
-        case .tGate: return .plus // |+> -> 45 deg (Visible 45 deg rotation)
+        case .xGate: return .zero
+        case .yGate: return .plus
+        case .zGate: return .plus
+        case .hGate: return .zero
+        case .sGate: return .plus
+        case .tGate: return .plus
         }
     }
 }

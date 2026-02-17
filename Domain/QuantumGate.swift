@@ -1,18 +1,13 @@
 import Foundation
 
-/// 1量子ビットに作用する量子ゲート
-/// 各ゲートは2×2のユニタリ行列で表現される
 public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
-    case x  // パウリX（NOT）ゲート
-    case y  // パウリYゲート
-    case z  // パウリZゲート
-    case h  // アダマールゲート
-    case s  // 位相ゲート（π/2回転）
-    case t  // π/8ゲート（π/4回転）
-    
-    // MARK: - ゲート行列
-    
-    /// ゲートの2×2ユニタリ行列を返す
+    case x
+    case y
+    case z
+    case h
+    case s
+    case t
+
     public var matrix: [[Complex]] {
         switch self {
         case .x:
@@ -50,20 +45,14 @@ public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
             ]
         }
     }
-    
-    // MARK: - ゲート適用
-    
-    /// 量子状態にゲートを適用する
+
     public func apply(to state: QuantumState) -> QuantumState {
         let m = matrix
         let newAlpha = m[0][0] * state.alpha + m[0][1] * state.beta
         let newBeta = m[1][0] * state.alpha + m[1][1] * state.beta
         return QuantumState(alpha: newAlpha, beta: newBeta)
     }
-    
-    // MARK: - ゲート情報
-    
-    /// ゲートの名前
+
     public var name: String {
         switch self {
         case .x: return "パウリX（NOT）"
@@ -74,8 +63,7 @@ public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
         case .t: return "Tゲート（√S）"
         }
     }
-    
-    /// ゲートの説明
+
     public var description: String {
         switch self {
         case .x: return "ビット反転: |0⟩ ↔ |1⟩"
