@@ -23,7 +23,7 @@ struct TutorialConfirmationView: View {
 
             VStack(spacing: 40) {
 
-                Text("START TUTORIAL?")
+                Text("TUTORIAL")
                     .font(.system(size: 45, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(color: .white.opacity(0.5), radius: 3)

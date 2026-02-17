@@ -4,9 +4,11 @@ struct SwiftUIGatePaletteView: View {
     let gates: [QuantumGate] = [.x, .y, .z, .h, .s, .t]
     let onGateSelected: (QuantumGate) -> Void
     var highlightedGate: QuantumGate?
+    var allDisabled: Bool
 
-    init(highlightedGate: QuantumGate? = nil, onGateSelected: @escaping (QuantumGate) -> Void) {
+    init(highlightedGate: QuantumGate? = nil, allDisabled: Bool = false, onGateSelected: @escaping (QuantumGate) -> Void) {
         self.highlightedGate = highlightedGate
+        self.allDisabled = allDisabled
         self.onGateSelected = onGateSelected
     }
 
@@ -40,10 +42,11 @@ struct SwiftUIGatePaletteView: View {
                 }
                 .buttonStyle(GateButtonStyle())
                 .scaleEffect(highlightedGate == gate ? 1.1 : 1.0)
-                .opacity(highlightedGate == nil || highlightedGate == gate ? 1.0 : 0.4)
-                .grayscale(highlightedGate == nil || highlightedGate == gate ? 0.0 : 1.0)
-                .disabled(highlightedGate != nil && highlightedGate != gate)
+                .opacity(allDisabled ? 0.4 : (highlightedGate == nil || highlightedGate == gate ? 1.0 : 0.4))
+                .grayscale(allDisabled ? 1.0 : (highlightedGate == nil || highlightedGate == gate ? 0.0 : 1.0))
+                .disabled(allDisabled || (highlightedGate != nil && highlightedGate != gate))
                 .animation(.spring(response: 0.4, dampingFraction: 0.7), value: highlightedGate)
+                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: allDisabled)
                 .anchorPreference(key: BoundsPreferenceKey.self, value: .bounds) { anchor in
                     [gate: anchor]
                 }

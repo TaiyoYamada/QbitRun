@@ -162,8 +162,8 @@ struct MainMenuView: View {
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Qbit")
-                .font(.system(size: 170, weight: .bold, design: .rounded))
-                .tracking(7)
+                .font(.system(size: 180, weight: .bold, design: .rounded))
+                .tracking(8)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [.white, .cyan],
@@ -174,8 +174,8 @@ struct MainMenuView: View {
                 .shadow(color: .cyan.opacity(0.6), radius: 30, x: 0, y: 0)
 
             Text("Play")
-                .font(.system(size: 120, weight: .thin, design: .rounded))
-                .tracking(7)
+                .font(.system(size: 130, weight: .thin, design: .rounded))
+                .tracking(8)
                 .foregroundStyle(.white.opacity(0.8))
         }
     }
@@ -194,7 +194,7 @@ struct MainMenuView: View {
             QuantumModeCard(
                 title: "HARD MODE",
                 subtitle: "Random Start",
-                icon: "questionmark",
+                icon: "shuffle",
                 accentColor: .cyan,
                 isRandomStart: true,
                 action: { triggerTransition(difficulty: .hard) }
@@ -203,14 +203,14 @@ struct MainMenuView: View {
             .opacity(hasCompletedTutorial ? 1.0 : 0.5)
             .overlay(
                 !hasCompletedTutorial ? Image(systemName: "lock.fill")
-                    .font(.system(size: 30))
-                    .foregroundStyle(.white.opacity(0.8)) : nil
+                    .font(.system(size: 40))
+                    .foregroundStyle(.white.opacity(0.9)) : nil
             )
 
             QuantumModeCard(
                 title: "EXPERT MODE",
                 subtitle: "Advanced States",
-                icon: "sparkles",
+                icon: "atom",
                 accentColor: .purple,
                 isRandomStart: true,
                 action: { triggerTransition(difficulty: .expert) }
@@ -219,8 +219,8 @@ struct MainMenuView: View {
             .opacity(hasCompletedTutorial ? 1.0 : 0.5)
             .overlay(
                 !hasCompletedTutorial ? Image(systemName: "lock.fill")
-                    .font(.system(size: 30))
-                    .foregroundStyle(.white.opacity(0.8)) : nil
+                    .font(.system(size: 40))
+                    .foregroundStyle(.white.opacity(0.9)) : nil
             )
         }
         .frame(width: 450)

@@ -55,7 +55,10 @@ struct GameView: View {
                     }
 
                     HStack(alignment: .center, spacing: 20) {
-                        SwiftUIGatePaletteView(highlightedGate: highlightedGate) { gate in
+                        SwiftUIGatePaletteView(
+                            highlightedGate: highlightedGate,
+                            allDisabled: viewModel.isTutorialActive && (viewModel.currentTutorialStep.targetGate == nil || !viewModel.tutorialGateEnabled)
+                        ) { gate in
                             if viewModel.isTutorialActive {
                                 viewModel.handleTutorialGateTap(gate)
                             } else if viewModel.canAddGate && !showCountdown {
@@ -159,7 +162,7 @@ struct GameView: View {
         }
         .onChange(of: viewModel.isTutorialActive) { _, isActive in
             if isActive {
-                self.highlightedGate = viewModel.currentTutorialStep.targetGate
+                self.highlightedGate = nil
                 updateSpotlightFrames()
             } else {
                 hasCompletedTutorial = true
@@ -178,7 +181,13 @@ struct GameView: View {
         }
         .onChange(of: viewModel.currentTutorialStep) { _, step in
             if viewModel.isTutorialActive {
-                self.highlightedGate = step.targetGate
+                self.highlightedGate = nil
+                updateSpotlightFrames()
+            }
+        }
+        .onChange(of: viewModel.tutorialGateEnabled) { _, enabled in
+            if enabled && viewModel.isTutorialActive {
+                self.highlightedGate = viewModel.currentTutorialStep.targetGate
                 updateSpotlightFrames()
             }
         }
@@ -208,6 +217,34 @@ struct GameView: View {
 
         withAnimation {
             self.tutorialSpotlightFrames = frames
+        }
+    }
+
+    private var scoreColor: AnyShapeStyle {
+        let score = viewModel.score
+        switch score {
+        case 30000...:
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [.white, .cyan, .purple],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        case 10000...:
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [.white, .purple],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        case 5000...:
+            return AnyShapeStyle(.purple)
+        case 1000...:
+            return AnyShapeStyle(.cyan)
+        default:
+            return AnyShapeStyle(.white)
         }
     }
 
@@ -315,15 +352,20 @@ struct GameView: View {
             HStack {
                 Text("\(viewModel.score)")
                     .font(.system(size: 45, weight: .bold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(scoreColor)
                     .frame(width: 170, height: 110, alignment: .trailing)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 5)
-                    .background(.ultraThinMaterial)
+                    .background(
+                        ZStack {
+                            Color.cyan
+                            Color.black.opacity(0.85)
+                        }
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 60))
                     .overlay(
                         RoundedRectangle(cornerRadius: 60)
-                            .stroke(Color.cyan.opacity(0.7), lineWidth: 5)
+                            .stroke(Color.white.opacity(0.7), lineWidth: 5)
                     )
 
                 Spacer()
@@ -430,14 +472,14 @@ struct GameView: View {
                 }) {
                     Text("CLEAR")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(.white.opacity(0.75))
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
                         .background(.ultraThinMaterial)
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
-                                .stroke(Color.purple.opacity(0.3), lineWidth: 5)
+                                .stroke(Color.purple.opacity(0.6), lineWidth: 5)
                         )
                 }
 

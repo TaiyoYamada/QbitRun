@@ -90,19 +90,23 @@ final class GameViewModel {
         }
     }
 
-    var currentTutorialStep: TutorialStep = .intro {
+    var currentTutorialStep: TutorialStep = .intro1 {
         didSet {
             setTutorialVector(currentTutorialStep.initialVector)
+            tutorialGateEnabled = false
+            showTutorialNextButton = false
         }
     }
     var isTutorialActive: Bool = false
     var showTutorialNextButton: Bool = true
+    var tutorialGateEnabled: Bool = false
 
     func startTutorial() {
         isTutorialActive = true
-        currentTutorialStep = .intro
+        currentTutorialStep = .intro1
         setTutorialVector(.zero)
-        showTutorialNextButton = true
+        showTutorialNextButton = false
+        tutorialGateEnabled = false
     }
 
     func advanceTutorialStep() {
@@ -112,12 +116,6 @@ final class GameViewModel {
         if nextIndex < TutorialStep.allCases.count {
             withAnimation {
                 currentTutorialStep = TutorialStep.allCases[nextIndex]
-
-                if currentTutorialStep.targetGate != nil {
-                     showTutorialNextButton = false
-                } else {
-                     showTutorialNextButton = true
-                }
             }
         } else {
             endTutorial()
@@ -132,8 +130,10 @@ final class GameViewModel {
     }
 
     func handleTutorialGateTap(_ gate: QuantumGate) {
+        guard tutorialGateEnabled else { return }
         guard currentTutorialStep.targetGate == gate else { return }
 
+        tutorialGateEnabled = false
         showTutorialNextButton = false
 
         Task {

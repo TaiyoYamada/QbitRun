@@ -7,13 +7,14 @@ extension Notification.Name {
 
 struct TypewriterText: View {
     let text: String
+    var onFinished: (() -> Void)? = nil
     @State private var displayedText: String = ""
     @State private var charIndex: Int = 0
 
     var body: some View {
         Text(displayedText)
-            .font(.system(size: 18, weight: .medium, design: .monospaced))
-            .lineSpacing(4)
+            .font(.system(size: 23, weight: .medium, design: .monospaced))
+            .lineSpacing(2)
             .foregroundStyle(.white)
             .shadow(color: .cyan.opacity(0.8), radius: 2)
             .onChange(of: text) { _, newValue in
@@ -35,6 +36,9 @@ struct TypewriterText: View {
                 let randomDelay = UInt64(Double.random(in: 0.01...0.05) * 1_000_000_000)
                 try? await Task.sleep(nanoseconds: randomDelay)
             }
+            await MainActor.run {
+                onFinished?()
+            }
         }
     }
 }
@@ -47,22 +51,27 @@ struct TutorialOverlayView: View {
         VStack {
             VStack(spacing: 20) {
                 Text(viewModel.currentTutorialStep.title)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(.system(size: 50, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(color: .cyan, radius: 5)
                     .padding(.top, 30)
 
-                TypewriterText(text: viewModel.currentTutorialStep.instruction)
-                    .font(.system(size: 18, weight: .bold, design: .rounded).monospacedDigit()) // Slightly smaller text
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 20)
-                    .frame(maxWidth: 700)
+                TypewriterText(text: viewModel.currentTutorialStep.instruction, onFinished: {
+                    viewModel.tutorialGateEnabled = true
+                    if viewModel.currentTutorialStep.targetGate == nil {
+                        viewModel.showTutorialNextButton = true
+                    }
+                })
+                    .font(.system(size: 23, weight: .bold, design: .rounded).monospacedDigit())
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 15)
+                    .frame(maxWidth: 750, alignment: .center)
             }
-            .padding(.bottom, 30)
+            .frame(height: 280, alignment: .top)
             .frame(maxWidth: .infinity)
             .background(
                 LinearGradient(
-                    colors: [Color.black.opacity(0.8), Color.black.opacity(0.0)],
+                    colors: [Color.white.opacity(0.4), Color.black.opacity(0.7)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -74,32 +83,32 @@ struct TutorialOverlayView: View {
                 viewModel.advanceTutorialStep()
             }) {
                 HStack(spacing: 15) {
-                    Text(viewModel.currentTutorialStep == .finish ? "INITIALIZE_GAME" : "NEXT_STEP")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                    Text(viewModel.currentTutorialStep == .finish ? "START GAME" : "NEXT")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
                 }
-                .foregroundStyle(viewModel.showTutorialNextButton ? .black : .white.opacity(0.3))
-                .padding(.horizontal, 30)
+                .foregroundStyle(viewModel.showTutorialNextButton ? .white : .white.opacity(0.3))
+                .padding(.horizontal, 40)
                 .padding(.vertical, 15)
                 .background(
                     ZStack {
                         if viewModel.showTutorialNextButton {
                             Color.cyan
-                            Color.white.opacity(0.2)
+                            Color.black.opacity(0.7)
                         } else {
                             Color.gray.opacity(0.3)
                         }
                     }
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .clipShape(RoundedRectangle(cornerRadius: 50))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(viewModel.showTutorialNextButton ? Color.white : Color.gray.opacity(0.5), lineWidth: 3)
+                    RoundedRectangle(cornerRadius: 50)
+                        .stroke(viewModel.showTutorialNextButton ? Color.white.opacity(0.85) : Color.gray.opacity(0.5), lineWidth: 5)
                 )
-                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 5)
+                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
             }
             .disabled(!viewModel.showTutorialNextButton)
             .animation(.easeIn, value: viewModel.showTutorialNextButton)
-            .padding(.bottom, 60)
+            .padding(.bottom, 50)
         }
     }
 }

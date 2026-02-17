@@ -35,19 +35,12 @@ struct QuantumModeCard: View {
                             Circle().fill(Color.black)
                         )
                         .frame(width: 60, height: 60)
-                        .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 10)
+                        .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 5)
 
-                    if isRandomStart {
-                        Image(systemName: "questionmark")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(accentColor)
-                            .symbolEffect(.pulse, options: .repeating)
-                    } else {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(accentColor)
-                            .symbolEffect(.pulse, options: .repeating)
-                    }
+                    Image(systemName: icon)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(accentColor)
+                        .symbolEffect(.pulse, options: .repeating)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -72,15 +65,15 @@ struct QuantumModeCard: View {
                 ZStack {
                     Color.black.opacity(0.9)
 
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 18)
                         .strokeBorder(
-                            accentColor.opacity(0.5),
-                            lineWidth: 2
+                            accentColor.opacity(0.7),
+                            lineWidth: 3
                         )
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .black.opacity(0.8), radius: 10, x: 0, y: 4)
+            .shadow(color: .cyan.opacity(0.7), radius: 3)
             .scaleEffect(isPressed ? 0.98 : (isHovered ? 1.02 : 1.0))
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
