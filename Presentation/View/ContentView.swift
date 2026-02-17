@@ -4,19 +4,27 @@ struct ContentView: View {
     @State private var coordinator = AppCoordinator()
 
     var body: some View {
-        NavigationStack(path: $coordinator.path) {
-            MainMenuView(
-                onSelectMode: { difficulty, isTutorial, isReview in
-                    coordinator.navigateToGame(difficulty: difficulty, isTutorial: isTutorial, isReview: isReview)
-                },
-                audioManager: coordinator.audioManager
-            )
-            .navigationBarBackButtonHidden(true)
-            .navigationDestination(for: AppRoute.self) { route in
-                destinationView(for: route)
+        GeometryReader { geometry in
+            ZStack {
+                NavigationStack(path: $coordinator.path) {
+                    MainMenuView(
+                        onSelectMode: { difficulty, isTutorial, isReview in
+                            coordinator.navigateToGame(difficulty: difficulty, isTutorial: isTutorial, isReview: isReview)
+                        },
+                        audioManager: coordinator.audioManager
+                    )
+                    .navigationBarBackButtonHidden(true)
+                    .navigationDestination(for: AppRoute.self) { route in
+                        destinationView(for: route)
+                    }
+                }
+                .preferredColorScheme(.dark)
+                
+                if geometry.size.width > geometry.size.height {
+                    LandscapeWarningView()
+                }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     @ViewBuilder
