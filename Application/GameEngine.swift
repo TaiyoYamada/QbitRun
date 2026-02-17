@@ -226,9 +226,9 @@ public final class GameEngine {
         if comboCount >= 2 {
             let maxBonus: Double
             switch gameDifficulty {
-            case .easy: maxBonus = 500.0
-            case .hard: maxBonus = 1500.0
-            case .expert: maxBonus = 5000.0
+            case .easy: maxBonus = 700.0
+            case .hard: maxBonus = 1400.0
+            case .expert: maxBonus = 4900.0
             }
             let k: Double = 0.5
 
