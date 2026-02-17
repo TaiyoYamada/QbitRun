@@ -1,17 +1,12 @@
-// SPDX-License-Identifier: MIT
-// Application/AppCoordinator.swift
-// アプリケーション全体のナビゲーションを集中管理するCoordinator
-
 import SwiftUI
 
 /// 画面遷移のルート定義
 enum AppRoute: Hashable {
-    case game(difficulty: GameDifficulty)
+    case game(difficulty: GameDifficulty, isTutorial: Bool, isReview: Bool)
     case result(score: ScoreEntry)
 }
 
 /// アプリ全体のナビゲーションを管理するCoordinator
-/// @Observable マクロによりSwiftUIと自動的に連携
 @Observable
 final class AppCoordinator {
     
@@ -40,8 +35,10 @@ final class AppCoordinator {
     
     /// ゲーム画面へ遷移
     /// - Parameter difficulty: 選択された難易度
-    func navigateToGame(difficulty: GameDifficulty) {
-        path.append(AppRoute.game(difficulty: difficulty))
+    /// - Parameter isTutorial: チュートリアルモードかどうか
+    /// - Parameter isReview: レビューモード（チュートリアルのみ）かどうか
+    func navigateToGame(difficulty: GameDifficulty, isTutorial: Bool = false, isReview: Bool = false) {
+        path.append(AppRoute.game(difficulty: difficulty, isTutorial: isTutorial, isReview: isReview))
     }
     
     /// リザルト画面へ遷移

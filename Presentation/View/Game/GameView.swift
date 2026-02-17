@@ -4,21 +4,31 @@ import SwiftUI
 struct GameView: View {
 
     // MARK: - Dependencies
-    @Bindable private var viewModel = GameViewModel()
+    @State private var viewModel = GameViewModel()
     @Environment(\.dismiss) private var dismiss
     
     let difficulty: GameDifficulty
+    let isTutorial: Bool
+    let isReviewMode: Bool // [NEW]
     let onGameEnd: (ScoreEntry) -> Void
-    let audioManager: AudioManager // [NEW]
+    let audioManager: AudioManager
 
     // MARK: - Local State
+    @AppStorage("hasCompletedTutorial") private var hasCompletedTutorial: Bool = false
     @State private var countdownValue: Int = 3
     @State private var showCountdown: Bool = true
+
     @State private var countdownScale: CGFloat = 0.5
     @State private var countdownOpacity: Double = 0.0
     
     @State private var showSuccessEffect = false
     @State private var showFailureEffect = false
+    
+    // Tutorial / Spotlight State
+    @State private var tutorialSpotlightFrames: [CGRect] = []
+    @State private var elementFrames: [QuantumGate: CGRect] = [:]
+    @State private var sphereFrame: CGRect = .zero
+    @State private var highlightedGate: QuantumGate? // For Palette
     
     @State private var showExitConfirmation = false
     @State private var showInfoModal = false
@@ -36,21 +46,27 @@ struct GameView: View {
                 // MARK: - Layer 2: Main Content
                 VStack(spacing: 5) {
                     // タイマーとスコア
-                    headerSection
-                        .padding(.bottom, 10)
-                        .padding(.horizontal, 24)
-                        .animation(.easeIn(duration: 0.5), value: showCountdown)
+                    if !viewModel.isTutorialActive {
+                        headerSection
+                            .padding(.bottom, 10)
+                            .padding(.horizontal, 24)
+                            .animation(.easeIn(duration: 0.5), value: showCountdown)
+                    }
                     
                     // ブロッホ球表示エリア
                     spheresSection(geometry: geometry)
 
                     // 回路表示エリア
-                    circuitSection
+                    if !viewModel.isTutorialActive {
+                        circuitSection
+                    }
 
-                    // ゲートパレット（タップで追加） + 情報ボタン
+                     // ゲートパレット（タップで追加） + 情報ボタン
                     HStack(alignment: .center, spacing: 20) {
-                        SwiftUIGatePaletteView { gate in
-                            if viewModel.canAddGate && !showCountdown {
+                        SwiftUIGatePaletteView(highlightedGate: highlightedGate) { gate in
+                            if viewModel.isTutorialActive {
+                                viewModel.handleTutorialGateTap(gate)
+                            } else if viewModel.canAddGate && !showCountdown {
                                 audioManager.playSFX(.set)
                                 viewModel.addGate(gate)
                             }
@@ -114,12 +130,74 @@ struct GameView: View {
                     .zIndex(100)
                     .transition(.opacity)
                 }
+                
+                // MARK: - Layer 6: Tutorial Overlay
+                if viewModel.isTutorialActive {
+                    TutorialOverlayView(
+                        viewModel: viewModel,
+                        spotlightFrames: tutorialSpotlightFrames
+                    )
+                    .zIndex(200) // Ensure it is on top
+                    .transition(.opacity)
+
+                }
+            }
+            // Move Preference Resolution INSIDE GeometryReader
+            .onPreferenceChange(BoundsPreferenceKey.self) { preferences in
+                var newFrames: [QuantumGate: CGRect] = [:]
+                for (gate, anchor) in preferences {
+                    newFrames[gate] = geometry[anchor]
+                }
+                self.elementFrames = newFrames
+                updateSpotlightFrames()
+            }
+            .onPreferenceChange(SphereBoundsPreferenceKey.self) { anchor in
+                if let anchor = anchor {
+                   self.sphereFrame = geometry[anchor]
+                }
+                updateSpotlightFrames()
             }
         }
+
         .onAppear {
-            audioManager.playBGM(.game) // [NEW]
+            audioManager.playBGM(.game) 
             viewModel.prepareGame(difficulty: difficulty)
-            startCountdown()
+            
+            if isTutorial {
+                viewModel.startTutorial()
+                showCountdown = false
+            } else {
+                startCountdown()
+            }
+        }
+        .onChange(of: viewModel.isTutorialActive) { _, isActive in
+            if isActive {
+                // Initialize highlight
+                self.highlightedGate = viewModel.currentTutorialStep.targetGate
+                updateSpotlightFrames()
+            } else {
+                // Tutorial finished
+                hasCompletedTutorial = true
+                highlightedGate = nil
+                updateSpotlightFrames() // Clear spotlight
+                
+                if isReviewMode {
+                    // Return to menu without starting game
+                    dismiss()
+                } else {
+                    // Start Game Countdown
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(500))
+                        startCountdown()
+                    }
+                }
+            }
+        }
+        .onChange(of: viewModel.currentTutorialStep) { _, step in
+            if viewModel.isTutorialActive {
+                self.highlightedGate = step.targetGate
+                updateSpotlightFrames()
+            }
         }
         .onChange(of: viewModel.finalScore) { _, newScore in
             if let score = newScore {
@@ -131,8 +209,29 @@ struct GameView: View {
                 triggerComboAnimation()
             }
         }
+
     }
     
+
+    
+    private func updateSpotlightFrames() {
+        var frames: [CGRect] = []
+        
+        // Always highlight Sphere if tutorial is active?
+        // Or only when needed?
+        // For now, let's always highlight sphere + target gate.
+        if !sphereFrame.isEmpty {
+             frames.append(sphereFrame)
+        }
+        
+        if let gate = highlightedGate, let rect = elementFrames[gate] {
+            frames.append(rect)
+        }
+        
+        withAnimation {
+            self.tutorialSpotlightFrames = frames
+        }
+    }
     // MARK: - Countdown Logic
     
     private func startCountdown() {
@@ -283,6 +382,7 @@ struct GameView: View {
                 }
             }
         }
+        .opacity(viewModel.isTutorialActive ? 0 : 1) // Hide during tutorial
     }
     
     // MARK: - ブロッホ球表示（統合ビュー）
@@ -293,52 +393,53 @@ struct GameView: View {
         return ZStack(alignment: .topTrailing) {
             VStack() {
 
-                VStack(alignment: .leading,spacing: 20) {
-                    // 現在の状態（赤）
-                    HStack(spacing: 15) {
-                        Circle()
-                            .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
-                            .frame(width: 30, height: 30)
-                        Text("CURRENT")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .tracking(3)
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
+                if !viewModel.isTutorialActive {
+                    VStack(alignment: .leading,spacing: 20) {
+                        // 現在の状態（赤）
+                        HStack(spacing: 15) {
+                            Circle()
+                                .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
+                                .frame(width: 30, height: 30)
+                            Text("CURRENT")
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .tracking(3)
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
 
-                    // ターゲット状態（金）
-                    HStack(spacing: 15) {
-                        Circle()
-                            .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.8))
-                            .frame(width: 30, height: 30)
-                        Text("TARGET")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .tracking(3)
-                            .foregroundStyle(.yellow.opacity(0.8))
+                        // ターゲット状態（金）
+                        HStack(spacing: 15) {
+                            Circle()
+                                .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.8))
+                                .frame(width: 30, height: 30)
+                            Text("TARGET")
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .tracking(3)
+                                .foregroundStyle(.yellow.opacity(0.8))
+                        }
                     }
+                    .padding(.vertical, 15)
+                    .padding(.horizontal, 20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .offset(
+                        x: -geometry.size.width * 0.32,
+                        y: geometry.size.height * 0.1
+                    )
                 }
-                .padding(.vertical, 15)
-                .padding(.horizontal, 20)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(.ultraThinMaterial)
-                )
-//                .overlay(
-//                    RoundedRectangle(cornerRadius: 20)
-//                        .stroke(Color.white.opacity(0.5), lineWidth: 1)
-//                )
-                .offset(
-                    x: -geometry.size.width * 0.32,
-                    y: geometry.size.height * 0.1
-                )
 
                 BlochSphereViewRepresentable(
                     vector: viewModel.currentVector,
-                    animated: true,
-                    targetVector: viewModel.targetVector,
+                    animated: !viewModel.isTutorialActive,
+                    targetVector: viewModel.isTutorialActive ? nil : viewModel.targetVector,
                     showBackground: false
                 )
                 .frame(width: size, height: size)
                 .opacity(showCountdown ? 0 : 1)
+                .anchorPreference(key: SphereBoundsPreferenceKey.self, value: .bounds) { anchor in
+                    anchor
+                }
             }
             
             // Persistent Combo Display
@@ -454,6 +555,13 @@ struct GameView: View {
     }
 }
 
-#Preview("ゲーム画面", traits: .landscapeLeft) {
-    GameView(difficulty: .easy, onGameEnd: { _ in }, audioManager: AudioManager())
+
+
+// MARK: - Preferences
+
+struct SphereBoundsPreferenceKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
 }

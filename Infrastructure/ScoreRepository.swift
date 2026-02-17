@@ -3,7 +3,6 @@ import Foundation
 // MARK: - スコアリポジトリ
 
 /// スコアの保存・読み込みを担当
-/// actor: スレッドセーフなアクセスを保証
 public actor ScoreRepository {
     
     // MARK: - 定数
@@ -35,7 +34,6 @@ public actor ScoreRepository {
     // MARK: - 保存
     
     /// スコアを保存し、ランキング順位を返す
-    /// - Returns: 新しい順位（Top5に入らなければnil）
     @discardableResult
     public func saveScore(_ entry: ScoreEntry) -> Int? {
         let difficulty = entry.difficulty

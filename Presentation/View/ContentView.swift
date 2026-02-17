@@ -9,10 +9,10 @@ struct ContentView: View {
         NavigationStack(path: $coordinator.path) {
             // メインメニュー（ルートビュー）
             MainMenuView(
-                onSelectMode: { difficulty in
-                    coordinator.navigateToGame(difficulty: difficulty)
+                onSelectMode: { difficulty, isTutorial, isReview in
+                    coordinator.navigateToGame(difficulty: difficulty, isTutorial: isTutorial, isReview: isReview)
                 },
-                audioManager: coordinator.audioManager // [NEW]
+                audioManager: coordinator.audioManager
             )
             .navigationBarBackButtonHidden(true)
             .navigationDestination(for: AppRoute.self) { route in
@@ -27,13 +27,15 @@ struct ContentView: View {
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
             
-        case .game(let difficulty):
+        case .game(let difficulty, let isTutorial, let isReview):
             GameView(
                 difficulty: difficulty,
+                isTutorial: isTutorial,
+                isReviewMode: isReview,
                 onGameEnd: { score in
                     coordinator.navigateToResult(score: score)
                 },
-                audioManager: coordinator.audioManager // [NEW]
+                audioManager: coordinator.audioManager
             )
             .navigationBarBackButtonHidden(true)
             
@@ -44,7 +46,7 @@ struct ContentView: View {
                 audioManager: coordinator.audioManager, // [NEW]
                 onPlayAgain: {
                     coordinator.popToRoot()
-                    coordinator.navigateToGame(difficulty: score.difficulty)
+                    coordinator.navigateToGame(difficulty: score.difficulty, isTutorial: false)
                 },
                 onReturnToMenu: { coordinator.popToRoot() }
             )

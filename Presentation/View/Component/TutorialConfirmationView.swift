@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: MIT
-// Presentation/View/Component/ExitConfirmationView.swift
+// Presentation/View/Component/TutorialConfirmationView.swift
 
 import SwiftUI
 
-/// カスタム終了確認モーダル
-/// ゲームの「量子」の世界観に合わせたデザイン
-struct ExitConfirmationView: View {
-    
-    // MARK: - Properties
-    let title: String
-    let message: String
+/// チュートリアル開始確認モーダル
+struct TutorialConfirmationView: View {
+
     let onConfirm: () -> Void
     let onCancel: () -> Void
     
@@ -32,19 +28,12 @@ struct ExitConfirmationView: View {
             
             // Modal Content
             VStack(spacing: 40) {
-                // Text
-                VStack(spacing: 10) {
-                    Text(title)
-                        .font(.system(size: 45, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .shadow(color: .white.opacity(0.5), radius: 3)
 
-                    Text(message)
-                        .font(.system(size: 30, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
+
+                Text("START TUTORIAL?")
+                    .font(.system(size: 45, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .shadow(color: .white.opacity(0.5), radius: 3)
                 
                 // Buttons
                 HStack(spacing: 25) {
@@ -70,12 +59,12 @@ struct ExitConfirmationView: View {
                             )
                     }
                     
-                    // Exit Button (Destructive)
+                    // Start Button (Positive)
                     Button(action: {
                         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                         onConfirm()
                     }) {
-                        Text("EXIT GAME")
+                        Text("START")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                             .padding(.vertical, 15)
@@ -120,13 +109,4 @@ struct ExitConfirmationView: View {
             }
         }
     }
-}
-
-#Preview {
-    ExitConfirmationView(
-        title: "END GAME?",
-        message: "Current progress will be lost.",
-        onConfirm: {},
-        onCancel: {}
-    )
 }

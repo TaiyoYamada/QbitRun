@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Presentation/View/Component/SettingsView.swift
-
 import SwiftUI
 
 struct SettingsView: View {
@@ -8,24 +5,28 @@ struct SettingsView: View {
     @Bindable var audioManager: AudioManager
     let onDismiss: () -> Void
     
+    @State private var animateIn = false
+    
     var body: some View {
         ZStack {
-            // Background Dim
             Color.black.opacity(0.6).ignoresSafeArea()
                 .onTapGesture {
-                    onDismiss()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        animateIn = false
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        onDismiss()
+                    }
                 }
-            
-            // Modal Content
-            VStack(spacing: 30) {
+
+            VStack(spacing: 60) {
                 Text("SETTING")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(.system(size: 50, weight: .bold, design: .rounded))
                     .tracking(4)
                     .foregroundStyle(.white)
                     .shadow(color: .cyan.opacity(0.5), radius: 10)
 
                 VStack(spacing: 24) {
-                    // BGM Volume
                     VolumeSlider(
                         label: "BGM",
                         value: $audioManager.bgmVolume,
@@ -40,23 +41,26 @@ struct SettingsView: View {
                     )
                 }
                 .padding(.horizontal, 20)
-                
-                // Close Button
+
                 Button(action: {
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
-                    onDismiss()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        animateIn = false
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        onDismiss()
+                    }
                 }) {
                     Text("CLOSE")
-                        .font(.system(size: 25, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 30)
-                        .padding(.vertical, 10)
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 60))
-                        .background(
-                            Capsule()
-                                .stroke(Color.white.opacity(0.5), lineWidth: 2)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(.vertical, 15)
+                        .frame(maxWidth: .infinity)
+                        .background(.white.opacity(0.1))
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule().stroke(.white.opacity(0.3), lineWidth: 3)
                         )
                 }
                 .padding(.top, 10)
@@ -76,6 +80,13 @@ struct SettingsView: View {
                         lineWidth: 2
                     )
             )
+            .scaleEffect(animateIn ? 1.0 : 0.8)
+            .opacity(animateIn ? 1.0 : 0.0)
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                animateIn = true
+            }
         }
     }
 }
@@ -89,14 +100,14 @@ struct VolumeSlider: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: icon)
-                    .font(.system(size: 25, weight: .bold, design: .rounded))
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .foregroundStyle(.cyan)
                 Text(label)
-                    .font(.system(size: 25, weight: .bold, design: .rounded))
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.9))
                 Spacer()
                 Text("\(Int(value * 100))")
-                    .font(.system(size: 25, weight: .black, design: .rounded))
+                    .font(.system(size: 30, weight: .black, design: .rounded))
                     .foregroundStyle(.white.opacity(0.8))
             }
             Slider(value: $value, in: 0...1)

@@ -1,4 +1,5 @@
 import SwiftUI
+import simd
 
 /// ゲーム画面のViewModel
 @Observable
@@ -15,6 +16,9 @@ final class GameViewModel {
     init(gameEngine: GameEngine = GameEngine()) {
         self.gameEngine = gameEngine
     }
+    
+    // MARK: - Tutorial State
+    var tutorialVector: BlochVector?
     
     // MARK: - 表示用プロパティ（GameEngineからの橋渡し）
     
@@ -34,7 +38,9 @@ final class GameViewModel {
     var lastComboBonus: Int { gameEngine.lastComboBonus }
     
     /// 現在のブロッホベクトル
-    var currentVector: BlochVector { gameEngine.currentVector }
+    var currentVector: BlochVector {
+        tutorialVector ?? gameEngine.currentVector
+    }
     
     /// ターゲットのブロッホベクトル
     var targetVector: BlochVector { gameEngine.targetVector }
@@ -117,5 +123,135 @@ final class GameViewModel {
             let isGameOver = gameEngine.handleWrongAnswer()
             return (isCorrect: false, isGameOver: isGameOver)
         }
+    }
+
+    // MARK: - Tutorial Support
+    
+    var currentTutorialStep: TutorialStep = .intro {
+        didSet {
+            // Update vector when step changes
+            setTutorialVector(currentTutorialStep.initialVector)
+        }
+    }
+    var isTutorialActive: Bool = false
+    var showTutorialNextButton: Bool = true
+    
+    func startTutorial() {
+        isTutorialActive = true
+        currentTutorialStep = .intro
+        setTutorialVector(.zero)
+        showTutorialNextButton = true
+    }
+    
+    func advanceTutorialStep() {
+        guard let currentIndex = TutorialStep.allCases.firstIndex(of: currentTutorialStep) else { return }
+        let nextIndex = currentIndex + 1
+        
+        if nextIndex < TutorialStep.allCases.count {
+            withAnimation {
+                currentTutorialStep = TutorialStep.allCases[nextIndex]
+                
+                // Logic to show/hide Next button based on whether a gate tap is required
+                if currentTutorialStep.targetGate != nil {
+                     showTutorialNextButton = false
+                } else {
+                     showTutorialNextButton = true
+                }
+            }
+        } else {
+            endTutorial()
+        }
+    }
+    
+    func endTutorial() {
+        withAnimation {
+            isTutorialActive = false
+            clearTutorialVector()
+        }
+    }
+    
+    func handleTutorialGateTap(_ gate: QuantumGate) {
+        // Only allow target gate
+        guard currentTutorialStep.targetGate == gate else { return }
+        
+        // Hide next button during animation
+        showTutorialNextButton = false
+        
+        // Animate
+        Task {
+            let startVector = currentVector.vector
+            let (axis, angle) = rotationParameters(for: gate)
+            
+            // Check if we should animate trajectory (Only for rotation gates like S, T)
+            let shouldAnimateTrajectory: Bool
+            switch gate {
+            case .s, .t: shouldAnimateTrajectory = true
+            default: shouldAnimateTrajectory = false // X, Y, Z, H are instantaneous jumps
+            }
+            
+            if shouldAnimateTrajectory {
+                let duration: Double = 1.0
+                let fps: Double = 60
+                let totalFrames = Int(duration * fps)
+                
+                for frame in 0...totalFrames {
+                    let progress = Double(frame) / Double(totalFrames)
+                    let t = 1.0 - pow(1.0 - progress, 3.0) // Ease out
+                    let currentAngle = angle * t
+                    
+                    let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
+                    
+                    await MainActor.run {
+                        self.setTutorialVector(BlochVector(rotated))
+                    }
+                    
+                    try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
+                }
+            } else {
+                // Instantaneous update for X, Y, Z, H
+                // Add a small delay to let the user see the button press visual
+                try? await Task.sleep(for: .milliseconds(200))
+                
+                let finalVector = rotate(vector: startVector, axis: axis, angle: angle)
+                 await MainActor.run {
+                     // Use withAnimation to smooth the jump slightly if desired, or standard set for instant
+                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                         self.setTutorialVector(BlochVector(finalVector))
+                     }
+                 }
+            }
+            
+            // Animation done, show next button
+            await MainActor.run {
+                self.showTutorialNextButton = true
+            }
+        }
+    }
+    
+    func setTutorialVector(_ vector: BlochVector) {
+        self.tutorialVector = vector
+    }
+    
+    func clearTutorialVector() {
+        self.tutorialVector = nil
+    }
+    
+    // Helper methods for animation (copied from TutorialViewModel)
+    private func rotationParameters(for gate: QuantumGate) -> (axis: simd_double3, angle: Double) {
+        switch gate {
+        case .x: return (simd_double3(1, 0, 0), .pi)
+        case .y: return (simd_double3(0, 1, 0), .pi)
+        case .z: return (simd_double3(0, 0, 1), .pi)
+        case .h: 
+            let axis = simd_normalize(simd_double3(1, 0, 1))
+            return (axis, .pi)
+        case .s: return (simd_double3(0, 0, 1), .pi / 2)
+        case .t: return (simd_double3(0, 0, 1), .pi / 4)
+        }
+    }
+    
+    private func rotate(vector: simd_double3, axis: simd_double3, angle: Double) -> simd_double3 {
+        let rotationWrapper = simd_quatd(angle: angle, axis: axis)
+        return rotationWrapper.act(vector)
     }
 }

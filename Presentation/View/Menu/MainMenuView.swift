@@ -7,11 +7,13 @@ import SwiftUI
 struct MainMenuView: View {
 
     // MARK: - Actions
-    let onSelectMode: (GameDifficulty) -> Void
+    let onSelectMode: (GameDifficulty, Bool, Bool) -> Void // (Difficulty, isTutorial, isReview)
     let audioManager: AudioManager // [NEW]
 
     // MARK: - State
+    @AppStorage("hasCompletedTutorial") private var hasCompletedTutorial: Bool = false
     @State private var shimmerOffset: CGFloat = -200
+    @State private var showTutorialConfirmation = false // [NEW]
     @State private var showSettings = false // [NEW]
     @State private var isNavigating = false // [NEW] Prevent double tap
 
@@ -38,10 +40,26 @@ struct MainMenuView: View {
                     Spacer()
                 }
                 
-                // Settings Button (Top Right)
+                // Top Right Buttons
                 VStack {
-                    HStack {
+                    HStack(spacing: 20) {
                         Spacer()
+                        
+                        // Tutorial Button
+                        Button(action: {
+                            audioManager.playSFX(.button)
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                showTutorialConfirmation = true
+                            }
+                        }) {
+                            Image(systemName: "questionmark.circle.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                        .padding(.top, 40)
+                        
+                        // Settings Button
                         Button(action: {
                             audioManager.playSFX(.button)
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -67,6 +85,20 @@ struct MainMenuView: View {
                             withAnimation(.easeOut(duration: 0.2)) {
                                 showSettings = false
                             }
+                        }
+                    )
+                    .zIndex(100)
+                    .transition(.opacity)
+                }
+
+                if showTutorialConfirmation {
+                    TutorialConfirmationView(
+                        onConfirm: {
+                            startTutorial()
+                            showTutorialConfirmation = false
+                        },
+                        onCancel: {
+                            showTutorialConfirmation = false
                         }
                     )
                     .zIndex(100)
@@ -141,7 +173,7 @@ struct MainMenuView: View {
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Qbit")
-                .font(.system(size: 160, weight: .bold, design: .rounded))
+                .font(.system(size: 170, weight: .bold, design: .rounded))
                 .tracking(7)
                 .foregroundStyle(
                     LinearGradient(
@@ -153,23 +185,18 @@ struct MainMenuView: View {
                 .shadow(color: .cyan.opacity(0.6), radius: 30, x: 0, y: 0)
 
             Text("Play")
-                .font(.system(size: 115, weight: .thin, design: .rounded))
+                .font(.system(size: 120, weight: .thin, design: .rounded))
                 .tracking(7)
                 .foregroundStyle(.white.opacity(0.8))
         }
-//        .onAppear {
-//            withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
-//                shimmerOffset = 400
-//            }
-//        }
     }
 
     private var menuButtons: some View {
         VStack(spacing: 24) {
             QuantumModeCard(
                 title: "EASY MODE",
-                subtitle: "Start from |0⟩",
-                icon: "arrow.up",
+                subtitle: hasCompletedTutorial ? "Start from |0⟩" : "TUTORIAL START",
+                icon: hasCompletedTutorial ? "arrow.up" : "graduationcap.fill",
                 accentColor: .white,
                 isRandomStart: false,
                 action: { triggerTransition(difficulty: .easy) }
@@ -183,6 +210,13 @@ struct MainMenuView: View {
                 isRandomStart: true,
                 action: { triggerTransition(difficulty: .hard) }
             )
+            .disabled(!hasCompletedTutorial)
+            .opacity(hasCompletedTutorial ? 1.0 : 0.5)
+            .overlay(
+                !hasCompletedTutorial ? Image(systemName: "lock.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.white.opacity(0.8)) : nil
+            )
             
             QuantumModeCard(
                 title: "EXPERT MODE",
@@ -191,6 +225,13 @@ struct MainMenuView: View {
                 accentColor: .purple,
                 isRandomStart: true,
                 action: { triggerTransition(difficulty: .expert) }
+            )
+            .disabled(!hasCompletedTutorial)
+            .opacity(hasCompletedTutorial ? 1.0 : 0.5)
+            .overlay(
+                !hasCompletedTutorial ? Image(systemName: "lock.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.white.opacity(0.8)) : nil
             )
         }
         .frame(width: 450)
@@ -201,24 +242,37 @@ struct MainMenuView: View {
         if isNavigating { return } // Prevent double tap
         isNavigating = true
         
-        audioManager.playSFX(.click) // [NEW]
+        audioManager.playSFX(.click)
         let generator = UIImpactFeedbackGenerator(style: .soft)
         generator.impactOccurred()
         
-        // Buttons handle their own press animation, so just delay the action slightly
         Task {
             try? await Task.sleep(for: .milliseconds(150))
-            onSelectMode(difficulty)
+            
+            let isTutorial = (difficulty == .easy && !hasCompletedTutorial)
+            onSelectMode(difficulty, isTutorial, false)
         }
     }
-
-
+    
+    private func startTutorial() {
+        if isNavigating { return }
+        isNavigating = true
+        
+        audioManager.playSFX(.click)
+        let generator = UIImpactFeedbackGenerator(style: .soft)
+        generator.impactOccurred()
+        
+        Task {
+            try? await Task.sleep(for: .milliseconds(150))
+            onSelectMode(.easy, true, true) // Force tutorial mode + Review Mode
+        }
+    }
 
 }
 
 #Preview("New Main Menu") {
     MainMenuView(
-        onSelectMode: { _ in },
+        onSelectMode: { _, _, _ in },
         audioManager: AudioManager()
     )
 }
