@@ -280,7 +280,7 @@ public final class GameEngine {
             switch gameDifficulty {
             case .easy: maxBonus = 500.0
             case .hard: maxBonus = 2000.0
-            case .expert: maxBonus = 6000.0
+            case .expert: maxBonus = 5000.0
             }
             let k: Double = 0.5 // 傾き（急峻さ）
             
@@ -289,7 +289,7 @@ public final class GameEngine {
             switch gameDifficulty {
             case .easy: midpoint = 10.0
             case .hard: midpoint = 8.0
-            case .expert: midpoint = 4.0
+            case .expert: midpoint = 5.0
             }
             let x = Double(comboCount)
             
