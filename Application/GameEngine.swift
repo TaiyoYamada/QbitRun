@@ -56,7 +56,8 @@ public final class GameEngine {
 
     private let problemGenerator = ProblemGenerator()
 
-    private var lastProblemKey: String?
+    private var recentProblemKeys: [String] = []
+    private let maxRecentKeys = 4
 
     private let judgeService = JudgeService()
 
@@ -122,6 +123,7 @@ public final class GameEngine {
         currentVector = .zero
         didSolveLastProblem = false
         finalScoreEntry = nil
+        recentProblemKeys = []
     }
 
     private func endGame() {
@@ -153,9 +155,12 @@ public final class GameEngine {
     }
 
     private func generateNewProblem() {
-        let result = problemGenerator.generateProblem(gameDifficulty: gameDifficulty, problemNumber: problemsSolved, lastProblemKey: lastProblemKey)
+        let result = problemGenerator.generateProblem(gameDifficulty: gameDifficulty, problemNumber: problemsSolved, recentProblemKeys: recentProblemKeys)
         currentProblem = result.problem
-        lastProblemKey = result.problemKey
+        recentProblemKeys.append(result.problemKey)
+        if recentProblemKeys.count > maxRecentKeys {
+            recentProblemKeys.removeFirst()
+        }
     }
 
     public func addGate(_ gate: QuantumGate) {
