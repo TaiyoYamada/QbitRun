@@ -51,7 +51,9 @@ final class GameViewModel {
         }
     }
 
-    var canAddGate: Bool { gameEngine.currentCircuit.gateCount < 5 }
+    var canAddGate: Bool { !gameEngine.currentCircuit.isFull }
+
+    var maxGates: Int { gameEngine.currentCircuit.maxGates }
 
     func prepareGame(difficulty: GameDifficulty = .easy) {
         gameEngine.start(difficulty: difficulty, startTimer: false)

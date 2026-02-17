@@ -2,8 +2,12 @@ import SwiftUI
 
 struct SwiftUICircuitView: View {
     @Binding var gates: [QuantumGate]
-    let maxSlots: Int = 5
+    let maxSlots: Int
     let onRun: () -> Void
+
+    private var wireWidth: CGFloat {
+        maxSlots >= 6 ? 14 : 25
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -15,7 +19,7 @@ struct SwiftUICircuitView: View {
                 ForEach(0..<maxSlots, id: \.self) { index in
                     Rectangle()
                         .fill(.white.opacity(0.7))
-                        .frame(width: 23, height: 3)
+                        .frame(width: wireWidth, height: 3)
 
                     CircuitSlot(
                         gate: index < gates.count ? gates[index] : nil,
@@ -29,7 +33,7 @@ struct SwiftUICircuitView: View {
 
                     Rectangle()
                         .fill(.white.opacity(0.7))
-                        .frame(width: 23, height: 3)
+                        .frame(width: wireWidth, height: 3)
                 }
             }
 

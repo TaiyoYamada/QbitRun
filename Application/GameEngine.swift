@@ -32,7 +32,14 @@ public final class GameEngine {
 
     public private(set) var currentProblem: Problem?
 
-    public private(set) var currentCircuit = Circuit()
+    public private(set) var currentCircuit = Circuit(maxGates: 4)
+
+    private var maxGatesForDifficulty: Int {
+        switch gameDifficulty {
+        case .easy, .hard: return 4
+        case .expert: return 6
+        }
+    }
 
     public private(set) var currentVector: BlochVector = .zero
 
@@ -75,7 +82,7 @@ public final class GameEngine {
         comboCount = 0
         lastComboBonus = 0
         missCount = 0
-        currentCircuit = Circuit()
+        currentCircuit = Circuit(maxGates: maxGatesForDifficulty)
         didSolveLastProblem = false
         finalScoreEntry = nil
 
@@ -118,7 +125,7 @@ public final class GameEngine {
         comboCount = 0
         lastComboBonus = 0
         missCount = 0
-        currentCircuit = Circuit()
+        currentCircuit = Circuit(maxGates: 4)
         currentProblem = nil
         currentVector = .zero
         didSolveLastProblem = false
