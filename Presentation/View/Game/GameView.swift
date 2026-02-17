@@ -144,14 +144,19 @@ struct GameView: View {
                 for (gate, anchor) in preferences {
                     newFrames[gate] = geometry[anchor]
                 }
-                self.elementFrames = newFrames
-                updateSpotlightFrames()
+                if self.elementFrames != newFrames {
+                    self.elementFrames = newFrames
+                    updateSpotlightFrames()
+                }
             }
             .onPreferenceChange(SphereBoundsPreferenceKey.self) { anchor in
                 if let anchor = anchor {
-                   self.sphereFrame = geometry[anchor]
+                   let newFrame = geometry[anchor]
+                   if self.sphereFrame != newFrame {
+                       self.sphereFrame = newFrame
+                       updateSpotlightFrames()
+                   }
                 }
-                updateSpotlightFrames()
             }
         }
 

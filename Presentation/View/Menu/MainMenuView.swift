@@ -175,7 +175,7 @@ struct MainMenuView: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .shadow(color: .cyan.opacity(0.6), radius: 30, x: 0, y: 0)
+                .shadow(color: .cyan.opacity(0.5), radius: 35)
 
             Text("Run")
                 .font(.system(size: 135, weight: .light, design: .rounded))

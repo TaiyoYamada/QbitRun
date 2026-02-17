@@ -32,19 +32,19 @@ struct ResultView: View {
                     VStack(spacing: 32) {
 
                         Text("MISSION COMPLETE")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.system(size: 40, weight: .bold, design: .rounded))
                             .tracking(4)
                             .foregroundStyle(.white.opacity(0.8))
                             .shadow(color: .cyan.opacity(0.5), radius: 10)
 
                         VStack(spacing: 20) {
                             Text("TOTAL SCORE")
-                               .font(.system(size: 14, weight: .bold, design: .rounded))
+                               .font(.system(size: 30, weight: .bold, design: .rounded))
                                .tracking(2)
                                .foregroundStyle(.cyan.opacity(0.8))
 
                             Text("\(scoreCount)")
-                                .font(.system(size: 80, weight: .black, design: .rounded).monospacedDigit())
+                                .font(.system(size: 90, weight: .black, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
                                 .shadow(color: .cyan.opacity(0.8), radius: 20)
                                 .contentTransition(.numericText())
@@ -89,14 +89,14 @@ struct ResultView: View {
                             onReturnToMenu()
                         }) {
                             Text("RETURN TO BASE")
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .font(.system(size: 25, weight: .bold, design: .rounded))
                                 .tracking(1)
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 18)
+                                .padding(.vertical, 20)
                                 .background(
                                     LinearGradient(
-                                        colors: [Color.cyan.opacity(0.6), Color.blue.opacity(0.6)],
+                                        colors: [.cyan.opacity(0.6), .purple.opacity(0.7)],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
@@ -107,7 +107,7 @@ struct ResultView: View {
                                     Capsule()
                                         .stroke(Color.white.opacity(0.3), lineWidth: 1)
                                 )
-                                .shadow(color: .cyan.opacity(0.3), radius: 10, x: 0, y: 5)
+                                .shadow(color: .cyan.opacity(0.5), radius: 10)
                         }
                         .padding(.horizontal, 40)
                     }
@@ -157,11 +157,11 @@ struct ResultView: View {
     private func detailItem(label: String, value: String) -> some View {
         VStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.system(size: 25, weight: .semibold, design: .rounded))
                 .tracking(1)
                 .foregroundStyle(.white.opacity(0.5))
             Text(value)
-                .font(.system(size: 32, weight: .bold, design: .rounded).monospacedDigit())
+                .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
                 .shadow(color: .white.opacity(0.3), radius: 8)
         }
