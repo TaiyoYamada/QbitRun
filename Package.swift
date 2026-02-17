@@ -8,20 +8,20 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "QbitPlay",
+    name: "QbitRun",
     platforms: [
         .iOS("18.0")
     ],
     products: [
         .iOSApplication(
-            name: "QbitPlay",
+            name: "QbitRun",
             targets: ["AppModule"],
             bundleIdentifier: "----.QuantumGateGame",
             teamIdentifier: "HJC5DQ3PVM",
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .asset("AppIcon"),
-            accentColor: .presetColor(.purple),
+            accentColor: .presetColor(.cyan),
             supportedDeviceFamilies: [
                 .pad,
                 .phone
@@ -31,7 +31,8 @@ let package = Package(
                 .landscapeRight,
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
-            ]
+            ],
+            appCategory: .games
         )
     ],
     targets: [

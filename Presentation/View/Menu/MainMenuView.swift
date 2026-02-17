@@ -39,18 +39,20 @@ struct MainMenuView: View {
                     HStack(spacing: 20) {
                         Spacer()
 
-                        Button(action: {
-                            audioManager.playSFX(.button)
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                showTutorialConfirmation = true
+                        if hasCompletedTutorial {
+                            Button(action: {
+                                audioManager.playSFX(.button)
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    showTutorialConfirmation = true
+                                }
+                            }) {
+                                Image(systemName: "questionmark.circle.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundStyle(.white.opacity(0.8))
                             }
-                        }) {
-                            Image(systemName: "questionmark.circle.fill")
-                                .font(.system(size: 40))
-                                .foregroundStyle(.white.opacity(0.8))
+                            .padding(.top, 40)
                         }
-                        .padding(.top, 40)
 
                         Button(action: {
                             audioManager.playSFX(.button)
@@ -164,21 +166,21 @@ struct MainMenuView: View {
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Qbit")
-                .font(.system(size: 180, weight: .bold, design: .rounded))
-                .tracking(8)
+                .font(.system(size: 190, weight: .bold, design: .rounded))
+                .tracking(10)
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.white, .cyan],
+                        colors: [.white.opacity(0.95), .cyan.opacity(0.95), .purple.opacity(0.95)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .shadow(color: .cyan.opacity(0.6), radius: 30, x: 0, y: 0)
 
-            Text("Play")
-                .font(.system(size: 130, weight: .thin, design: .rounded))
-                .tracking(8)
-                .foregroundStyle(.white.opacity(0.8))
+            Text("Run")
+                .font(.system(size: 135, weight: .light, design: .rounded))
+                .tracking(10)
+                .foregroundStyle(.white.opacity(0.9))
         }
     }
 
@@ -186,11 +188,17 @@ struct MainMenuView: View {
         VStack(spacing: 24) {
             QuantumModeCard(
                 title: "EASY MODE",
-                subtitle: hasCompletedTutorial ? "Start from |0⟩" : "TUTORIAL START",
-                icon: hasCompletedTutorial ? "arrow.up" : "graduationcap.fill",
+                subtitle: "Start from |0⟩",
+                icon: "arrow.up",
                 accentColor: .white,
                 isRandomStart: false,
-                action: { triggerTransition(difficulty: .easy) }
+                action: {
+                    if hasCompletedTutorial {
+                        triggerTransition(difficulty: .easy)
+                    } else {
+                        startForcedTutorial(targetDifficulty: .easy)
+                    }
+                }
             )
 
             QuantumModeCard(
@@ -199,14 +207,13 @@ struct MainMenuView: View {
                 icon: "shuffle",
                 accentColor: .cyan,
                 isRandomStart: true,
-                action: { triggerTransition(difficulty: .hard) }
-            )
-            .disabled(!hasCompletedTutorial)
-            .opacity(hasCompletedTutorial ? 1.0 : 0.5)
-            .overlay(
-                !hasCompletedTutorial ? Image(systemName: "lock.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.white.opacity(0.9)) : nil
+                action: {
+                    if hasCompletedTutorial {
+                        triggerTransition(difficulty: .hard)
+                    } else {
+                        startForcedTutorial(targetDifficulty: .hard)
+                    }
+                }
             )
 
             QuantumModeCard(
@@ -215,14 +222,13 @@ struct MainMenuView: View {
                 icon: "atom",
                 accentColor: .purple,
                 isRandomStart: true,
-                action: { triggerTransition(difficulty: .expert) }
-            )
-            .disabled(!hasCompletedTutorial)
-            .opacity(hasCompletedTutorial ? 1.0 : 0.5)
-            .overlay(
-                !hasCompletedTutorial ? Image(systemName: "lock.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.white.opacity(0.9)) : nil
+                action: {
+                    if hasCompletedTutorial {
+                        triggerTransition(difficulty: .expert)
+                    } else {
+                        startForcedTutorial(targetDifficulty: .expert)
+                    }
+                }
             )
         }
         .frame(width: 450)
@@ -254,7 +260,22 @@ struct MainMenuView: View {
 
         Task {
             try? await Task.sleep(for: .milliseconds(150))
+            // for review mode (from ? button), isTutorial=true, isReview=true
             onSelectMode(.easy, true, true)
+        }
+    }
+
+    private func startForcedTutorial(targetDifficulty: GameDifficulty) {
+        if isNavigating { return }
+        isNavigating = true
+
+        audioManager.playSFX(.click)
+        let generator = UIImpactFeedbackGenerator(style: .soft)
+        generator.impactOccurred()
+
+        Task {
+            try? await Task.sleep(for: .milliseconds(150))
+            onSelectMode(targetDifficulty, true, false)
         }
     }
 

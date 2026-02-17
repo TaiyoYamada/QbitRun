@@ -47,15 +47,16 @@ struct TutorialOverlayView: View {
     @Bindable var viewModel: GameViewModel
     let spotlightFrames: [CGRect]
     let audioManager: AudioManager
+    let isReviewMode: Bool
 
     var body: some View {
         VStack {
             VStack(spacing: 20) {
                 Text(viewModel.currentTutorialStep.title)
-                    .font(.system(size: 50, weight: .bold, design: .rounded))
+                    .font(.system(size: 60, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(color: .cyan, radius: 5)
-                    .padding(.top, 30)
+                    .padding(.top, 35)
 
                 TypewriterText(text: viewModel.currentTutorialStep.instruction, onFinished: {
                     viewModel.tutorialGateEnabled = true
@@ -85,7 +86,9 @@ struct TutorialOverlayView: View {
                 viewModel.advanceTutorialStep()
             }) {
                 HStack(spacing: 15) {
-                    Text(viewModel.currentTutorialStep == .finish ? "START GAME" : "NEXT")
+                    Text(viewModel.currentTutorialStep == .finish
+                         ? (isReviewMode ? "CLOSE" : "START GAME")
+                         : "NEXT")
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                 }
                 .foregroundStyle(viewModel.showTutorialNextButton ? .white : .white.opacity(0.3))

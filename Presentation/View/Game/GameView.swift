@@ -131,7 +131,8 @@ struct GameView: View {
                     TutorialOverlayView(
                         viewModel: viewModel,
                         spotlightFrames: tutorialSpotlightFrames,
-                        audioManager: audioManager
+                        audioManager: audioManager,
+                        isReviewMode: isReviewMode
                     )
                     .zIndex(200)
                     .transition(.opacity)
