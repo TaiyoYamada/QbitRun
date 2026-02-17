@@ -107,6 +107,7 @@ struct TutorialOverlayView: View {
                 .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
             }
             .disabled(!viewModel.showTutorialNextButton)
+            .buttonStyle(.plain)
             .animation(.easeIn, value: viewModel.showTutorialNextButton)
             .padding(.bottom, 50)
         }
