@@ -27,28 +27,28 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
     var instruction: String {
         switch self {
         case .intro:
-        return "This is the Bloch sphere — a geometric representation of a single qubit.\nA pure state lies on its surface.\n\nReference axes:\n|0⟩ (Z), |+⟩ (X), |+i⟩ (Y)\n\nApply quantum gates to rotate the state and reach the target."
+        return "This 'Bloch sphere' represents a qubit — the basic unit of quantum computing.\n\n|0⟩ and |1⟩ are on the Z-axis (top and bottom).\n|+⟩ and |−⟩ on X, |+i⟩ and |−i⟩ on Y.\n\nThe arrow shows your current state.\nApply gates to rotate it toward the target."
 
         case .xGate:
-        return "Apply the X gate.\nRotate 180° around the X-axis.\nFlips the Z component.\n|0⟩ ↔ |1⟩"
+        return "Flips the state top ↔ bottom.\n180° rotation around the X-axis.\n|0⟩ becomes |1⟩, and vice versa."
 
         case .yGate:
-        return "Apply the Y gate.\nRotate 180° around the Y-axis.\nFlips X and Z components (adds phase).\n|0⟩ → i|1⟩"
+        return "Flips the state with a phase twist.\n180° rotation around the Y-axis.\nSimilar to X, but adds extra phase."
 
         case .zGate:
-        return "Apply the Z gate.\nRotate 180° around the Z-axis.\nPreserves Z, flips X and Y.\n|+⟩ ↔ |−⟩"
+        return "Reverses the phase of the state.\n180° rotation around the Z-axis.\n|+⟩ becomes |−⟩, and vice versa."
 
         case .hGate:
-        return "Apply the H gate.\nMaps Z-basis to X-basis.\n|0⟩ → |+⟩\nCreates superposition."
+        return "Creates superposition — an equal mix of 0 and 1.\nMoves the state between the pole and the equator.\n|0⟩ becomes |+⟩."
 
         case .sGate:
-        return "Apply the S gate.\nRotate 90° around the Z-axis.\n|+⟩ → |+i⟩"
+        return "A quarter turn around the Z-axis.\n90° phase rotation.\n|+⟩ becomes |+i⟩."
 
         case .tGate:
-        return "Apply the T gate.\nRotate 45° around the Z-axis.\nAdds phase e^{iπ/4} to |1⟩."
+        return "A fine phase adjustment.\n45° rotation around the Z-axis.\nSlightly shifts the state along the equator."
 
         case .finish:
-        return "Calibration complete.\nYou can now control a qubit on the Bloch sphere."
+        return "You've learned all the basic gates!\nYou're ready to take on quantum puzzles."
         }
     }
 
