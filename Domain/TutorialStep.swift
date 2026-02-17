@@ -13,7 +13,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
 
     var title: String {
         switch self {
-        case .intro: return "GAME SYSTEM CHECK"
+        case .intro: return "TUTORIAL"
         case .xGate: return "X GATE"
         case .yGate: return "Y GATE"
         case .zGate: return "Z GATE"

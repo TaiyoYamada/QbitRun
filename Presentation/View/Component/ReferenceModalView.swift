@@ -81,7 +81,7 @@ struct ReferenceModalView: View {
     private func gateRow(gate: QuantumGate, name: String, description: String) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Text(gate.symbol)
-                .font(.system(size: 20, weight: .bold, design: .monospaced))
+                .font(.system(size: 20, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 44, height: 44)
                 .background(gate.swiftUIColor)

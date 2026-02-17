@@ -43,6 +43,9 @@ struct GameView: View {
                             .padding(.bottom, 10)
                             .padding(.horizontal, 24)
                             .animation(.easeIn(duration: 0.5), value: showCountdown)
+                    } else {
+                        Spacer()
+                            .frame(height: 170)
                     }
 
                     spheresSection(geometry: geometry)

@@ -47,23 +47,26 @@ struct TutorialOverlayView: View {
         VStack {
             VStack(spacing: 20) {
                 Text(viewModel.currentTutorialStep.title)
-                    .font(.system(size: 45, weight: .bold, design: .rounded))
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                    .shadow(color: .cyan, radius: 10)
-                    .padding(.top, 10)
+                    .shadow(color: .cyan, radius: 5)
+                    .padding(.top, 30)
 
                 TypewriterText(text: viewModel.currentTutorialStep.instruction)
-                    .font(.system(size: 20, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.system(size: 18, weight: .bold, design: .rounded).monospacedDigit()) // Slightly smaller text
                     .padding(.horizontal, 20)
                     .padding(.vertical, 20)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.cyan.opacity(0.7), lineWidth: 1)
-                    )
                     .frame(maxWidth: 700)
             }
+            .padding(.bottom, 30)
+            .frame(maxWidth: .infinity)
+            .background(
+                LinearGradient(
+                    colors: [Color.black.opacity(0.8), Color.black.opacity(0.0)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
 
             Spacer()
 
@@ -72,7 +75,7 @@ struct TutorialOverlayView: View {
             }) {
                 HStack(spacing: 15) {
                     Text(viewModel.currentTutorialStep == .finish ? "INITIALIZE_GAME" : "NEXT_STEP")
-                        .font(.system(size: 30, weight: .bold, design: .monospaced))
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
                 }
                 .foregroundStyle(viewModel.showTutorialNextButton ? .black : .white.opacity(0.3))
                 .padding(.horizontal, 30)
@@ -87,16 +90,16 @@ struct TutorialOverlayView: View {
                         }
                     }
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: 20))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(viewModel.showTutorialNextButton ? Color.white : Color.gray.opacity(0.5), lineWidth: 2)
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(viewModel.showTutorialNextButton ? Color.white : Color.gray.opacity(0.5), lineWidth: 3)
                 )
-                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 10)
+                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 5)
             }
             .disabled(!viewModel.showTutorialNextButton)
             .animation(.easeIn, value: viewModel.showTutorialNextButton)
-            .padding(.bottom, 70)
+            .padding(.bottom, 60)
         }
     }
 }
