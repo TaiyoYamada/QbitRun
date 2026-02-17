@@ -228,7 +228,7 @@ public final class GameEngine {
             switch gameDifficulty {
             case .easy: maxBonus = 700.0
             case .hard: maxBonus = 1400.0
-            case .expert: maxBonus = 4900.0
+            case .expert: maxBonus = 4200.0
             }
             let k: Double = 0.5
 
