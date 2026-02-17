@@ -406,15 +406,15 @@ struct GameView: View {
                                 .foregroundStyle(.white.opacity(0.8))
                         }
 
-                        // ターゲット状態（金）
+                        // ターゲット状態（白）
                         HStack(spacing: 15) {
                             Circle()
-                                .fill(Color(red: 1.0, green: 0.85, blue: 0.2).opacity(0.8))
+                                .fill(Color.white.opacity(0.8))
                                 .frame(width: 30, height: 30)
                             Text("TARGET")
                                 .font(.system(size: 30, weight: .bold, design: .rounded))
                                 .tracking(3)
-                                .foregroundStyle(.yellow.opacity(0.8))
+                                .foregroundStyle(.white.opacity(0.8))
                         }
                     }
                     .padding(.vertical, 15)

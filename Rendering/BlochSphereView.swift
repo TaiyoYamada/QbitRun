@@ -157,7 +157,7 @@ public final class BlochSphereView: UIView {
         stateVectorNode.isHidden = true
         scene.rootNode.addChildNode(stateVectorNode)
         
-        let ghostVectorNode = createArrow(color: UIColor(red: 1.0, green: 0.85, blue: 0.2, alpha: 1.0), opacity: 1.0)
+        let ghostVectorNode = createArrow(color: UIColor.white, opacity: 1.0) // [MODIFIED] White
         ghostVectorNode.isHidden = true
         scene.rootNode.addChildNode(ghostVectorNode)
         
