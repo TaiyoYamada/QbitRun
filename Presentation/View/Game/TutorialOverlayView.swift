@@ -110,7 +110,6 @@ struct TutorialOverlayView: View {
             }
             .disabled(!viewModel.showTutorialNextButton)
             .buttonStyle(.plain)
-            .animation(.easeIn, value: viewModel.showTutorialNextButton)
             .padding(.bottom, 50)
         }
     }
