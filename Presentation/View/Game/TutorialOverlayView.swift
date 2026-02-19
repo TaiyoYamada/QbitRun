@@ -70,13 +70,13 @@ struct TutorialOverlayView: View {
     var body: some View {
         VStack {
             VStack(spacing: 20) {
-                Text(viewModel.currentTutorialStep.title)
+                Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
                     .font(.system(size: 60, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(color: .cyan, radius: 5)
                     .padding(.top, 35)
 
-                TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction, onFinished: {
+                TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
                     viewModel.tutorialGateEnabled = true
                     if viewModel.currentTutorialStep.targetGate == nil {
                         viewModel.showTutorialNextButton = true

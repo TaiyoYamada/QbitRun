@@ -20,7 +20,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
     case tGate
     case finish
 
-    var title: String {
+    func title(isReviewMode: Bool) -> String {
         switch self {
         case .intro1, .intro2, .intro3, .intro4: return "BLOCH SPHERE"
         case .xGate1, .xGate2: return "X GATE"
@@ -29,11 +29,11 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .hGate1, .hGate2, .hGate3: return "H GATE"
         case .sGate: return "S GATE"
         case .tGate: return "T GATE"
-        case .finish: return "READY TO LAUNCH"
+        case .finish: return isReviewMode ? "REVIEW COMPLETE" : "READY TO LAUNCH"
         }
     }
 
-    var instruction: String {
+    func instruction(isReviewMode: Bool) -> String {
         switch self {
         case .intro1:
         return "This Bloch sphere represents a quantum bit (qubit) — the basic unit of quantum computing.\n\nThe arrow shows your current quantum state."
@@ -82,7 +82,11 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         return "45° rotation around the Z-axis.\nA fine phase adjustment.\nSlightly shifts the state along the equator."
 
         case .finish:
-        return "You've learned all the basic gates!\nYou're ready to play!"
+            if isReviewMode {
+                return "That's all the gates!\nHead back anytime to review."
+            } else {
+                return "You've learned all the basic gates!\nYou're ready to play!"
+            }
         }
     }
 
@@ -120,8 +124,8 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
     static let yAxisColor = Color.purple
     static let arrowColor = Color.red
 
-    var attributedInstruction: AttributedString {
-        let raw = instruction
+    func attributedInstruction(isReviewMode: Bool) -> AttributedString {
+        let raw = instruction(isReviewMode: isReviewMode)
 
         let colorMap: [(String, Color)] = [
             ("(X+Z) axis", Color(red: 0.5, green: 0.8, blue: 1.0)),
