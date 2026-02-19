@@ -5,6 +5,7 @@ import SceneKit
 
 @MainActor
 public final class BlochSphereView: UIView {
+    private typealias AxisDefinition = (direction: SCNVector3, color: UIColor, labelText: String, labelPosition: SCNVector3)
 
     private var scnView: SCNView!
     private var scene: SCNScene!
@@ -59,7 +60,7 @@ public final class BlochSphereView: UIView {
         }
     }
 
-    public var showAxisLabels: Bool = true {
+    public var showAxisLabels: Bool = false {
         didSet {
             updateAxesVisibility()
         }
@@ -272,20 +273,10 @@ public final class BlochSphereView: UIView {
         axesNode = SCNNode()
         let axisLength: CGFloat = 1.35
         let radius: CGFloat = 0.006
-        let labelDistance: CGFloat = 1.6
 
-        let axes: [(SCNVector3, UIColor, String, SCNVector3)] = [
-            (SCNVector3(0, 1, 0), BlochAxisPalette.zAxisUIColor, "|0⟩", SCNVector3(0, labelDistance, 0)),
-            (SCNVector3(0, -1, 0), BlochAxisPalette.zAxisUIColor, "|1⟩", SCNVector3(0, -labelDistance, 0)),
+        let axes = axisDefinitions()
 
-            (SCNVector3(0, 0, 1), BlochAxisPalette.xAxisUIColor, "|+⟩", SCNVector3(0, 0, labelDistance)),
-            (SCNVector3(0, 0, -1), BlochAxisPalette.xAxisUIColor, "|-⟩", SCNVector3(0, 0, -labelDistance)),
-
-            (SCNVector3(1, 0, 0), BlochAxisPalette.yAxisUIColor, "|+i⟩", SCNVector3(labelDistance, 0, 0)),
-            (SCNVector3(-1, 0, 0), BlochAxisPalette.yAxisUIColor, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
-        ]
-
-        for (dir, color, labelText, labelPos) in axes {
+        for (dir, color, _, _) in axes {
             let cylinder = SCNCylinder(radius: radius, height: axisLength)
             let mat = SCNMaterial()
             mat.lightingModel = .constant
@@ -325,12 +316,36 @@ public final class BlochSphereView: UIView {
             }
 
             axesNode.addChildNode(shaftContainer)
+        }
+        if showAxisLabels {
+            addAxisLabelsIfNeeded()
+        }
+        scene.rootNode.addChildNode(axesNode)
+    }
 
+    private func axisDefinitions() -> [AxisDefinition] {
+        let labelDistance: CGFloat = 1.6
+        return [
+            (SCNVector3(0, 1, 0), BlochAxisPalette.zAxisUIColor, "|0⟩", SCNVector3(0, labelDistance, 0)),
+            (SCNVector3(0, -1, 0), BlochAxisPalette.zAxisUIColor, "|1⟩", SCNVector3(0, -labelDistance, 0)),
+            (SCNVector3(0, 0, 1), BlochAxisPalette.xAxisUIColor, "|+⟩", SCNVector3(0, 0, labelDistance)),
+            (SCNVector3(0, 0, -1), BlochAxisPalette.xAxisUIColor, "|-⟩", SCNVector3(0, 0, -labelDistance)),
+            (SCNVector3(1, 0, 0), BlochAxisPalette.yAxisUIColor, "|+i⟩", SCNVector3(labelDistance, 0, 0)),
+            (SCNVector3(-1, 0, 0), BlochAxisPalette.yAxisUIColor, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
+        ]
+    }
+
+    private func addAxisLabelsIfNeeded() {
+        guard let axesNode else { return }
+        if axesNode.childNodes.contains(where: { $0.name == "axisLabel" }) {
+            return
+        }
+
+        for (_, color, labelText, labelPos) in axisDefinitions() {
             let textNode = createAxisLabelNode(text: labelText, color: color)
             textNode.position = labelPos
             axesNode.addChildNode(textNode)
         }
-        scene.rootNode.addChildNode(axesNode)
     }
 
     private func createAxisLabelNode(text: String, color: UIColor) -> SCNNode {
@@ -401,6 +416,10 @@ public final class BlochSphereView: UIView {
 
     private func updateAxesVisibility() {
         axesNode?.isHidden = !showAxes
+
+        if showAxisLabels {
+            addAxisLabelsIfNeeded()
+        }
 
         if let axes = axesNode {
             for child in axes.childNodes {
