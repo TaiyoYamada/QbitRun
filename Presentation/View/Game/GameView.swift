@@ -401,24 +401,22 @@ struct GameView: View {
                         RoundedRectangle(cornerRadius: 60)
                             .stroke(Color.white.opacity(0.7), lineWidth: 5)
                     )
+                    .padding(.leading, 30)
 
                 Spacer()
 
-                HStack(spacing: 40) {
-
-
-                    Button(action: {
-                        audioManager.playSFX(.button)
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        showExitConfirmation = true
-                    }) {
-                        Image(systemName: "door.left.hand.open")
-                            .font(.system(size: 60, weight: .regular, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
-                    .accessibilityLabel("Exit game")
-                    .accessibilityHint("Open exit confirmation.")
+                Button(action: {
+                    audioManager.playSFX(.button)
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    showExitConfirmation = true
+                }) {
+                    Image(systemName: "door.left.hand.open")
+                        .font(.system(size: 60, weight: .regular, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.8))
                 }
+                .padding(.trailing, 20)
+                .accessibilityLabel("Exit game")
+                .accessibilityHint("Open exit confirmation.")
             }
         }
         .opacity(viewModel.isTutorialActive ? 0 : 1)

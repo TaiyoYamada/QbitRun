@@ -45,7 +45,7 @@ struct SwiftUICircuitView: View {
                 Text("▶ Run")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(.white)
-                    .shadow(color: .black, radius: 3)
+                    .shadow(color: .black, radius: 5)
                     .frame(width: 120, height: 60)
                     .background {
                         if gates.isEmpty {
@@ -60,6 +60,7 @@ struct SwiftUICircuitView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
+            .shadow(color: .black, radius: 3)
             .disabled(gates.isEmpty)
             .accessibilityLabel("Run circuit")
             .accessibilityValue(gates.isEmpty ? "Disabled" : "Enabled")

@@ -67,7 +67,7 @@ struct SwiftUIGatePaletteView: View {
             }
         }
         .padding(.horizontal, 50)
-        .padding(.vertical, 16)
+        .padding(.vertical, 25)
         .background(.white.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 80))
         .onChange(of: highlightedGate) { _, newValue in
