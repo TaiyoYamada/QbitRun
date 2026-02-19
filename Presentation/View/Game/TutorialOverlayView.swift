@@ -24,7 +24,7 @@ struct TypewriterText: View {
             .font(.system(size: 23, weight: .medium, design: .monospaced))
             .lineSpacing(2)
             .foregroundStyle(.white)
-            .shadow(color: .cyan.opacity(0.8), radius: 2)
+            .shadow(color: .black.opacity(0.7), radius: 2, x: 0, y: 1)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(plainText.voiceOverFriendlyTutorialText)
             .onChange(of: plainText) { _, _ in

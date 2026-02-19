@@ -275,14 +275,14 @@ public final class BlochSphereView: UIView {
         let labelDistance: CGFloat = 1.6
 
         let axes: [(SCNVector3, UIColor, String, SCNVector3)] = [
-            (SCNVector3(0, 1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1), "|0⟩", SCNVector3(0, labelDistance, 0)),
-            (SCNVector3(0, -1, 0), UIColor(red: 0.2, green: 0.2, blue: 1.0, alpha: 1), "|1⟩", SCNVector3(0, -labelDistance, 0)),
+            (SCNVector3(0, 1, 0), BlochAxisPalette.zAxisUIColor, "|0⟩", SCNVector3(0, labelDistance, 0)),
+            (SCNVector3(0, -1, 0), BlochAxisPalette.zAxisUIColor, "|1⟩", SCNVector3(0, -labelDistance, 0)),
 
-            (SCNVector3(0, 0, 1), UIColor.cyan, "|+⟩", SCNVector3(0, 0, labelDistance)),
-            (SCNVector3(0, 0, -1), UIColor.cyan, "|-⟩", SCNVector3(0, 0, -labelDistance)),
+            (SCNVector3(0, 0, 1), BlochAxisPalette.xAxisUIColor, "|+⟩", SCNVector3(0, 0, labelDistance)),
+            (SCNVector3(0, 0, -1), BlochAxisPalette.xAxisUIColor, "|-⟩", SCNVector3(0, 0, -labelDistance)),
 
-            (SCNVector3(1, 0, 0), UIColor.purple, "|+i⟩", SCNVector3(labelDistance, 0, 0)),
-            (SCNVector3(-1, 0, 0), UIColor.purple, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
+            (SCNVector3(1, 0, 0), BlochAxisPalette.yAxisUIColor, "|+i⟩", SCNVector3(labelDistance, 0, 0)),
+            (SCNVector3(-1, 0, 0), BlochAxisPalette.yAxisUIColor, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
         ]
 
         for (dir, color, labelText, labelPos) in axes {

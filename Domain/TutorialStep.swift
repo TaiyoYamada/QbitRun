@@ -119,9 +119,9 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         }
     }
 
-    static let zAxisColor = Color.blue
-    static let xAxisColor = Color.cyan
-    static let yAxisColor = Color.purple
+    static let zAxisColor = BlochAxisPalette.zAxisColor
+    static let xAxisColor = BlochAxisPalette.xAxisColor
+    static let yAxisColor = BlochAxisPalette.yAxisColor
     static let arrowColor = Color.red
 
     func attributedInstruction(isReviewMode: Bool) -> AttributedString {
