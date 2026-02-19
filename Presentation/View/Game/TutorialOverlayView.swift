@@ -6,42 +6,60 @@ extension Notification.Name {
 }
 
 struct TypewriterText: View {
-    let text: String
+    let attributedText: AttributedString
+    let plainText: String
     var onFinished: (() -> Void)? = nil
-    @State private var displayedText: String = ""
-    @State private var charIndex: Int = 0
+    @State private var revealedCount: Int = 0
+    @State private var isTyping: Bool = false
+
+    init(attributedText: AttributedString, onFinished: (() -> Void)? = nil) {
+        self.attributedText = attributedText
+        self.plainText = String(attributedText.characters)
+        self.onFinished = onFinished
+    }
 
     var body: some View {
-        Text(displayedText)
+        Text(revealedAttributedText)
             .font(.system(size: 23, weight: .medium, design: .monospaced))
             .lineSpacing(2)
             .foregroundStyle(.white)
             .shadow(color: .cyan.opacity(0.8), radius: 2)
-            .onChange(of: text) { _, newValue in
-                startTyping(newValue)
+            .onChange(of: plainText) { _, _ in
+                startTyping()
             }
             .onAppear {
-                startTyping(text)
+                startTyping()
             }
     }
 
-    private func startTyping(_ newText: String) {
-        displayedText = ""
-        charIndex = 0
+    private var revealedAttributedText: AttributedString {
+        guard revealedCount > 0 else { return AttributedString("") }
+        let chars = attributedText.characters
+        let endIdx = chars.index(chars.startIndex, offsetBy: min(revealedCount, chars.count))
+        return AttributedString(attributedText[chars.startIndex..<endIdx])
+    }
+
+    private func startTyping() {
+        revealedCount = 0
+        isTyping = true
+        let totalCount = attributedText.characters.count
+        let currentPlainText = plainText
 
         Task {
-            for char in newText {
-                if newText != text { break }
-                displayedText.append(char)
+            for i in 1...totalCount {
+                if currentPlainText != plainText { break }
+                revealedCount = i
                 let randomDelay = UInt64(Double.random(in: 0.01...0.05) * 1_000_000_000)
                 try? await Task.sleep(nanoseconds: randomDelay)
             }
             await MainActor.run {
+                isTyping = false
                 onFinished?()
             }
         }
     }
 }
+
 
 struct TutorialOverlayView: View {
     @Bindable var viewModel: GameViewModel
@@ -58,7 +76,7 @@ struct TutorialOverlayView: View {
                     .shadow(color: .cyan, radius: 5)
                     .padding(.top, 35)
 
-                TypewriterText(text: viewModel.currentTutorialStep.instruction, onFinished: {
+                TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction, onFinished: {
                     viewModel.tutorialGateEnabled = true
                     if viewModel.currentTutorialStep.targetGate == nil {
                         viewModel.showTutorialNextButton = true

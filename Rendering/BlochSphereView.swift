@@ -281,7 +281,7 @@ public final class BlochSphereView: UIView {
             (SCNVector3(0, 0, 1), UIColor.cyan, "|+⟩", SCNVector3(0, 0, labelDistance)),
             (SCNVector3(0, 0, -1), UIColor.cyan, "|-⟩", SCNVector3(0, 0, -labelDistance)),
 
-            (SCNVector3(1, 0, 0), UIColor.purple, "|i⟩", SCNVector3(labelDistance, 0, 0)),
+            (SCNVector3(1, 0, 0), UIColor.purple, "|+i⟩", SCNVector3(labelDistance, 0, 0)),
             (SCNVector3(-1, 0, 0), UIColor.purple, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
         ]
 
