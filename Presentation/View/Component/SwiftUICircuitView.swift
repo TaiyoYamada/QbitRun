@@ -4,6 +4,7 @@ struct SwiftUICircuitView: View {
     @Binding var gates: [QuantumGate]
     let maxSlots: Int
     let onRun: () -> Void
+    let onGateRemove: (Int) -> Void
 
     private var wireWidth: CGFloat {
         maxSlots >= 6 ? 14 : 25
@@ -26,8 +27,7 @@ struct SwiftUICircuitView: View {
                         gate: index < gates.count ? gates[index] : nil,
                         onRemove: {
                             if index < gates.count {
-                                gates.remove(at: index)
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                onGateRemove(index)
                             }
                         }
                     )

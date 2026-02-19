@@ -536,7 +536,12 @@ struct GameView: View {
             SwiftUICircuitView(
                 gates: $viewModel.circuitGates,
                 maxSlots: viewModel.maxGates,
-                onRun: { runCircuit() }
+                onRun: { runCircuit() },
+                onGateRemove: { index in
+                    audioManager.playSFX(.clear)
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    viewModel.removeGate(at: index)
+                }
             )
             .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 0)
         }
