@@ -126,6 +126,7 @@ struct TutorialOverlayView: View {
                          ? (isReviewMode ? "CLOSE" : "START GAME")
                          : "NEXT")
                         .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .scaleEffect(viewModel.showTutorialNextButton ? pulseScale : 1.0)
                 }
                 .foregroundStyle(viewModel.showTutorialNextButton ? .white : .white.opacity(0.3))
                 .padding(.horizontal, 40)
@@ -146,7 +147,6 @@ struct TutorialOverlayView: View {
                         .stroke(viewModel.showTutorialNextButton ? Color.white.opacity(0.85) : Color.gray.opacity(0.5), lineWidth: 5)
                 )
                 .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
-                .scaleEffect(viewModel.showTutorialNextButton ? pulseScale : 1.0)
             }
             .disabled(!viewModel.showTutorialNextButton)
             .buttonStyle(.plain)
