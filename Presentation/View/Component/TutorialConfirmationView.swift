@@ -23,11 +23,18 @@ struct TutorialConfirmationView: View {
                 }
 
             VStack(spacing: 40) {
+                VStack(spacing: 10) {
+                    Text("REVIEW")
+                        .font(.system(size: 45, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .shadow(color: .white.opacity(0.5), radius: 3)
 
-                Text("TUTORIAL")
-                    .font(.system(size: 45, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .shadow(color: .white.opacity(0.5), radius: 3)
+                    Text("Review and learn the quantum gates.")
+                        .font(.system(size: 30, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
 
                 HStack(spacing: 25) {
                     Button(action: {
@@ -74,7 +81,7 @@ struct TutorialConfirmationView: View {
                                 Capsule().stroke(.white.opacity(0.6), lineWidth: 3)
                             )
                     }
-                    .accessibilityLabel("Start tutorial")
+                    .accessibilityLabel("Start review")
                     .accessibilityHint("Begin tutorial review.")
                 }
                 .padding(.horizontal, 20)
