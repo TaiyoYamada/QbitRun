@@ -27,14 +27,16 @@ struct GameView: View {
     @State private var highlightedGate: QuantumGate?
 
     @State private var showExitConfirmation = false
-    @State private var showInfoModal = false
+
+
 
     @State private var showComboEffect = false
     @State private var comboAnimationTask: Task<Void, Never>?
 
     private var isGameModalPresented: Bool {
-        showExitConfirmation || showInfoModal
+        showExitConfirmation
     }
+
 
     var body: some View {
         GeometryReader { geometry in
@@ -129,14 +131,7 @@ struct GameView: View {
                     .transition(.opacity)
                 }
 
-                if showInfoModal {
-                    ReferenceModalView {
-                        audioManager.playSFX(.cancel)
-                        showInfoModal = false
-                    }
-                    .zIndex(100)
-                    .transition(.opacity)
-                }
+
 
                 if viewModel.isTutorialActive {
                     TutorialOverlayView(
@@ -410,17 +405,7 @@ struct GameView: View {
                 Spacer()
 
                 HStack(spacing: 40) {
-                    Button(action: {
-                        audioManager.playSFX(.button)
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        showInfoModal = true
-                    }) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.system(size: 60, weight: .regular, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
-                    .accessibilityLabel("Gate reference")
-                    .accessibilityHint("Open gate reference modal.")
+
 
                     Button(action: {
                         audioManager.playSFX(.button)
