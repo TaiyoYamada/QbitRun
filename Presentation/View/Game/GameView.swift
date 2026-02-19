@@ -152,15 +152,15 @@ struct GameView: View {
                 }
                 if self.elementFrames != newFrames {
                     self.elementFrames = newFrames
-                    updateSpotlightFrames()
+                    updateSpotlightFrames(animated: false)
                 }
             }
             .onPreferenceChange(SphereBoundsPreferenceKey.self) { anchor in
                 if let anchor = anchor {
                    let newFrame = geometry[anchor]
-                   if self.sphereFrame != newFrame {
+                    if self.sphereFrame != newFrame {
                        self.sphereFrame = newFrame
-                       updateSpotlightFrames()
+                       updateSpotlightFrames(animated: false)
                    }
                 }
             }
@@ -171,7 +171,11 @@ struct GameView: View {
             viewModel.prepareGame(difficulty: difficulty)
 
             if isTutorial {
-                viewModel.startTutorial()
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    viewModel.startTutorial()
+                }
                 showCountdown = false
             } else {
                 startCountdown()
@@ -180,11 +184,11 @@ struct GameView: View {
         .onChange(of: viewModel.isTutorialActive) { _, isActive in
             if isActive {
                 self.highlightedGate = nil
-                updateSpotlightFrames()
+                updateSpotlightFrames(animated: false)
             } else {
                 hasCompletedTutorial = true
                 highlightedGate = nil
-                updateSpotlightFrames()
+                updateSpotlightFrames(animated: false)
 
                 if isReviewMode {
                     dismiss()
@@ -199,7 +203,7 @@ struct GameView: View {
         .onChange(of: viewModel.currentTutorialStep) { _, step in
             if viewModel.isTutorialActive {
                 self.highlightedGate = nil
-                updateSpotlightFrames()
+                updateSpotlightFrames(animated: false)
             }
         }
         .onChange(of: viewModel.tutorialGateEnabled) { _, enabled in
@@ -221,7 +225,7 @@ struct GameView: View {
 
     }
 
-    private func updateSpotlightFrames() {
+    private func updateSpotlightFrames(animated: Bool = true) {
         var frames: [CGRect] = []
 
         if !sphereFrame.isEmpty {
@@ -232,8 +236,16 @@ struct GameView: View {
             frames.append(rect)
         }
 
-        withAnimation {
-            self.tutorialSpotlightFrames = frames
+        if animated {
+            withAnimation {
+                self.tutorialSpotlightFrames = frames
+            }
+        } else {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                self.tutorialSpotlightFrames = frames
+            }
         }
     }
 

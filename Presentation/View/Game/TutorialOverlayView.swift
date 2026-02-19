@@ -153,31 +153,29 @@ struct TutorialOverlayView: View {
             .disabled(!viewModel.showTutorialNextButton)
             .buttonStyle(.plain)
             .padding(.bottom, 50)
-            .task(id: viewModel.showTutorialNextButton) {
-                if viewModel.showTutorialNextButton {
-                    // Slight delay to ensure clean start
-                    try? await Task.sleep(for: .seconds(0.1))
-                    
-                    while !Task.isCancelled {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            animationScale = 1.15
-                        }
-                        try? await Task.sleep(for: .seconds(0.3))
-                        
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            animationScale = 1.0
-                        }
-                        try? await Task.sleep(for: .seconds(0.3))
-                        
-                        // Wait phase
-                        try? await Task.sleep(for: .seconds(1.0))
-                    }
-                } else {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        animationScale = 1.0
-                    }
-                }
-            }
+//            .task(id: viewModel.showTutorialNextButton) {
+//                if viewModel.showTutorialNextButton {
+//                    try? await Task.sleep(for: .seconds(0.1))
+//                    
+//                    while !Task.isCancelled {
+//                        withAnimation(.easeInOut(duration: 0.3)) {
+//                            animationScale = 1.15
+//                        }
+//                        try? await Task.sleep(for: .seconds(0.3))
+//                        
+//                        withAnimation(.easeInOut(duration: 0.3)) {
+//                            animationScale = 1.0
+//                        }
+//                        try? await Task.sleep(for: .seconds(0.3))
+//
+//                        try? await Task.sleep(for: .seconds(1.0))
+//                    }
+//                } else {
+//                    withAnimation(.easeOut(duration: 0.2)) {
+//                        animationScale = 1.0
+//                    }
+//                }
+//            }
         }
     }
 }
