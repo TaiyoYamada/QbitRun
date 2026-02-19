@@ -66,29 +66,46 @@ struct TutorialOverlayView: View {
     let spotlightFrames: [CGRect]
     let audioManager: AudioManager
     let isReviewMode: Bool
+    var onExitTapped: (() -> Void)? = nil
 
     var body: some View {
         VStack {
-            VStack(spacing: 20) {
-                Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
-                    .font(.system(size: 60, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .shadow(color: .cyan, radius: 5)
-                    .padding(.top, 35)
+            ZStack(alignment: .topTrailing) {
+                VStack(spacing: 20) {
+                    Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
+                        .font(.system(size: 60, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .shadow(color: .cyan, radius: 5)
+                        .padding(.top, 35)
 
-                TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
-                    viewModel.tutorialGateEnabled = true
-                    if viewModel.currentTutorialStep.targetGate == nil {
-                        viewModel.showTutorialNextButton = true
+                    TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
+                        viewModel.tutorialGateEnabled = true
+                        if viewModel.currentTutorialStep.targetGate == nil {
+                            viewModel.showTutorialNextButton = true
+                        }
+                    })
+                        .font(.system(size: 23, weight: .bold, design: .rounded).monospacedDigit())
+                        .padding(.horizontal, 15)
+                        .padding(.vertical, 15)
+                        .frame(maxWidth: 750, alignment: .center)
+                }
+                .frame(height: 280, alignment: .top)
+                .frame(maxWidth: .infinity)
+
+                if isReviewMode {
+                    Button(action: {
+                        audioManager.playSFX(.button)
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        onExitTapped?()
+                    }) {
+                        Image(systemName: "door.left.hand.open")
+                            .font(.system(size: 40, weight: .regular, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.8))
                     }
-                })
-                    .font(.system(size: 23, weight: .bold, design: .rounded).monospacedDigit())
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 15)
-                    .frame(maxWidth: 750, alignment: .center)
+                    .padding(.top, 40)
+                    .padding(.trailing, 20)
+                }
             }
-            .frame(height: 280, alignment: .top)
-            .frame(maxWidth: .infinity)
             .background(
                 LinearGradient(
                     colors: [Color.white.opacity(0.4), Color.black.opacity(0.7)],

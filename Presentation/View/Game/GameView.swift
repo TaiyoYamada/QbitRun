@@ -103,8 +103,11 @@ struct GameView: View {
 
                 if showExitConfirmation {
                     ExitConfirmationView(
-                        title: "END GAME？",
-                        message: "Return to the main menu?\nCurrent progress will be lost.",
+                        title: viewModel.isTutorialActive && isReviewMode ? "EXIT REVIEW？" : "END GAME？",
+                        message: viewModel.isTutorialActive && isReviewMode
+                            ? "Return to the main menu?"
+                            : "Return to the main menu?\nCurrent progress will be lost.",
+                        confirmText: viewModel.isTutorialActive && isReviewMode ? "EXIT" : "EXIT GAME",
                         onConfirm: {
                             audioManager.playSFX(.button)
                             dismiss()
@@ -114,7 +117,7 @@ struct GameView: View {
                             showExitConfirmation = false
                         }
                     )
-                    .zIndex(100)
+                    .zIndex(300)
                     .transition(.opacity)
                 }
 
@@ -132,7 +135,10 @@ struct GameView: View {
                         viewModel: viewModel,
                         spotlightFrames: tutorialSpotlightFrames,
                         audioManager: audioManager,
-                        isReviewMode: isReviewMode
+                        isReviewMode: isReviewMode,
+                        onExitTapped: {
+                            showExitConfirmation = true
+                        }
                     )
                     .zIndex(200)
                     .transition(.opacity)

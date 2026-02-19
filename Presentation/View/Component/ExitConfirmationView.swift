@@ -5,6 +5,7 @@ struct ExitConfirmationView: View {
 
     let title: String
     let message: String
+    var confirmText: String = "EXIT GAME"
     let onConfirm: () -> Void
     let onCancel: () -> Void
 
@@ -63,7 +64,7 @@ struct ExitConfirmationView: View {
                         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                         onConfirm()
                     }) {
-                        Text("EXIT GAME")
+                        Text(confirmText)
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                             .padding(.vertical, 15)
