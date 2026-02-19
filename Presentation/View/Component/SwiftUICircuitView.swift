@@ -14,6 +14,7 @@ struct SwiftUICircuitView: View {
             Text("|0⟩")
                 .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
+                .accessibilityLabel("Input state, ket zero")
 
             HStack(spacing: 0) {
                 ForEach(0..<maxSlots, id: \.self) { index in
@@ -60,6 +61,9 @@ struct SwiftUICircuitView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .disabled(gates.isEmpty)
+            .accessibilityLabel("Run circuit")
+            .accessibilityValue(gates.isEmpty ? "Disabled" : "Enabled")
+            .accessibilityHint(gates.isEmpty ? "Add at least one gate before running." : "Execute current circuit.")
         }
         .padding(.horizontal, 25)
         .padding(.vertical, 20)
@@ -74,15 +78,19 @@ struct CircuitSlot: View {
 
     var body: some View {
         if let gate = gate {
-            Text(gate.symbol)
-                .font(.system(size: 25, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 60, height: 60)
-                .background(gate.swiftUIColor)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .onTapGesture {
-                    onRemove()
-                }
+            Button {
+                onRemove()
+            } label: {
+                Text(gate.symbol)
+                    .font(.system(size: 25, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 60, height: 60)
+                    .background(gate.swiftUIColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(gate.circuitAccessibilityName) gate")
+            .accessibilityHint("Double tap to remove this gate from the circuit.")
         } else {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.white.opacity(0.08))
@@ -91,6 +99,20 @@ struct CircuitSlot: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(.white.opacity(0.2), lineWidth: 2)
                 )
+                .accessibilityHidden(true)
+        }
+    }
+}
+
+private extension QuantumGate {
+    var circuitAccessibilityName: String {
+        switch self {
+        case .x: return "X"
+        case .y: return "Y"
+        case .z: return "Z"
+        case .h: return "H"
+        case .s: return "S"
+        case .t: return "T"
         }
     }
 }

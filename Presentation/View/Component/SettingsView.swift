@@ -10,6 +10,7 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea()
+                .accessibilityHidden(true)
                 .onTapGesture {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         animateIn = false
@@ -63,6 +64,8 @@ struct SettingsView: View {
                         )
                 }
                 .padding(.top, 10)
+                .accessibilityLabel("Close settings")
+                .accessibilityHint("Return to the main menu.")
             }
             .padding(50)
             .frame(width: 450)
@@ -81,6 +84,8 @@ struct SettingsView: View {
             )
             .scaleEffect(animateIn ? 1.0 : 0.8)
             .opacity(animateIn ? 1.0 : 0.0)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Audio settings")
         }
         .onAppear {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -111,6 +116,9 @@ struct VolumeSlider: View {
             }
             Slider(value: $value, in: 0...1)
                 .tint(.cyan)
+                .accessibilityLabel("\(label) volume")
+                .accessibilityValue("\(Int(value * 100)) percent")
+                .accessibilityHint("Swipe up or down with one finger to adjust.")
         }
     }
 }

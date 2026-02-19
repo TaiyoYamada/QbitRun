@@ -12,12 +12,18 @@ struct MainMenuView: View {
     @State private var showSettings = false
     @State private var isNavigating = false
 
+    private var isMenuModalPresented: Bool {
+        showSettings || showTutorialConfirmation
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 settingsLayer
+                    .accessibilityHidden(isMenuModalPresented)
 
                 PositionedBlochSphere(geometry: geometry)
+                    .accessibilityHidden(true)
 
                 HStack {
                     VStack(alignment: .leading, spacing: 100) {
@@ -34,6 +40,7 @@ struct MainMenuView: View {
                     .padding(.leading, geometry.size.width * 0.05)
                     Spacer()
                 }
+                .accessibilityHidden(isMenuModalPresented)
 
                 VStack {
                     HStack(spacing: 20) {
@@ -52,6 +59,8 @@ struct MainMenuView: View {
                                     .foregroundStyle(.white.opacity(0.8))
                             }
                             .padding(.top, 40)
+                            .accessibilityLabel("Tutorial review")
+                            .accessibilityHint("Open tutorial review confirmation.")
                         }
 
                         Button(action: {
@@ -67,9 +76,12 @@ struct MainMenuView: View {
                         }
                         .padding(.top, 40)
                         .padding(.trailing, 40)
+                        .accessibilityLabel("Settings")
+                        .accessibilityHint("Open audio settings.")
                     }
                     Spacer()
                 }
+                .accessibilityHidden(isMenuModalPresented)
 
                 if showSettings {
                     SettingsView(
@@ -182,6 +194,9 @@ struct MainMenuView: View {
                 .tracking(10)
                 .foregroundStyle(.white.opacity(0.9))
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Qbit Run")
+        .accessibilityAddTraits(.isHeader)
     }
 
     private var menuButtons: some View {

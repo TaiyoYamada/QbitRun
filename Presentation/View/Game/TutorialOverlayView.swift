@@ -1,5 +1,6 @@
 import SwiftUI
 import simd
+import UIKit
 
 extension Notification.Name {
     static let tutorialGateTapped = Notification.Name("tutorialGateTapped")
@@ -24,6 +25,8 @@ struct TypewriterText: View {
             .lineSpacing(2)
             .foregroundStyle(.white)
             .shadow(color: .cyan.opacity(0.8), radius: 2)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(plainText.voiceOverFriendlyTutorialText)
             .onChange(of: plainText) { _, _ in
                 startTyping()
             }
@@ -80,6 +83,7 @@ struct TutorialOverlayView: View {
                         .shadow(color: .cyan, radius: 5)
                         .padding(.top, 35)
                         .transaction { $0.animation = nil }
+                        .accessibilitySortPriority(3)
 
                     TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
                         viewModel.tutorialGateEnabled = true
@@ -91,9 +95,13 @@ struct TutorialOverlayView: View {
                         .padding(.horizontal, 15)
                         .padding(.vertical, 15)
                         .frame(maxWidth: 750, alignment: .center)
+                        .accessibilitySortPriority(2)
                 }
                 .frame(height: 280, alignment: .top)
                 .frame(maxWidth: .infinity)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Tutorial")
+                .accessibilityHint("Read the current explanation, then continue.")
 
                 if isReviewMode {
                     Button(action: {
@@ -107,6 +115,9 @@ struct TutorialOverlayView: View {
                     }
                     .padding(.top, 40)
                     .padding(.trailing, 20)
+                    .accessibilityLabel("Exit review")
+                    .accessibilityHint("Return to the main menu.")
+                    .accessibilitySortPriority(1)
                 }
             }
             .background(
@@ -153,6 +164,9 @@ struct TutorialOverlayView: View {
             .disabled(!viewModel.showTutorialNextButton)
             .buttonStyle(.plain)
             .padding(.bottom, 50)
+            .accessibilityLabel(nextButtonAccessibilityLabel)
+            .accessibilityHint(nextButtonAccessibilityHint)
+            .accessibilitySortPriority(4)
 //            .task(id: viewModel.showTutorialNextButton) {
 //                if viewModel.showTutorialNextButton {
 //                    try? await Task.sleep(for: .seconds(0.1))
@@ -177,5 +191,66 @@ struct TutorialOverlayView: View {
 //                }
 //            }
         }
+        .onAppear {
+            announceCurrentStepForVoiceOver()
+        }
+        .onChange(of: viewModel.currentTutorialStep) { _, _ in
+            announceCurrentStepForVoiceOver()
+        }
+    }
+
+    private var nextButtonAccessibilityLabel: String {
+        if viewModel.currentTutorialStep == .finish {
+            return isReviewMode ? "Close review" : "Start game"
+        }
+        return "Next tutorial step"
+    }
+
+    private var nextButtonAccessibilityHint: String {
+        if !viewModel.showTutorialNextButton {
+            if let gate = viewModel.currentTutorialStep.targetGate {
+                return "Apply the \(gate.voiceOverName) gate to continue."
+            }
+            return "Wait for the tutorial text to finish."
+        }
+        return viewModel.currentTutorialStep == .finish
+            ? (isReviewMode ? "Close this review tutorial." : "Finish tutorial and begin the game.")
+            : "Move to the next explanation."
+    }
+
+    private func announceCurrentStepForVoiceOver() {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+
+        let title = viewModel.currentTutorialStep.title(isReviewMode: isReviewMode)
+        let instruction = viewModel.currentTutorialStep
+            .instruction(isReviewMode: isReviewMode)
+            .voiceOverFriendlyTutorialText
+        UIAccessibility.post(notification: .screenChanged, argument: "\(title). \(instruction)")
+    }
+}
+
+private extension QuantumGate {
+    var voiceOverName: String {
+        switch self {
+        case .x: return "X"
+        case .y: return "Y"
+        case .z: return "Z"
+        case .h: return "H"
+        case .s: return "S"
+        case .t: return "T"
+        }
+    }
+}
+
+private extension String {
+    var voiceOverFriendlyTutorialText: String {
+        self
+            .replacingOccurrences(of: "|0⟩", with: "ket zero")
+            .replacingOccurrences(of: "|1⟩", with: "ket one")
+            .replacingOccurrences(of: "|+⟩", with: "ket plus")
+            .replacingOccurrences(of: "|−⟩", with: "ket minus")
+            .replacingOccurrences(of: "|+i⟩", with: "ket plus i")
+            .replacingOccurrences(of: "|−i⟩", with: "ket minus i")
+            .replacingOccurrences(of: "↔", with: "to")
     }
 }

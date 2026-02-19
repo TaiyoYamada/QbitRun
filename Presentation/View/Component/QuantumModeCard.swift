@@ -79,6 +79,9 @@ struct QuantumModeCard: View {
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(title)
+        .accessibilityValue(subtitle)
+        .accessibilityHint("Double tap to start this mode.")
         .onHover { hovering in
             isHovered = hovering
         }

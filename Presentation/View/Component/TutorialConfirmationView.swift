@@ -12,6 +12,7 @@ struct TutorialConfirmationView: View {
         ZStack {
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
+                .accessibilityHidden(true)
                 .onTapGesture {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         animateIn = false
@@ -49,6 +50,8 @@ struct TutorialConfirmationView: View {
                                 Capsule().stroke(.white.opacity(0.3), lineWidth: 3)
                             )
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Close without starting tutorial.")
 
                     Button(action: {
                         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
@@ -71,6 +74,8 @@ struct TutorialConfirmationView: View {
                                 Capsule().stroke(.white.opacity(0.6), lineWidth: 3)
                             )
                     }
+                    .accessibilityLabel("Start tutorial")
+                    .accessibilityHint("Begin tutorial review.")
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 10)
@@ -92,6 +97,8 @@ struct TutorialConfirmationView: View {
             .frame(maxWidth: 520)
             .scaleEffect(animateIn ? 1.0 : 0.8)
             .opacity(animateIn ? 1.0 : 0.0)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Tutorial confirmation")
         }
         .onAppear {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {

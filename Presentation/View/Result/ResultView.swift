@@ -1,5 +1,6 @@
 
 import SwiftUI
+import UIKit
 
 struct ResultView: View {
 
@@ -36,6 +37,7 @@ struct ResultView: View {
                             .tracking(4)
                             .foregroundStyle(.white.opacity(0.8))
                             .shadow(color: .cyan.opacity(0.5), radius: 10)
+                            .accessibilityAddTraits(.isHeader)
 
                         VStack(spacing: 20) {
                             Text("TOTAL SCORE")
@@ -50,6 +52,8 @@ struct ResultView: View {
                                 .contentTransition(.numericText())
                                 .scaleEffect(showContent ? 1.0 : 0.8)
                                 .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: showContent)
+                                .accessibilityLabel("Total score")
+                                .accessibilityValue("\(scoreCount)")
 
                             Divider()
                                 .background(Color.white.opacity(0.1))
@@ -110,6 +114,8 @@ struct ResultView: View {
                                 .shadow(color: .cyan.opacity(0.5), radius: 10)
                         }
                         .padding(.horizontal, 40)
+                        .accessibilityLabel("Return to menu")
+                        .accessibilityHint("Go back to main menu.")
                     }
                     .buttonStyle(ScaleButtonStyle())
                     .frame(maxWidth: 500)
@@ -124,6 +130,9 @@ struct ResultView: View {
             .task {
                 audioManager.playBGM(.result)
                 await viewModel.loadResults()
+                if UIAccessibility.isVoiceOverRunning {
+                    UIAccessibility.post(notification: .screenChanged, argument: "Mission complete. Total score \(viewModel.score.score).")
+                }
 
                 withAnimation {
                     showContent = true

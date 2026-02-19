@@ -11,6 +11,7 @@ struct ReferenceModalView: View {
         ZStack {
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
+                .accessibilityHidden(true)
                 .onTapGesture {
                     dismissModal()
                 }
@@ -49,6 +50,8 @@ struct ReferenceModalView: View {
                 }
                 .padding(.horizontal, 30)
                 .padding(.bottom, 25)
+                .accessibilityLabel("Close reference")
+                .accessibilityHint("Return to the game.")
             }
             .background(.thinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 30))
@@ -60,6 +63,8 @@ struct ReferenceModalView: View {
             .scaleEffect(animateIn ? 1.0 : 0.8)
             .opacity(animateIn ? 1.0 : 0.0)
             .padding(20)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Gate reference")
         }
         .onAppear {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -109,6 +114,9 @@ struct ReferenceModalView: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(.white.opacity(0.1), lineWidth: 1)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name). \(description.voiceOverFriendlyReferenceText)")
+        .accessibilityHint("Reference information.")
     }
 }
 
@@ -117,5 +125,15 @@ struct ReferenceModalView: View {
         Color.blue.opacity(0.3).ignoresSafeArea()
 
         ReferenceModalView(onDismiss: {})
+    }
+}
+
+private extension String {
+    var voiceOverFriendlyReferenceText: String {
+        self
+            .replacingOccurrences(of: "|0⟩", with: "ket zero")
+            .replacingOccurrences(of: "|1⟩", with: "ket one")
+            .replacingOccurrences(of: "|+⟩", with: "ket plus")
+            .replacingOccurrences(of: "↔", with: "to")
     }
 }

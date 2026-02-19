@@ -32,6 +32,10 @@ struct GameView: View {
     @State private var showComboEffect = false
     @State private var comboAnimationTask: Task<Void, Never>?
 
+    private var isGameModalPresented: Bool {
+        showExitConfirmation || showInfoModal
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -71,14 +75,17 @@ struct GameView: View {
                     }
                     .padding(.top, 20)
                 }
+                .accessibilityHidden(isGameModalPresented)
 
                 EffectOverlayView(
                     showSuccess: $showSuccessEffect,
                     showFailure: $showFailureEffect
                 )
+                .accessibilityHidden(isGameModalPresented)
 
                 if showCountdown {
                     Color.black.opacity(0.3).ignoresSafeArea()
+                        .accessibilityHidden(isGameModalPresented)
 
                     Text(countdownValue > 0 ? "\(countdownValue)" : "START！")
                         .tracking(2)
@@ -99,6 +106,7 @@ struct GameView: View {
                         .shadow(color: .white.opacity(0.5), radius: 30)
                         .scaleEffect(countdownScale)
                         .opacity(countdownOpacity)
+                        .accessibilityHidden(isGameModalPresented)
                 }
 
                 if showExitConfirmation {
@@ -142,6 +150,7 @@ struct GameView: View {
                     )
                     .zIndex(200)
                     .transition(.opacity)
+                    .accessibilityHidden(isGameModalPresented)
 
                 }
             }
@@ -410,6 +419,8 @@ struct GameView: View {
                             .font(.system(size: 60, weight: .regular, design: .rounded))
                             .foregroundStyle(.white.opacity(0.8))
                     }
+                    .accessibilityLabel("Gate reference")
+                    .accessibilityHint("Open gate reference modal.")
 
                     Button(action: {
                         audioManager.playSFX(.button)
@@ -420,6 +431,8 @@ struct GameView: View {
                             .font(.system(size: 60, weight: .regular, design: .rounded))
                             .foregroundStyle(.white.opacity(0.8))
                     }
+                    .accessibilityLabel("Exit game")
+                    .accessibilityHint("Open exit confirmation.")
                 }
             }
         }
@@ -512,6 +525,8 @@ struct GameView: View {
                                 .stroke(Color.purple.opacity(0.6), lineWidth: 5)
                         )
                 }
+                .accessibilityLabel("Clear circuit")
+                .accessibilityHint("Remove all gates from the current circuit.")
 
                 Spacer()
             }

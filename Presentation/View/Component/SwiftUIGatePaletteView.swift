@@ -58,6 +58,9 @@ struct SwiftUIGatePaletteView: View {
                 .disabled(allDisabled || (highlightedGate != nil && highlightedGate != gate))
                 .animation(.spring(response: 0.4, dampingFraction: 0.6), value: bouncePhase)
                 .animation(.spring(response: 0.4, dampingFraction: 0.7), value: allDisabled)
+                .accessibilityLabel("\(gate.accessibilityName) gate")
+                .accessibilityHint(gateAccessibilityHint(for: gate))
+                .accessibilityValue(gateAccessibilityValue(for: gate))
                 .anchorPreference(key: BoundsPreferenceKey.self, value: .bounds) { anchor in
                     [gate: anchor]
                 }
@@ -111,6 +114,26 @@ struct SwiftUIGatePaletteView: View {
     private func stopBounceLoop() {
         bouncePhase = 0
     }
+
+    private func gateAccessibilityHint(for gate: QuantumGate) -> String {
+        if allDisabled {
+            return "This step does not require gate input."
+        }
+        if let highlightedGate, highlightedGate != gate {
+            return "Not available now. Use the \(highlightedGate.accessibilityName) gate."
+        }
+        return "Double tap to apply this gate."
+    }
+
+    private func gateAccessibilityValue(for gate: QuantumGate) -> String {
+        if allDisabled {
+            return "Disabled"
+        }
+        if let highlightedGate, highlightedGate != gate {
+            return "Disabled"
+        }
+        return "Enabled"
+    }
 }
 
 struct GateButtonStyle: ButtonStyle {
@@ -127,5 +150,18 @@ struct BoundsPreferenceKey: PreferenceKey {
 
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value.merge(nextValue()) { $1 }
+    }
+}
+
+private extension QuantumGate {
+    var accessibilityName: String {
+        switch self {
+        case .x: return "X"
+        case .y: return "Y"
+        case .z: return "Z"
+        case .h: return "H"
+        case .s: return "S"
+        case .t: return "T"
+        }
     }
 }
