@@ -67,6 +67,7 @@ struct TutorialOverlayView: View {
     let audioManager: AudioManager
     let isReviewMode: Bool
     var onExitTapped: (() -> Void)? = nil
+    @State private var pulseScale: CGFloat = 1.0
 
     var body: some View {
         VStack {
@@ -145,10 +146,22 @@ struct TutorialOverlayView: View {
                         .stroke(viewModel.showTutorialNextButton ? Color.white.opacity(0.85) : Color.gray.opacity(0.5), lineWidth: 5)
                 )
                 .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
+                .scaleEffect(viewModel.showTutorialNextButton ? pulseScale : 1.0)
             }
             .disabled(!viewModel.showTutorialNextButton)
             .buttonStyle(.plain)
             .padding(.bottom, 50)
+            .onChange(of: viewModel.showTutorialNextButton) { _, enabled in
+                if enabled {
+                    withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                        pulseScale = 1.07
+                    }
+                } else {
+                    withAnimation(.none) {
+                        pulseScale = 1.0
+                    }
+                }
+            }
         }
     }
 }
