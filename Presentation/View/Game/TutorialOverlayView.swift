@@ -122,7 +122,7 @@ struct TutorialOverlayView: View {
             }
             .background(
                 LinearGradient(
-                    colors: [Color.white.opacity(0.3), Color.black.opacity(0.6)],
+                    colors: [Color.white.opacity(0.3), Color.black.opacity(0.5)],
                     startPoint: .top,
                     endPoint: .bottom
                 )

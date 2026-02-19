@@ -57,7 +57,7 @@ struct SwiftUIGatePaletteView: View {
                 .grayscale(allDisabled ? 1.0 : (highlightedGate == nil || highlightedGate == gate ? 0.0 : 1.0))
                 .disabled(allDisabled || (highlightedGate != nil && highlightedGate != gate))
                 .animation(.spring(response: 0.4, dampingFraction: 0.6), value: bouncePhase)
-                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: allDisabled)
+                .animation(nil, value: allDisabled)
                 .accessibilityLabel("\(gate.accessibilityName) gate")
                 .accessibilityHint(gateAccessibilityHint(for: gate))
                 .accessibilityValue(gateAccessibilityValue(for: gate))
