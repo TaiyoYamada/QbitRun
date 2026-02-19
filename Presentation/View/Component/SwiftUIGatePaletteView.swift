@@ -45,9 +45,9 @@ struct SwiftUIGatePaletteView: View {
                                 )
                             }
                         )
-                        .clipShape(Circle())
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
-                            Circle()
+                            RoundedRectangle(cornerRadius: 12)
                                 .stroke(.white.opacity(0.7), lineWidth: 1)
                         )
                 }
