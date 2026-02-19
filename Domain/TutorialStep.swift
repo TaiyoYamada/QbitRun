@@ -144,6 +144,8 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
             var searchRange = result.startIndex..<result.endIndex
             while let range = result[searchRange].range(of: pattern) {
                 result[range].foregroundColor = color
+                result[range].inlinePresentationIntent = .stronglyEmphasized
+                result[range].font = .system(size: 25, weight: .bold, design: .monospaced)
                 if range.upperBound < result.endIndex {
                     searchRange = range.upperBound..<result.endIndex
                 } else {
