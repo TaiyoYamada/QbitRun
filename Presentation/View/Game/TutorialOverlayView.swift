@@ -67,7 +67,8 @@ struct TutorialOverlayView: View {
     let audioManager: AudioManager
     let isReviewMode: Bool
     var onExitTapped: (() -> Void)? = nil
-    @State private var pulseScale: CGFloat = 1.0
+
+    @State private var animationScale: CGFloat = 1.0
 
     var body: some View {
         VStack {
@@ -78,6 +79,7 @@ struct TutorialOverlayView: View {
                         .foregroundStyle(.white)
                         .shadow(color: .cyan, radius: 5)
                         .padding(.top, 35)
+                        .transaction { $0.animation = nil }
 
                     TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
                         viewModel.tutorialGateEnabled = true
@@ -126,7 +128,6 @@ struct TutorialOverlayView: View {
                          ? (isReviewMode ? "CLOSE" : "START GAME")
                          : "NEXT")
                         .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .scaleEffect(viewModel.showTutorialNextButton ? pulseScale : 1.0)
                 }
                 .foregroundStyle(viewModel.showTutorialNextButton ? .white : .white.opacity(0.3))
                 .padding(.horizontal, 40)
@@ -146,19 +147,34 @@ struct TutorialOverlayView: View {
                     RoundedRectangle(cornerRadius: 50)
                         .stroke(viewModel.showTutorialNextButton ? Color.white.opacity(0.85) : Color.gray.opacity(0.5), lineWidth: 5)
                 )
+                .scaleEffect(animationScale)
                 .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
             }
             .disabled(!viewModel.showTutorialNextButton)
             .buttonStyle(.plain)
             .padding(.bottom, 50)
-            .onChange(of: viewModel.showTutorialNextButton) { _, enabled in
-                if enabled {
-                    withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                        pulseScale = 1.07
+            .task(id: viewModel.showTutorialNextButton) {
+                if viewModel.showTutorialNextButton {
+                    // Slight delay to ensure clean start
+                    try? await Task.sleep(for: .seconds(0.1))
+                    
+                    while !Task.isCancelled {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            animationScale = 1.15
+                        }
+                        try? await Task.sleep(for: .seconds(0.3))
+                        
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            animationScale = 1.0
+                        }
+                        try? await Task.sleep(for: .seconds(0.3))
+                        
+                        // Wait phase
+                        try? await Task.sleep(for: .seconds(1.0))
                     }
                 } else {
-                    withAnimation(.none) {
-                        pulseScale = 1.0
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        animationScale = 1.0
                     }
                 }
             }
