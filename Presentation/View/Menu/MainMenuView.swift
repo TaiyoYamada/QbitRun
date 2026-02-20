@@ -127,30 +127,30 @@ struct MainMenuView: View {
 
             QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
                 .ignoresSafeArea()
-                .opacity(0.4)
+                .opacity(0.5)
 
-            VStack {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.cyan.opacity(0.18), .clear],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .frame(height: 200)
-
-                Spacer()
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.cyan.opacity(0.18), .clear],
-                            startPoint: .bottom,
-                            endPoint: .top
-                        )
-                    )
-                    .frame(height: 200)
-            }
+//            VStack {
+//                Rectangle()
+//                    .fill(
+//                        LinearGradient(
+//                            colors: [.cyan.opacity(0.18), .clear],
+//                            startPoint: .top,
+//                            endPoint: .bottom
+//                        )
+//                    )
+//                    .frame(height: 200)
+//
+//                Spacer()
+//                Rectangle()
+//                    .fill(
+//                        LinearGradient(
+//                            colors: [.cyan.opacity(0.18), .clear],
+//                            startPoint: .bottom,
+//                            endPoint: .top
+//                        )
+//                    )
+//                    .frame(height: 200)
+//            }
             .ignoresSafeArea()
         }
     }
@@ -172,7 +172,7 @@ struct MainMenuView: View {
             x: geometry.size.width * 0.7,
             y: geometry.size.height * 0.5
         )
-        .opacity(0.8)
+        .opacity(0.85)
     }
 
     private var headerView: some View {
@@ -190,7 +190,7 @@ struct MainMenuView: View {
     }
 
     private var menuButtons: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 30) {
             QuantumModeCard(
                 title: "EASY MODE",
                 subtitle: "Start from |0⟩",
@@ -327,9 +327,9 @@ struct GlitchCharacterText: View {
     private var baseText: some View {
         ZStack {
             Text(character)
-                .font(.system(size: 195, weight: .bold, design: .rounded))
+                .font(.system(size: 200, weight: .bold, design: .rounded))
                 .tracking(10)
-                .foregroundStyle(.black)
+                .foregroundStyle(.white)
 
             Text(character)
                 .font(.system(size: 190, weight: .bold, design: .rounded))

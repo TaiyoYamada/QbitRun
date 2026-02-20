@@ -65,7 +65,7 @@ struct QuantumModeCard: View {
                 ZStack {
                     Color.black.opacity(0.9)
 
-                    RoundedRectangle(cornerRadius: 18)
+                    RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(
                             accentColor.opacity(0.7),
                             lineWidth: 3
