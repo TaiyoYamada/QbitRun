@@ -99,7 +99,11 @@ struct GameView: View {
                             ? AnyShapeStyle(.white)
                             : AnyShapeStyle(
                                 LinearGradient(
-                                    colors: [.white, .cyan, .purple],
+                                    colors: [
+                                        Color(red: 0.65, green: 0.95, blue: 1.0),
+                                        Color(red: 0.35, green: 0.50, blue: 0.95),
+                                        Color(red: 0.45, green: 0.20, blue: 0.70)
+                                    ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -359,8 +363,10 @@ struct GameView: View {
                                 Color(red: 1.0, green: 0.2, blue: 0.2),
                                 Color(red: 0.8, green: 0.0, blue: 0.0)
                             ] : [
-                                Color(.purple),
-                                Color(.cyan)
+                                Color(red: 0.65, green: 0.95, blue: 1.0),
+                                Color(red: 0.35, green: 0.50, blue: 0.95),
+                                Color(red: 0.45, green: 0.20, blue: 0.70)
+
                             ]),
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -392,14 +398,14 @@ struct GameView: View {
                     .padding(.vertical, 5)
                     .background(
                         ZStack {
-                            Color.cyan
-                            Color.black.opacity(0.85)
+                            Color.clear
+                            Color.black.opacity(0.2)
                         }
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 60))
                     .overlay(
                         RoundedRectangle(cornerRadius: 60)
-                            .stroke(Color.white.opacity(0.7), lineWidth: 5)
+                            .stroke(Color(red: 0.35, green: 0.50, blue: 0.95).opacity(0.9), lineWidth: 5)
                     )
                     .padding(.leading, 30)
 
@@ -498,14 +504,14 @@ struct GameView: View {
                 }) {
                     Text("CLEAR")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.75))
+                        .foregroundStyle(.white.opacity(0.8))
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
                         .background(.ultraThinMaterial)
                         .clipShape(Capsule())
                         .overlay(
                             Capsule()
-                                .stroke(Color.purple.opacity(0.6), lineWidth: 5)
+                                .stroke(Color(red: 0.35, green: 0.50, blue: 0.95).opacity(0.6), lineWidth: 5)
                         )
                 }
                 .accessibilityLabel("Clear circuit")

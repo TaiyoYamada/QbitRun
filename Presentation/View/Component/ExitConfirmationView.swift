@@ -74,7 +74,11 @@ struct ExitConfirmationView: View {
                             .frame(maxWidth: .infinity)
                             .background(
                                 LinearGradient(
-                                    colors: [Color.purple.opacity(0.8), Color.cyan.opacity(0.8)],
+                                    colors: [
+                                        Color.cyan.opacity(0.9),
+                                        Color(red: 0.24, green: 0.36, blue: 0.82),
+                                        Color(red: 0.25, green: 0.08, blue: 0.48)
+                                    ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -97,7 +101,11 @@ struct ExitConfirmationView: View {
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(
                         LinearGradient(
-                            colors: [.cyan.opacity(0.5), .purple.opacity(0.5)],
+                            colors: [
+                                Color.cyan.opacity(0.9),
+                                Color(red: 0.24, green: 0.36, blue: 0.82),
+                                Color(red: 0.25, green: 0.08, blue: 0.48)
+                            ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
