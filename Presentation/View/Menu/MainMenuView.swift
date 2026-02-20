@@ -138,7 +138,7 @@ struct MainMenuView: View {
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 300)
+                    .frame(height: 200)
 
                 Spacer()
                 Rectangle()
@@ -149,7 +149,7 @@ struct MainMenuView: View {
                             endPoint: .top
                         )
                     )
-                    .frame(height: 300)
+                    .frame(height: 200)
             }
             .ignoresSafeArea()
         }

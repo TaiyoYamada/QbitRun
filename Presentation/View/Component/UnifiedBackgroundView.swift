@@ -20,7 +20,7 @@ struct UnifiedBackgroundView: View {
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 300)
+                    .frame(height: 200)
                     .allowsHitTesting(false)
 
                 Spacer()
@@ -33,7 +33,7 @@ struct UnifiedBackgroundView: View {
                             endPoint: .top
                         )
                     )
-                    .frame(height: 300)
+                    .frame(height: 200)
                     .allowsHitTesting(false)
             }
             .ignoresSafeArea()
