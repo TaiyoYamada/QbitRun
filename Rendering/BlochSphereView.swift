@@ -350,10 +350,10 @@ public final class BlochSphereView: UIView {
 
     private func createAxisLabelNode(text: String, color: UIColor) -> SCNNode {
         let textGeometry = SCNText(string: text, extrusionDepth: 0.0)
-        if let descriptor = UIFont.systemFont(ofSize: 10, weight: .bold).fontDescriptor.withDesign(.rounded) {
-             textGeometry.font = UIFont(descriptor: descriptor, size: 10)
+        if let descriptor = UIFont.systemFont(ofSize: 11, weight: .bold).fontDescriptor.withDesign(.rounded) {
+             textGeometry.font = UIFont(descriptor: descriptor, size: 11)
         } else {
-             textGeometry.font = UIFont.systemFont(ofSize: 10, weight: .bold)
+             textGeometry.font = UIFont.systemFont(ofSize: 11, weight: .bold)
         }
         textGeometry.flatness = 0.1
 
