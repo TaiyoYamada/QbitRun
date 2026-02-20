@@ -95,14 +95,25 @@ final class GameViewModel {
             setTutorialVector(currentTutorialStep.initialVector)
             tutorialGateEnabled = false
             showTutorialNextButton = false
+            updateFurthestReachedTutorialIndex()
         }
     }
     var isTutorialActive: Bool = false
     var showTutorialNextButton: Bool = true
     var tutorialGateEnabled: Bool = false
+    private var furthestReachedTutorialIndex: Int = 0
+
+    var canGoToPreviousTutorialStep: Bool {
+        tutorialStepIndex(currentTutorialStep) > 0
+    }
+
+    var canGoToNextReachedTutorialStep: Bool {
+        tutorialStepIndex(currentTutorialStep) < furthestReachedTutorialIndex
+    }
 
     func startTutorial() {
         isTutorialActive = true
+        furthestReachedTutorialIndex = 0
         currentTutorialStep = .intro1
         setTutorialVector(.zero)
         showTutorialNextButton = false
@@ -110,7 +121,7 @@ final class GameViewModel {
     }
 
     func advanceTutorialStep() {
-        guard let currentIndex = TutorialStep.allCases.firstIndex(of: currentTutorialStep) else { return }
+        let currentIndex = tutorialStepIndex(currentTutorialStep)
         let nextIndex = currentIndex + 1
 
         if nextIndex < TutorialStep.allCases.count {
@@ -119,6 +130,28 @@ final class GameViewModel {
             }
         } else {
             endTutorial()
+        }
+    }
+
+    func goToPreviousTutorialStep() {
+        let currentIndex = tutorialStepIndex(currentTutorialStep)
+        let previousIndex = currentIndex - 1
+        guard previousIndex >= 0 else { return }
+
+        withAnimation {
+            currentTutorialStep = TutorialStep.allCases[previousIndex]
+        }
+    }
+
+    func goToNextReachedTutorialStep() {
+        let currentIndex = tutorialStepIndex(currentTutorialStep)
+        let nextIndex = currentIndex + 1
+
+        guard nextIndex <= furthestReachedTutorialIndex,
+              nextIndex < TutorialStep.allCases.count else { return }
+
+        withAnimation {
+            currentTutorialStep = TutorialStep.allCases[nextIndex]
         }
     }
 
@@ -205,5 +238,16 @@ final class GameViewModel {
     private func rotate(vector: simd_double3, axis: simd_double3, angle: Double) -> simd_double3 {
         let rotationWrapper = simd_quatd(angle: angle, axis: axis)
         return rotationWrapper.act(vector)
+    }
+
+    private func tutorialStepIndex(_ step: TutorialStep) -> Int {
+        TutorialStep.allCases.firstIndex(of: step) ?? 0
+    }
+
+    private func updateFurthestReachedTutorialIndex() {
+        let currentIndex = tutorialStepIndex(currentTutorialStep)
+        if currentIndex > furthestReachedTutorialIndex {
+            furthestReachedTutorialIndex = currentIndex
+        }
     }
 }

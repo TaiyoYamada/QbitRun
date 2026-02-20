@@ -77,13 +77,39 @@ struct TutorialOverlayView: View {
         VStack {
             ZStack(alignment: .topTrailing) {
                 VStack(spacing: 20) {
-                    Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
-                        .font(.system(size: 60, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .shadow(color: .cyan, radius: 5)
-                        .padding(.top, 35)
-                        .transaction { $0.animation = nil }
-                        .accessibilitySortPriority(3)
+                    HStack(alignment: .center, spacing: 5) {
+                        tutorialNavigationButton(
+                            systemName: "chevron.left",
+                            isEnabled: viewModel.canGoToPreviousTutorialStep,
+                            accessibilityLabel: "Previous tutorial step",
+                            accessibilityHint: "Move back to the previous tutorial explanation."
+                        ) {
+                            viewModel.goToPreviousTutorialStep()
+                        }
+
+                        Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
+                            .font(.system(size: 60, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .shadow(color: .cyan, radius: 5)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.55)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 450)
+                            .transaction { $0.animation = nil }
+                            .accessibilitySortPriority(3)
+
+                        tutorialNavigationButton(
+                            systemName: "chevron.right",
+                            isEnabled: viewModel.canGoToNextReachedTutorialStep,
+                            accessibilityLabel: "Next reached tutorial step",
+                            accessibilityHint: "Move forward to a tutorial step you've already reached."
+                        ) {
+                            viewModel.goToNextReachedTutorialStep()
+                        }
+                    }
+                    .frame(maxWidth: 760)
+                    .padding(.top, 30)
+                    .padding(.horizontal, 10)
 
                     TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
                         viewModel.tutorialGateEnabled = true
@@ -226,6 +252,31 @@ struct TutorialOverlayView: View {
             .instruction(isReviewMode: isReviewMode)
             .voiceOverFriendlyTutorialText
         UIAccessibility.post(notification: .screenChanged, argument: "\(title). \(instruction)")
+    }
+
+    private func tutorialNavigationButton(
+        systemName: String,
+        isEnabled: Bool,
+        accessibilityLabel: String,
+        accessibilityHint: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: {
+            audioManager.playSFX(.button)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        }) {
+            Image(systemName: systemName)
+                .font(.system(size: 37, weight: .bold, design: .rounded))
+                .foregroundStyle(isEnabled ? .white : .white.opacity(0.35))
+                .shadow(color: isEnabled ? .cyan : .clear,
+                        radius: isEnabled ? 5 : 0)
+                .frame(width: 68, height: 68)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityHint(accessibilityHint)
     }
 }
 
