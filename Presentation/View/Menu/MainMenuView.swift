@@ -177,17 +177,7 @@ struct MainMenuView: View {
 
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Qbit")
-                .font(.system(size: 190, weight: .bold, design: .rounded))
-                .tracking(10)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.white.opacity(0.95), .cyan.opacity(0.95), .purple.opacity(0.95)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .shadow(color: .cyan.opacity(0.5), radius: 35)
+            GlitchQbitText()
 
             Text("Run")
                 .font(.system(size: 135, weight: .light, design: .rounded))
@@ -294,6 +284,105 @@ struct MainMenuView: View {
         }
     }
 
+}
+
+struct GlitchQbitText: View {
+    var body: some View {
+        HStack(spacing: 0) {
+            GlitchCharacterText(character: "Q")
+            GlitchCharacterText(character: "b")
+            GlitchCharacterText(character: "i")
+            GlitchCharacterText(character: "t")
+        }
+        .shadow(color: .cyan.opacity(0.5), radius: 5)
+    }
+}
+
+struct GlitchCharacterText: View {
+    let character: String
+    let sliceCount = 15
+
+    @State private var offsets: [CGFloat] = Array(repeating: 0, count: 15)
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<sliceCount, id: \.self) { index in
+                baseText
+                    .mask(
+                        GeometryReader { proxy in
+                            let sliceHeight = proxy.size.height / CGFloat(sliceCount)
+                            Rectangle()
+                                .frame(width: proxy.size.width, height: sliceHeight)
+                                .offset(y: sliceHeight * CGFloat(index))
+                        }
+                    )
+                    .offset(x: offsets[index])
+            }
+        }
+        .task {
+            await glitchLoop()
+        }
+    }
+
+    private var baseText: some View {
+        ZStack {
+            Text(character)
+                .font(.system(size: 195, weight: .bold, design: .rounded))
+                .tracking(10)
+                .foregroundStyle(.black)
+
+            Text(character)
+                .font(.system(size: 190, weight: .bold, design: .rounded))
+                .tracking(10)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.white.opacity(0.95), .cyan.opacity(0.95), .purple.opacity(0.95)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
+    }
+
+    @MainActor
+    private func glitchLoop() async {
+        while !Task.isCancelled {
+            let delay = Double.random(in: 3...6)
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+
+
+            if Task.isCancelled { break }
+
+            let catastrophic = Int.random(in: 0...12) == 0
+
+            let glitchCount = catastrophic
+                ? Int.random(in: 10...sliceCount)
+                : Int.random(in: 5...10)
+
+            let active = offsets.indices.shuffled().prefix(glitchCount)
+
+            withAnimation(.linear(duration: 0.05)) {
+                for i in active {
+                    offsets[i] = randomGaussian() * (catastrophic ? 20 : 5)
+                }
+            }
+
+            try? await Task.sleep(nanoseconds: 60_000_000)
+
+            withAnimation(.easeOut(duration: catastrophic ? 0.20 : 0.15)) {
+                for i in active {
+                    offsets[i] = 0
+                }
+            }
+        }
+    }
+
+    private func randomGaussian() -> CGFloat {
+        let u1 = Double.random(in: 0...1)
+        let u2 = Double.random(in: 0...1)
+        let z = sqrt(-2 * log(u1)) * cos(2 * .pi * u2)
+        return CGFloat(z)
+    }
 }
 
 #Preview("New Main Menu") {
