@@ -123,7 +123,20 @@ struct MainMenuView: View {
 
     private var settingsLayer: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+
+                Color.black.ignoresSafeArea()
+
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.03, green: 0.05, blue: 0.25),
+                        .black
+                    ],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 600
+                )
+                .ignoresSafeArea()
+
 
             QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
                 .ignoresSafeArea()
@@ -180,9 +193,22 @@ struct MainMenuView: View {
             GlitchQbitText()
 
             Text("Run")
-                .font(.system(size: 135, weight: .light, design: .rounded))
+                .font(.system(size: 132, weight: .light, design: .rounded))
                 .tracking(10)
                 .foregroundStyle(.white.opacity(0.9))
+//                .foregroundStyle(
+//                    LinearGradient(
+//                        colors: [
+//                            Color.white.opacity(0.9),
+//                            Color(red: 0.96, green: 0.98, blue: 1.0),
+//                            Color(red: 0.86, green: 0.88, blue: 0.95),
+//                            Color(red: 0.24, green: 0.36, blue: 0.82),
+//                            Color(red: 0.25, green: 0.08, blue: 0.48)
+//                        ],
+//                        startPoint: .leading,
+//                        endPoint: .trailing
+//                    )
+//                )
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Qbit Run")
@@ -319,6 +345,7 @@ struct GlitchCharacterText: View {
                     .offset(x: offsets[index])
             }
         }
+        .drawingGroup(opaque: false)
         .task {
             await glitchLoop()
         }
@@ -327,16 +354,20 @@ struct GlitchCharacterText: View {
     private var baseText: some View {
         ZStack {
             Text(character)
-                .font(.system(size: 200, weight: .bold, design: .rounded))
-                .tracking(10)
-                .foregroundStyle(.white)
+                .font(.system(size: 205, weight: .bold, design: .rounded))
+                .tracking(13)
+                .foregroundStyle(.white.opacity(0.8))
 
             Text(character)
-                .font(.system(size: 190, weight: .bold, design: .rounded))
-                .tracking(10)
+                .font(.system(size: 195, weight: .bold, design: .rounded))
+                .tracking(13)
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.white.opacity(0.95), .cyan.opacity(0.95), .purple.opacity(0.95)],
+                        colors: [
+                            Color(red: 0.96, green: 0.98, blue: 1.0),
+                            Color(red: 0.24, green: 0.36, blue: 0.82),
+                            Color(red: 0.25, green: 0.08, blue: 0.48)
+                        ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
