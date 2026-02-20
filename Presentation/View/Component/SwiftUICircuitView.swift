@@ -6,8 +6,16 @@ struct SwiftUICircuitView: View {
     let onRun: () -> Void
     let onGateRemove: (Int) -> Void
 
+    @Environment(\.isEnabled) private var isViewEnabled
+    @State private var runButtonScale: CGFloat = 1.0
+    @State private var runPulseTask: Task<Void, Never>?
+
     private var wireWidth: CGFloat {
         maxSlots >= 6 ? 14 : 25
+    }
+
+    private var isRunButtonEnabled: Bool {
+        isViewEnabled && !gates.isEmpty
     }
 
     var body: some View {
@@ -52,7 +60,11 @@ struct SwiftUICircuitView: View {
                             Color.gray
                         } else {
                             LinearGradient(
-                                colors: [.cyan, .purple],
+                                colors: [
+                                    Color(red: 0.65, green: 0.95, blue: 1.0),
+                                    Color(red: 0.35, green: 0.50, blue: 0.95),
+                                    Color(red: 0.45, green: 0.20, blue: 0.70)
+                                ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -60,16 +72,59 @@ struct SwiftUICircuitView: View {
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
+            .scaleEffect(runButtonScale)
             .shadow(color: .black, radius: 3)
             .disabled(gates.isEmpty)
             .accessibilityLabel("Run circuit")
             .accessibilityValue(gates.isEmpty ? "Disabled" : "Enabled")
             .accessibilityHint(gates.isEmpty ? "Add at least one gate before running." : "Execute current circuit.")
+            .onAppear {
+                updateRunPulseLoop()
+            }
+            .onChange(of: isRunButtonEnabled) { _, _ in
+                updateRunPulseLoop()
+            }
+            .onDisappear {
+                stopRunPulseLoop()
+            }
         }
         .padding(.horizontal, 25)
         .padding(.vertical, 20)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 15))
+    }
+
+    private func updateRunPulseLoop() {
+        stopRunPulseLoop()
+        guard isRunButtonEnabled else { return }
+
+        runPulseTask = Task { @MainActor in
+            while !Task.isCancelled {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.45)) {
+                    runButtonScale = 1.05
+                }
+
+                try? await Task.sleep(for: .milliseconds(180))
+                if Task.isCancelled { break }
+
+                withAnimation(.easeOut(duration: 0.16)) {
+                    runButtonScale = 1.0
+                }
+
+                try? await Task.sleep(for: .milliseconds(1200))
+            }
+        }
+    }
+
+    private func stopRunPulseLoop() {
+        runPulseTask?.cancel()
+        runPulseTask = nil
+
+        if runButtonScale != 1.0 {
+            withAnimation(.easeOut(duration: 0.12)) {
+                runButtonScale = 1.0
+            }
+        }
     }
 }
 

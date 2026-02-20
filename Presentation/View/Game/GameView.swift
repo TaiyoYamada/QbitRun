@@ -519,7 +519,7 @@ struct GameView: View {
 
                 Spacer()
             }
-            .padding(.leading, 50)
+            .padding(.leading, 60)
             .padding(.bottom, 15)
 
             SwiftUICircuitView(
