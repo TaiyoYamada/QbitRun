@@ -29,13 +29,6 @@ struct QuantumModeCard: View {
         }) {
             HStack(spacing: 20) {
                 ZStack {
-                    QuantumMetalBackground(
-                        colors: fluctuationColors,
-                        phase: $iconBackgroundPhase,
-                        speed: $iconBackgroundSpeed
-                    )
-                    .clipShape(Circle())
-
                     Circle()
                         .fill(Color.black.opacity(0.2))
 
