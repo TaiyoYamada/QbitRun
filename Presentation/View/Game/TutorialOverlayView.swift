@@ -161,146 +161,11 @@ struct TutorialOverlayView: View {
 
     var body: some View {
         VStack {
-            ZStack(alignment: .topTrailing) {
-                VStack(spacing: 20) {
-                    HStack(alignment: .center, spacing: 5) {
-                        tutorialNavigationButton(
-                            systemName: "chevron.left",
-                            isEnabled: viewModel.canGoToPreviousTutorialStep,
-                            accessibilityLabel: "Previous tutorial step",
-                            accessibilityHint: "Move back to the previous tutorial explanation."
-                        ) {
-                            viewModel.goToPreviousTutorialStep()
-                        }
-
-                        Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
-                            .font(.system(size: 60, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .shadow(color: .cyan, radius: 5)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.55)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 450)
-                            .transaction { $0.animation = nil }
-                            .accessibilitySortPriority(3)
-
-                        tutorialNavigationButton(
-                            systemName: "chevron.right",
-                            isEnabled: viewModel.canGoToNextReachedTutorialStep,
-                            accessibilityLabel: "Next reached tutorial step",
-                            accessibilityHint: "Move forward to a tutorial step you've already reached."
-                        ) {
-                            viewModel.goToNextReachedTutorialStep()
-                        }
-                    }
-                    .frame(maxWidth: 760)
-                    .padding(.top, 30)
-                    .padding(.horizontal, 10)
-
-                    TypewriterText(attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode), onFinished: {
-                        viewModel.tutorialGateEnabled = true
-                        if viewModel.currentTutorialStep.targetGate == nil {
-                            viewModel.showTutorialNextButton = true
-                        }
-                    })
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 15)
-                        .frame(maxWidth: 750, alignment: .center)
-                        .accessibilitySortPriority(2)
-                }
-                .frame(height: 280, alignment: .top)
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Tutorial")
-                .accessibilityHint("Read the current explanation, then continue.")
-
-                if isReviewMode {
-                    Button(action: {
-                        audioManager.playSFX(.button)
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        onExitTapped?()
-                    }) {
-                        Image(systemName: "door.left.hand.open")
-                            .font(.system(size: 40, weight: .regular, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.8))
-                    }
-                    .padding(.top, 40)
-                    .padding(.trailing, 20)
-                    .accessibilityLabel("Exit review")
-                    .accessibilityHint("Return to the main menu.")
-                    .accessibilitySortPriority(1)
-                }
-            }
-            .background(
-                LinearGradient(
-                    colors: [Color.white.opacity(0.3), Color.black.opacity(0.5)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
+            tutorialPanel
 
             Spacer()
 
-            Button(action: {
-                audioManager.playSFX(.button)
-                viewModel.advanceTutorialStep()
-            }) {
-                HStack(spacing: 15) {
-                    Text(viewModel.currentTutorialStep == .finish
-                         ? (isReviewMode ? "CLOSE" : "START GAME")
-                         : "NEXT")
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                }
-                .foregroundStyle(viewModel.showTutorialNextButton ? .white : .white.opacity(0.3))
-                .padding(.horizontal, 40)
-                .padding(.vertical, 15)
-                .background(
-                    ZStack {
-                        if viewModel.showTutorialNextButton {
-                            Color.cyan
-                            Color.black.opacity(0.7)
-                        } else {
-                            Color.gray.opacity(0.3)
-                        }
-                    }
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 50))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 50)
-                        .stroke(viewModel.showTutorialNextButton ? Color.white.opacity(0.85) : Color.gray.opacity(0.5), lineWidth: 5)
-                )
-                .scaleEffect(animationScale)
-                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
-            }
-            .disabled(!viewModel.showTutorialNextButton)
-            .buttonStyle(.plain)
-            .padding(.bottom, 50)
-            .accessibilityLabel(nextButtonAccessibilityLabel)
-            .accessibilityHint(nextButtonAccessibilityHint)
-            .accessibilitySortPriority(4)
-//            .task(id: viewModel.showTutorialNextButton) {
-//                if viewModel.showTutorialNextButton {
-//                    try? await Task.sleep(for: .seconds(0.1))
-//                    
-//                    while !Task.isCancelled {
-//                        withAnimation(.easeInOut(duration: 0.3)) {
-//                            animationScale = 1.15
-//                        }
-//                        try? await Task.sleep(for: .seconds(0.3))
-//                        
-//                        withAnimation(.easeInOut(duration: 0.3)) {
-//                            animationScale = 1.0
-//                        }
-//                        try? await Task.sleep(for: .seconds(0.3))
-//
-//                        try? await Task.sleep(for: .seconds(1.0))
-//                    }
-//                } else {
-//                    withAnimation(.easeOut(duration: 0.2)) {
-//                        animationScale = 1.0
-//                    }
-//                }
-//            }
+            nextTutorialButton
         }
         .onAppear {
             announceCurrentStepForVoiceOver()
@@ -308,6 +173,157 @@ struct TutorialOverlayView: View {
         .onChange(of: viewModel.currentTutorialStep) { _, _ in
             announceCurrentStepForVoiceOver()
         }
+    }
+
+    private var tutorialPanel: some View {
+        ZStack(alignment: .topTrailing) {
+            tutorialContent
+
+            if isReviewMode {
+                reviewExitButton
+            }
+        }
+    }
+
+    private var tutorialContent: some View {
+        VStack(spacing: 20) {
+            tutorialHeader
+            tutorialInstruction
+        }
+        .frame(height: 280, alignment: .top)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Tutorial")
+        .accessibilityHint("Read the current explanation, then continue.")
+    }
+
+    private var tutorialHeader: some View {
+        HStack(alignment: .center, spacing: 5) {
+            tutorialNavigationButton(
+                systemName: "chevron.left",
+                isEnabled: viewModel.canGoToPreviousTutorialStep,
+                accessibilityLabel: "Previous tutorial step",
+                accessibilityHint: "Move back to the previous tutorial explanation."
+            ) {
+                viewModel.goToPreviousTutorialStep()
+            }
+
+            Text(viewModel.currentTutorialStep.title(isReviewMode: isReviewMode))
+                .font(.system(size: 60, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .shadow(color: .cyan, radius: 5)
+                .lineLimit(2)
+                .minimumScaleFactor(0.55)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 450)
+                .transaction { $0.animation = nil }
+                .accessibilitySortPriority(3)
+
+            tutorialNavigationButton(
+                systemName: "chevron.right",
+                isEnabled: viewModel.canGoToNextReachedTutorialStep,
+                accessibilityLabel: "Next reached tutorial step",
+                accessibilityHint: "Move forward to a tutorial step you've already reached."
+            ) {
+                viewModel.goToNextReachedTutorialStep()
+            }
+        }
+        .frame(maxWidth: 760)
+        .padding(.top, 30)
+        .padding(.horizontal, 10)
+    }
+
+    private var tutorialInstruction: some View {
+        TypewriterText(
+            attributedText: viewModel.currentTutorialStep.attributedInstruction(isReviewMode: isReviewMode),
+            onFinished: {
+                viewModel.tutorialGateEnabled = true
+                if viewModel.currentTutorialStep.targetGate == nil {
+                    viewModel.showTutorialNextButton = true
+                }
+            }
+        )
+        .padding(.horizontal, 15)
+        .padding(.vertical, 15)
+        .frame(maxWidth: 750, alignment: .center)
+        .accessibilitySortPriority(2)
+    }
+
+    private var reviewExitButton: some View {
+        Button(action: {
+            audioManager.playSFX(.button)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            onExitTapped?()
+        }) {
+            Image(systemName: "door.left.hand.open")
+                .font(.system(size: 40, weight: .regular, design: .rounded))
+                .foregroundStyle(.white.opacity(0.8))
+        }
+        .padding(.top, 40)
+        .padding(.trailing, 20)
+        .accessibilityLabel("Exit review")
+        .accessibilityHint("Return to the main menu.")
+        .accessibilitySortPriority(1)
+    }
+
+    private var nextTutorialButton: some View {
+        Button(action: {
+            audioManager.playSFX(.button)
+            viewModel.advanceTutorialStep()
+        }) {
+            nextTutorialButtonLabel
+                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .frame(width: 300)
+                .foregroundStyle(viewModel.showTutorialNextButton ? .white : .white.opacity(0.3))
+                .padding(.horizontal, 40)
+                .padding(.vertical, 15)
+                .background(nextTutorialButtonBackground)
+                .overlay(nextTutorialButtonBorder)
+                .compositingGroup()
+                .contentTransition(.identity)
+                .transaction { $0.animation = nil }
+                .scaleEffect(animationScale)
+                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
+        }
+        .disabled(!viewModel.showTutorialNextButton)
+        .buttonStyle(.plain)
+        .padding(.bottom, 50)
+        .accessibilityLabel(nextButtonAccessibilityLabel)
+        .accessibilityHint(nextButtonAccessibilityHint)
+        .accessibilitySortPriority(4)
+    }
+
+    private var nextTutorialButtonLabel: some View {
+        ZStack {
+            Text("NEXT")
+                .opacity(viewModel.currentTutorialStep == .finish ? 0 : 1)
+
+            Text(isReviewMode ? "CLOSE" : "START GAME")
+                .opacity(viewModel.currentTutorialStep == .finish ? 1 : 0)
+        }
+    }
+
+    private var nextTutorialButtonBackground: some View {
+        Capsule(style: .continuous)
+            .fill(viewModel.showTutorialNextButton ? Color.black.opacity(0.72) : Color.gray.opacity(0.3))
+            .overlay {
+                if viewModel.showTutorialNextButton {
+                    Capsule(style: .continuous)
+                        .fill(Color.cyan.opacity(0.5)
+                            
+                        )
+                }
+            }
+    }
+
+    private var nextTutorialButtonBorder: some View {
+        Capsule(style: .continuous)
+            .stroke(
+                viewModel.showTutorialNextButton ? Color.white.opacity(0.85) : Color.gray.opacity(0.5),
+                lineWidth: 5
+            )
     }
 
     private var nextButtonAccessibilityLabel: String {

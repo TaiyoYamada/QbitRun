@@ -29,7 +29,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .hGate1, .hGate2, .hGate3: return "H GATE"
         case .sGate: return "S GATE"
         case .tGate: return "T GATE"
-        case .finish: return isReviewMode ? "REVIEW COMPLETE" : "READY TO LAUNCH"
+        case .finish: return isReviewMode ? "COMPLETE" : "LAUNCH"
         }
     }
 
