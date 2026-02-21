@@ -119,32 +119,32 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         }
     }
 
-    static let zAxisColor = BlochAxisPalette.zAxisColor
-    static let xAxisColor = BlochAxisPalette.xAxisColor
-    static let yAxisColor = BlochAxisPalette.yAxisColor
-    static let arrowColor = Color.red
+    private struct InstructionHighlightRule {
+        let pattern: String
+        let style: TutorialInstructionHighlightStyle
+    }
+
+    private static let instructionHighlightRules: [InstructionHighlightRule] = [
+        InstructionHighlightRule(pattern: "(X+Z) axis", style: .xzAxis),
+        InstructionHighlightRule(pattern: "the X-axis", style: .xAxis),
+        InstructionHighlightRule(pattern: "the Y-axis", style: .yAxis),
+        InstructionHighlightRule(pattern: "the Z-axis", style: .zAxis),
+        InstructionHighlightRule(pattern: "X-axis", style: .xAxis),
+        InstructionHighlightRule(pattern: "Y-axis", style: .yAxis),
+        InstructionHighlightRule(pattern: "Z-axis", style: .zAxis),
+        InstructionHighlightRule(pattern: "The arrow", style: .arrow),
+    ]
 
     func attributedInstruction(isReviewMode: Bool) -> AttributedString {
         let raw = instruction(isReviewMode: isReviewMode)
-
-        let colorMap: [(String, Color)] = [
-            ("(X+Z) axis", Color(red: 0.5, green: 0.8, blue: 1.0)),
-            ("the X-axis", Self.xAxisColor),
-            ("the Y-axis", Self.yAxisColor),
-            ("the Z-axis", Self.zAxisColor),
-            ("X-axis", Self.xAxisColor),
-            ("Y-axis", Self.yAxisColor),
-            ("Z-axis", Self.zAxisColor),
-            ("The arrow", Self.arrowColor),
-        ]
-
         var result = AttributedString(raw)
 
-        for (pattern, color) in colorMap {
+        for rule in Self.instructionHighlightRules {
             var searchRange = result.startIndex..<result.endIndex
-            while let range = result[searchRange].range(of: pattern) {
-                result[range].foregroundColor = color
+            while let range = result[searchRange].range(of: rule.pattern) {
+                result[range].foregroundColor = TutorialInstructionStylePalette.frontColor(for: rule.style)
                 result[range].inlinePresentationIntent = .stronglyEmphasized
+                result[range][TutorialInstructionHighlightStyleAttribute.self] = rule.style
                 if range.upperBound < result.endIndex {
                     searchRange = range.upperBound..<result.endIndex
                 } else {

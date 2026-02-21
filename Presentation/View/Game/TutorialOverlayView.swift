@@ -11,7 +11,8 @@ struct TypewriterText: View {
     let plainText: String
     var onFinished: (() -> Void)? = nil
     @State private var revealedCount: Int = 0
-    @State private var isTyping: Bool = false
+    private let baseFontSize: CGFloat = 23
+    private let lineSpacing: CGFloat = 2
 
     init(attributedText: AttributedString, onFinished: (() -> Void)? = nil) {
         self.attributedText = attributedText
@@ -20,19 +21,19 @@ struct TypewriterText: View {
     }
 
     var body: some View {
-        Text(revealedAttributedText)
-            .font(.system(size: 23, weight: .medium, design: .monospaced))
-            .lineSpacing(2)
-            .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.7), radius: 2, x: 0, y: 1)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(plainText.voiceOverFriendlyTutorialText)
-            .onChange(of: plainText) { _, _ in
-                startTyping()
-            }
-            .onAppear {
-                startTyping()
-            }
+        OutlinedInstructionTextView(
+            attributedText: revealedAttributedText,
+            baseFontSize: baseFontSize,
+            lineSpacing: lineSpacing
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(plainText.voiceOverFriendlyTutorialText)
+        .onChange(of: plainText) { _, _ in
+            startTyping()
+        }
+        .onAppear {
+            startTyping()
+        }
     }
 
     private var revealedAttributedText: AttributedString {
@@ -44,7 +45,6 @@ struct TypewriterText: View {
 
     private func startTyping() {
         revealedCount = 0
-        isTyping = true
         let totalCount = attributedText.characters.count
         let currentPlainText = plainText
 
@@ -56,10 +56,86 @@ struct TypewriterText: View {
                 try? await Task.sleep(nanoseconds: randomDelay)
             }
             await MainActor.run {
-                isTyping = false
                 onFinished?()
             }
         }
+    }
+}
+
+private struct OutlinedInstructionTextView: UIViewRepresentable {
+    let attributedText: AttributedString
+    let baseFontSize: CGFloat
+    let lineSpacing: CGFloat
+    private let highlightedFontSizeDelta: CGFloat = 2
+    private let highlightedStrokeWidth: CGFloat = -1.5
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.backgroundColor = .clear
+        label.lineBreakMode = .byWordWrapping
+        label.setContentHuggingPriority(.required, for: .vertical)
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        return label
+    }
+
+    func updateUIView(_ uiView: UILabel, context: Context) {
+        uiView.attributedText = makeAttributedString()
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UILabel, context: Context) -> CGSize? {
+        guard let width = proposal.width else {
+            return uiView.intrinsicContentSize
+        }
+        uiView.preferredMaxLayoutWidth = width
+        let fittingSize = uiView.sizeThatFits(
+            CGSize(width: width, height: .greatestFiniteMagnitude)
+        )
+        return CGSize(width: width, height: ceil(fittingSize.height))
+    }
+
+    private func makeAttributedString() -> NSAttributedString {
+        let text = String(attributedText.characters)
+        let result = NSMutableAttributedString(string: text)
+        let fullRange = NSRange(location: 0, length: (text as NSString).length)
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = lineSpacing
+        paragraphStyle.lineBreakMode = .byWordWrapping
+
+        let shadow = NSShadow()
+        shadow.shadowColor = UIColor.black.withAlphaComponent(0.7)
+        shadow.shadowBlurRadius = 2
+        shadow.shadowOffset = CGSize(width: 0, height: 1)
+
+        result.addAttributes([
+            .font: UIFont.monospacedSystemFont(ofSize: baseFontSize, weight: .medium),
+            .foregroundColor: UIColor.white,
+            .paragraphStyle: paragraphStyle,
+            .shadow: shadow
+        ], range: fullRange)
+
+        let characters = attributedText.characters
+        for run in attributedText.runs {
+            guard let style = run[TutorialInstructionHighlightStyleAttribute.self] else { continue }
+
+            let location = characters.distance(from: characters.startIndex, to: run.range.lowerBound)
+            let length = characters.distance(from: run.range.lowerBound, to: run.range.upperBound)
+            guard length > 0 else { continue }
+            let nsRange = NSRange(location: location, length: length)
+
+            result.addAttributes([
+                .font: UIFont.monospacedSystemFont(
+                    ofSize: baseFontSize + highlightedFontSizeDelta,
+                    weight: .medium
+                ),
+                .foregroundColor: UIColor(TutorialInstructionStylePalette.frontColor(for: style)),
+                .strokeColor: TutorialInstructionStylePalette.outlineUIColor(for: style),
+                .strokeWidth: highlightedStrokeWidth
+            ], range: nsRange)
+        }
+
+        return result
     }
 }
 
@@ -117,7 +193,6 @@ struct TutorialOverlayView: View {
                             viewModel.showTutorialNextButton = true
                         }
                     })
-                        .font(.system(size: 23, weight: .bold, design: .rounded).monospacedDigit())
                         .padding(.horizontal, 15)
                         .padding(.vertical, 15)
                         .frame(maxWidth: 750, alignment: .center)
