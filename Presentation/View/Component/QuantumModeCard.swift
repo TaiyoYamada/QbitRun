@@ -6,7 +6,6 @@ struct QuantumModeCard: View {
     let subtitle: String
     let icon: String
     let accentColor: Color
-    let fluctuationColors: [Color]
     let isRandomStart: Bool
     let action: () -> Void
 
@@ -35,7 +34,7 @@ struct QuantumModeCard: View {
                     Circle()
                         .strokeBorder(
                             accentColor.opacity(0.8),
-                            lineWidth: 2
+                            lineWidth: 3
                         )
 
                     Image(systemName: icon)
@@ -47,36 +46,43 @@ struct QuantumModeCard: View {
                 .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 5)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(accentColor)
-                        .shadow(color: accentColor.opacity(0.5), radius: 4)
+                    ZStack {
+                        Text(title)
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundStyle(accentColor)
+                            .shadow(color: accentColor.opacity(0.9), radius: 10)
 
+                        Text(title)
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.9))
+
+
+                    }
                     Text(subtitle)
                         .font(.system(size: 17, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
+                        .foregroundStyle(.white.opacity(0.95))
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(accentColor.opacity(0.8))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(accentColor.opacity(0.9))
             }
             .padding(24)
             .background(
                 ZStack {
                     Color.black.opacity(0.9)
 
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 23)
                         .strokeBorder(
                             accentColor.opacity(0.7),
                             lineWidth: 3
                         )
                 }
             )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .cyan.opacity(0.7), radius: 3)
+            .clipShape(RoundedRectangle(cornerRadius: 23))
+            .shadow(color: accentColor.opacity(0.6), radius: 8)
             .scaleEffect(isPressed ? 0.98 : (isHovered ? 1.02 : 1.0))
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
@@ -88,41 +94,5 @@ struct QuantumModeCard: View {
         .onHover { hovering in
             isHovered = hovering
         }
-    }
-}
-
-#Preview {
-    ZStack {
-        Color.gray
-        VStack {
-            QuantumModeCard(
-                title: "EASY MODE",
-                subtitle: "Start from |0⟩",
-                icon: "",
-                accentColor: .cyan,
-                fluctuationColors: [
-                    .cyan.opacity(0.9),
-                    .mint.opacity(0.8),
-                    .blue.opacity(0.8)
-                ],
-                isRandomStart: false,
-                action: {}
-            )
-
-            QuantumModeCard(
-                title: "HARD MODE",
-                subtitle: "Random Start State",
-                icon: "",
-                accentColor: .orange,
-                fluctuationColors: [
-                    .orange.opacity(0.9),
-                    .yellow.opacity(0.8),
-                    .red.opacity(0.8)
-                ],
-                isRandomStart: true,
-                action: {}
-            )
-        }
-        .padding()
     }
 }
