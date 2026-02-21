@@ -6,11 +6,14 @@ struct QuantumModeCard: View {
     let subtitle: String
     let icon: String
     let accentColor: Color
+    let fluctuationColors: [Color]
     let isRandomStart: Bool
     let action: () -> Void
 
     @State private var isHovered = false
     @State private var isPressed = false
+    @State private var iconBackgroundPhase = Double.random(in: 0...(2 * .pi))
+    @State private var iconBackgroundSpeed = 1.0
 
     var body: some View {
         Button(action: {
@@ -26,22 +29,29 @@ struct QuantumModeCard: View {
         }) {
             HStack(spacing: 20) {
                 ZStack {
+                    QuantumMetalBackground(
+                        colors: fluctuationColors,
+                        phase: $iconBackgroundPhase,
+                        speed: $iconBackgroundSpeed
+                    )
+                    .clipShape(Circle())
+
+                    Circle()
+                        .fill(Color.black.opacity(0.2))
+
                     Circle()
                         .strokeBorder(
                             accentColor.opacity(0.8),
                             lineWidth: 2
                         )
-                        .background(
-                            Circle().fill(Color.black)
-                        )
-                        .frame(width: 60, height: 60)
-                        .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 5)
 
                     Image(systemName: icon)
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(accentColor)
                         .symbolEffect(.pulse, options: .repeating)
                 }
+                .frame(width: 60, height: 60)
+                .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 5)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -97,6 +107,11 @@ struct QuantumModeCard: View {
                 subtitle: "Start from |0⟩",
                 icon: "",
                 accentColor: .cyan,
+                fluctuationColors: [
+                    .cyan.opacity(0.9),
+                    .mint.opacity(0.8),
+                    .blue.opacity(0.8)
+                ],
                 isRandomStart: false,
                 action: {}
             )
@@ -106,6 +121,11 @@ struct QuantumModeCard: View {
                 subtitle: "Random Start State",
                 icon: "",
                 accentColor: .orange,
+                fluctuationColors: [
+                    .orange.opacity(0.9),
+                    .yellow.opacity(0.8),
+                    .red.opacity(0.8)
+                ],
                 isRandomStart: true,
                 action: {}
             )

@@ -222,6 +222,11 @@ struct MainMenuView: View {
                 subtitle: "Start from |0⟩",
                 icon: "arrow.up",
                 accentColor: .white,
+                fluctuationColors: [
+                    Color(red: 0.64, green: 0.9, blue: 1.0),
+                    Color(red: 0.42, green: 0.8, blue: 0.98),
+                    Color(red: 0.76, green: 0.9, blue: 1.0)
+                ],
                 isRandomStart: false,
                 action: {
                     if hasCompletedTutorial {
@@ -237,6 +242,11 @@ struct MainMenuView: View {
                 subtitle: "Random Start",
                 icon: "shuffle",
                 accentColor: .cyan,
+                fluctuationColors: [
+                    Color(red: 0.0, green: 0.86, blue: 0.95),
+                    Color(red: 0.0, green: 0.55, blue: 0.9),
+                    Color(red: 0.1, green: 0.95, blue: 0.75)
+                ],
                 isRandomStart: true,
                 action: {
                     if hasCompletedTutorial {
@@ -252,6 +262,11 @@ struct MainMenuView: View {
                 subtitle: "Advanced States",
                 icon: "atom",
                 accentColor: .purple,
+                fluctuationColors: [
+                    Color(red: 0.65, green: 0.35, blue: 0.95),
+                    Color(red: 0.4, green: 0.2, blue: 0.9),
+                    Color(red: 0.86, green: 0.48, blue: 1.0)
+                ],
                 isRandomStart: true,
                 action: {
                     if hasCompletedTutorial {
