@@ -67,7 +67,7 @@ private struct OutlinedInstructionTextView: UIViewRepresentable {
     let baseFontSize: CGFloat
     let lineSpacing: CGFloat
     private let highlightedFontSizeDelta: CGFloat = 2
-    private let highlightedStrokeWidth: CGFloat = -1.5
+    private let highlightedStrokeWidth: CGFloat = -1.0
 
     func makeUIView(context: Context) -> UILabel {
         let label = UILabel()

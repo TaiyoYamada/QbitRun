@@ -7,7 +7,7 @@ enum TutorialInstructionStylePalette {
         case .xAxis:
             return BlochAxisPalette.xAxisColor
         case .yAxis:
-            return BlochAxisPalette.yAxisColor
+            return Color(red: 0.95, green: 0.62, blue: 1.0)
         case .zAxis:
             return BlochAxisPalette.zAxisColor
         case .xzAxis:
@@ -22,7 +22,7 @@ enum TutorialInstructionStylePalette {
         case .xAxis:
             return .white
         case .yAxis:
-            return .cyan
+            return .purple
         case .zAxis:
             return .cyan
         case .xzAxis:
