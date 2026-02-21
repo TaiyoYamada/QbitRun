@@ -125,9 +125,7 @@ final class GameViewModel {
         let nextIndex = currentIndex + 1
 
         if nextIndex < TutorialStep.allCases.count {
-            withAnimation {
-                currentTutorialStep = TutorialStep.allCases[nextIndex]
-            }
+            currentTutorialStep = TutorialStep.allCases[nextIndex]
         } else {
             endTutorial()
         }
@@ -138,9 +136,7 @@ final class GameViewModel {
         let previousIndex = currentIndex - 1
         guard previousIndex >= 0 else { return }
 
-        withAnimation {
-            currentTutorialStep = TutorialStep.allCases[previousIndex]
-        }
+        currentTutorialStep = TutorialStep.allCases[previousIndex]
     }
 
     func goToNextReachedTutorialStep() {
@@ -150,9 +146,7 @@ final class GameViewModel {
         guard nextIndex <= furthestReachedTutorialIndex,
               nextIndex < TutorialStep.allCases.count else { return }
 
-        withAnimation {
-            currentTutorialStep = TutorialStep.allCases[nextIndex]
-        }
+        currentTutorialStep = TutorialStep.allCases[nextIndex]
     }
 
     func endTutorial() {

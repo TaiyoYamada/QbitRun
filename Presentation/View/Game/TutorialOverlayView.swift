@@ -11,6 +11,7 @@ struct TypewriterText: View {
     let plainText: String
     var onFinished: (() -> Void)? = nil
     @State private var revealedCount: Int = 0
+    @State private var typingTask: Task<Void, Never>? = nil
     private let baseFontSize: CGFloat = 23
     private let lineSpacing: CGFloat = 2
 
@@ -34,6 +35,10 @@ struct TypewriterText: View {
         .onAppear {
             startTyping()
         }
+        .onDisappear {
+            typingTask?.cancel()
+            typingTask = nil
+        }
     }
 
     private var revealedAttributedText: AttributedString {
@@ -44,20 +49,23 @@ struct TypewriterText: View {
     }
 
     private func startTyping() {
+        typingTask?.cancel()
         revealedCount = 0
         let totalCount = attributedText.characters.count
-        let currentPlainText = plainText
+        guard totalCount > 0 else {
+            onFinished?()
+            return
+        }
 
-        Task {
+        typingTask = Task { @MainActor in
             for i in 1...totalCount {
-                if currentPlainText != plainText { break }
+                if Task.isCancelled { return }
                 revealedCount = i
                 let randomDelay = UInt64(Double.random(in: 0.01...0.05) * 1_000_000_000)
                 try? await Task.sleep(nanoseconds: randomDelay)
             }
-            await MainActor.run {
-                onFinished?()
-            }
+            guard !Task.isCancelled else { return }
+            onFinished?()
         }
     }
 }
@@ -74,6 +82,7 @@ private struct OutlinedInstructionTextView: UIViewRepresentable {
         label.numberOfLines = 0
         label.backgroundColor = .clear
         label.lineBreakMode = .byWordWrapping
+        label.textAlignment = .center
         label.setContentHuggingPriority(.required, for: .vertical)
         label.setContentCompressionResistancePriority(.required, for: .vertical)
         return label
@@ -102,6 +111,7 @@ private struct OutlinedInstructionTextView: UIViewRepresentable {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = lineSpacing
         paragraphStyle.lineBreakMode = .byWordWrapping
+        paragraphStyle.alignment = .center
 
         let shadow = NSShadow()
         shadow.shadowColor = UIColor.black.withAlphaComponent(0.7)
