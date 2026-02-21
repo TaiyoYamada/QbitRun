@@ -293,7 +293,6 @@ struct MainMenuView: View {
 
         Task {
             try? await Task.sleep(for: .milliseconds(150))
-            // for review mode (from ? button), isTutorial=true, isReview=true
             onSelectMode(.easy, true, true)
         }
     }
