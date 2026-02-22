@@ -48,7 +48,7 @@ struct ResultView: View {
                             .tracking(8)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .foregroundStyle(.white.opacity(0.85))
+                            .foregroundStyle(.white.opacity(0.95))
                             .shadow(color: .cyan.opacity(0.5), radius: 10)
                             .accessibilityAddTraits(.isHeader)
 

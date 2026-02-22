@@ -49,8 +49,8 @@ class QuantumGateFallScene: SKScene {
     private func getTexture(for gate: QuantumGate) -> SKTexture {
         if let tex = textureCache[gate] { return tex }
         
-        let gateSize = CGSize(width: 60, height: 60)
-        let cornerRadius: CGFloat = 8.0
+        let gateSize = CGSize(width: 40, height: 40)
+        let cornerRadius: CGFloat = 8.0 * (40.0 / 60.0)
         
         let renderer = UIGraphicsImageRenderer(size: gateSize)
         let image = renderer.image { context in
@@ -61,7 +61,7 @@ class QuantumGateFallScene: SKScene {
             path.fill()
             
             let text = gate.symbol
-            let font = UIFont.systemFont(ofSize: 30, weight: .bold)
+            let font = UIFont.systemFont(ofSize: 20, weight: .bold)
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: font,
                 .foregroundColor: UIColor.white
@@ -84,7 +84,7 @@ class QuantumGateFallScene: SKScene {
     private func dropSingleGate() {
         guard let gate = QuantumGate.allCases.randomElement() else { return }
 
-        let gateSize = CGSize(width: 60, height: 60)
+        let gateSize = CGSize(width: 40, height: 40)
         let texture = getTexture(for: gate)
         let sprite = SKSpriteNode(texture: texture)
         
