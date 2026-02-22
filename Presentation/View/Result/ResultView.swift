@@ -30,25 +30,27 @@ struct ResultView: View {
 
                     Spacer()
 
-                    VStack(spacing: 32) {
+                    VStack(spacing: 50) {
 
-                        Text("MISSION COMPLETE")
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
-                            .tracking(4)
-                            .foregroundStyle(.white.opacity(0.8))
+                        Text("GAME CLEAR")
+                            .font(.system(size: 50, weight: .bold, design: .rounded))
+                            .tracking(8)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .foregroundStyle(.white.opacity(0.85))
                             .shadow(color: .cyan.opacity(0.5), radius: 10)
                             .accessibilityAddTraits(.isHeader)
 
                         VStack(spacing: 20) {
                             Text("TOTAL SCORE")
-                               .font(.system(size: 30, weight: .bold, design: .rounded))
-                               .tracking(2)
-                               .foregroundStyle(.cyan.opacity(0.8))
+                               .font(.system(size: 35, weight: .bold, design: .rounded))
+                               .tracking(3)
+                               .foregroundStyle(Color.cyan.opacity(0.75))
 
                             Text("\(scoreCount)")
                                 .font(.system(size: 90, weight: .black, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
-                                .shadow(color: .cyan.opacity(0.8), radius: 20)
+                                .shadow(color: .cyan.opacity(0.3), radius: 15)
                                 .contentTransition(.numericText())
                                 .scaleEffect(showContent ? 1.0 : 0.8)
                                 .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(0.1), value: showContent)
@@ -56,7 +58,7 @@ struct ResultView: View {
                                 .accessibilityValue("\(scoreCount)")
 
                             Divider()
-                                .background(Color.white.opacity(0.1))
+                                .background(Color.white.opacity(0.3))
                                 .padding(.horizontal, 40)
 
                             HStack(spacing: 40) {
@@ -65,25 +67,25 @@ struct ResultView: View {
                         }
                         .padding(.vertical, 40)
                         .padding(.horizontal, 20)
-                        .background(
-                            ZStack {
-                                Color.black.opacity(0.3)
-                                RoundedRectangle(cornerRadius: 30)
-                                    .fill(.ultraThinMaterial)
-                            }
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 30))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 30)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.white.opacity(0.4), .white.opacity(0.05)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        )
+//                        .background(
+//                            ZStack {
+//                                Color.black.opacity(0.3)
+//                                RoundedRectangle(cornerRadius: 30)
+//                                    .fill(.ultraThinMaterial)
+//                            }
+//                        )
+//                        .clipShape(RoundedRectangle(cornerRadius: 30))
+//                        .overlay(
+//                            RoundedRectangle(cornerRadius: 30)
+//                                .stroke(
+//                                    LinearGradient(
+//                                        colors: [.white.opacity(0.4), .white.opacity(0.05)],
+//                                        startPoint: .topLeading,
+//                                        endPoint: .bottomTrailing
+//                                    ),
+//                                    lineWidth: 1
+//                                )
+//                        )
                         .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
 
                         Button(action: {
@@ -92,28 +94,29 @@ struct ResultView: View {
                             generator.impactOccurred()
                             onReturnToMenu()
                         }) {
-                            Text("RETURN TO BASE")
-                                .font(.system(size: 25, weight: .bold, design: .rounded))
-                                .tracking(1)
+                            Text("BACK TO MENU")
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 20)
+                                .padding(.vertical, 15)
+                                .padding(.horizontal, 35)
                                 .background(
                                     LinearGradient(
-                                        colors: [.cyan.opacity(0.6), .purple.opacity(0.7)],
+                                        colors: [
+                                            Color.cyan.opacity(0.6),
+                                            Color(red: 0.24, green: 0.36, blue: 0.82).opacity(0.6),
+                                            Color(red: 0.25, green: 0.08, blue: 0.48).opacity(0.6)
+                                        ],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
                                 )
-                                .background(.ultraThinMaterial)
                                 .clipShape(Capsule())
                                 .overlay(
-                                    Capsule()
-                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                    Capsule().stroke(.white.opacity(0.7), lineWidth: 3)
                                 )
-                                .shadow(color: .cyan.opacity(0.5), radius: 10)
+                                .shadow(color: .cyan.opacity(0.5), radius: 5)
+                                .shadow(color: .cyan.opacity(0.2), radius: 30)
                         }
-                        .padding(.horizontal, 40)
                         .accessibilityLabel("Return to menu")
                         .accessibilityHint("Go back to main menu.")
                     }
@@ -166,11 +169,11 @@ struct ResultView: View {
     private func detailItem(label: String, value: String) -> some View {
         VStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 25, weight: .semibold, design: .rounded))
+                .font(.system(size: 30, weight: .semibold, design: .rounded))
                 .tracking(1)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.7))
             Text(value)
-                .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
+                .font(.system(size: 45, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
                 .shadow(color: .white.opacity(0.3), radius: 8)
         }

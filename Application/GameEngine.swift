@@ -227,16 +227,16 @@ public final class GameEngine {
             let maxBonus: Double
             switch gameDifficulty {
             case .easy: maxBonus = 700.0
-            case .hard: maxBonus = 1400.0
-            case .expert: maxBonus = 4200.0
+            case .hard: maxBonus = 1200.0
+            case .expert: maxBonus = 3500.0
             }
             let k: Double = 0.5
 
             let midpoint: Double
             switch gameDifficulty {
-            case .easy: midpoint = 10.0
-            case .hard: midpoint = 8.0
-            case .expert: midpoint = 5.0
+            case .easy: midpoint = 8.0
+            case .hard: midpoint = 6.0
+            case .expert: midpoint = 4.0
             }
             let x = Double(comboCount)
 
