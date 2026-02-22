@@ -53,7 +53,7 @@ struct SwiftUICircuitView: View {
                 Text("▶ Run")
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(.white)
-                    .shadow(color: .black, radius: 5)
+                    .shadow(color: .black, radius: 15)
                     .frame(width: 120, height: 60)
                     .background {
                         if gates.isEmpty {

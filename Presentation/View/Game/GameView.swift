@@ -433,36 +433,34 @@ struct GameView: View {
 
         return ZStack(alignment: .topTrailing) {
             VStack() {
-
                 if !viewModel.isTutorialActive {
                     VStack(alignment: .leading,spacing: 10) {
                         HStack(spacing: 15) {
                             Circle()
-                                .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.9))
+                                .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
                                 .frame(width: 25, height: 25)
                             Text("CURRENT")
                                 .font(.system(size: 25, weight: .bold, design: .rounded))
                                 .tracking(3)
-                                .foregroundStyle(.white.opacity(0.9))
+                                .foregroundStyle(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
                         }
-
                         HStack(spacing: 15) {
                             Circle()
-                                .fill(Color.white.opacity(0.9))
+                                .fill(Color.white.opacity(0.8))
                                 .frame(width: 25, height: 25)
                             Text("TARGET")
                                 .font(.system(size: 25, weight: .bold, design: .rounded))
                                 .tracking(3)
-                                .foregroundStyle(.white.opacity(0.9))
+                                .foregroundStyle(Color.white.opacity(0.8))
                         }
                         HStack(spacing: 15) {
                             Circle()
-                                .fill(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.9))
+                                .fill(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.8))
                                 .frame(width: 25, height: 25)
                             Text("MATCH")
                                 .font(.system(size: 25, weight: .bold, design: .rounded))
                                 .tracking(3)
-                                .foregroundStyle(.white.opacity(0.9))
+                                .foregroundStyle(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.8))
                         }
                     }
                     .padding(.vertical, 15)
