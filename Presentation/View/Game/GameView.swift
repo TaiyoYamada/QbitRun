@@ -154,8 +154,11 @@ struct GameView: View {
                 }
             }
             .simultaneousGesture(
-                TapGesture().onEnded {
+                SpatialTapGesture().onEnded { value in
                     if viewModel.isTutorialActive {
+                        let isExitButtonArea = value.location.x > geometry.size.width - 120 && value.location.y < 120
+                        if isExitButtonArea { return }
+                        
                         NotificationCenter.default.post(name: .skipTutorialTyping, object: nil)
                     }
                 }
