@@ -186,7 +186,7 @@ struct MainMenuView: View {
             x: geometry.size.width * 0.7,
             y: geometry.size.height * 0.5
         )
-        .opacity(0.85)
+        .opacity(0.95)
     }
 
     private var headerView: some View {

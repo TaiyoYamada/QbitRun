@@ -443,7 +443,7 @@ struct GameView: View {
                             Text("CURRENT")
                                 .font(.system(size: 30, weight: .bold, design: .rounded))
                                 .tracking(3)
-                                .foregroundStyle(.white.opacity(0.8))
+                                .foregroundStyle(.white.opacity(0.9))
                         }
 
                         HStack(spacing: 15) {
@@ -453,7 +453,7 @@ struct GameView: View {
                             Text("TARGET")
                                 .font(.system(size: 30, weight: .bold, design: .rounded))
                                 .tracking(3)
-                                .foregroundStyle(.white.opacity(0.8))
+                                .foregroundStyle(.white.opacity(0.9))
                         }
                     }
                     .padding(.vertical, 15)
@@ -504,7 +504,7 @@ struct GameView: View {
                 }) {
                     Text("CLEAR")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.8))
+                        .foregroundStyle(.white.opacity(0.9))
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
                         .background(.ultraThinMaterial)
@@ -519,7 +519,7 @@ struct GameView: View {
 
                 Spacer()
             }
-            .padding(.leading, 60)
+            .padding(.leading, 73)
             .padding(.bottom, 15)
 
             SwiftUICircuitView(
