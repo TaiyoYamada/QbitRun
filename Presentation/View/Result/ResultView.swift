@@ -1,6 +1,7 @@
 
 import SwiftUI
 import UIKit
+import SpriteKit
 
 struct ResultView: View {
 
@@ -14,6 +15,11 @@ struct ResultView: View {
 
     @State private var showContent = false
     @State private var scoreCount = 0
+    @State private var fallScene: QuantumGateFallScene = {
+        let scene = QuantumGateFallScene()
+        scene.scaleMode = .resizeFill
+        return scene
+    }()
 
     init(score: ScoreEntry, scoreRepository: ScoreRepository, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
         self._viewModel = State(initialValue: ResultViewModel(score: score, scoreRepository: scoreRepository))
@@ -26,6 +32,11 @@ struct ResultView: View {
             ZStack {
                 UnifiedBackgroundView()
 
+                SpriteView(scene: fallScene, options: [.allowsTransparency])
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                 VStack(spacing: 0) {
 
                     Spacer()
@@ -33,7 +44,7 @@ struct ResultView: View {
                     VStack(spacing: 50) {
 
                         Text("GAME CLEAR")
-                            .font(.system(size: 50, weight: .bold, design: .rounded))
+                            .font(.system(size: 60, weight: .bold, design: .rounded))
                             .tracking(8)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -43,12 +54,12 @@ struct ResultView: View {
 
                         VStack(spacing: 20) {
                             Text("TOTAL SCORE")
-                               .font(.system(size: 35, weight: .bold, design: .rounded))
+                               .font(.system(size: 40, weight: .bold, design: .rounded))
                                .tracking(3)
-                               .foregroundStyle(Color.cyan.opacity(0.75))
+                               .foregroundStyle(Color(red: 0.2, green: 0.7, blue: 1.0))
 
                             Text("\(scoreCount)")
-                                .font(.system(size: 90, weight: .black, design: .rounded).monospacedDigit())
+                                .font(.system(size: 100, weight: .black, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
                                 .shadow(color: .cyan.opacity(0.3), radius: 15)
                                 .contentTransition(.numericText())
@@ -58,8 +69,8 @@ struct ResultView: View {
                                 .accessibilityValue("\(scoreCount)")
 
                             Divider()
-                                .background(Color.white.opacity(0.3))
-                                .padding(.horizontal, 40)
+                                .background(Color.white.opacity(0.9))
+                                .padding(.horizontal, 30)
 
                             HStack(spacing: 40) {
                                 detailItem(label: "PROBLEMS", value: "\(viewModel.score.problemsSolved)")
@@ -67,26 +78,7 @@ struct ResultView: View {
                         }
                         .padding(.vertical, 40)
                         .padding(.horizontal, 20)
-//                        .background(
-//                            ZStack {
-//                                Color.black.opacity(0.3)
-//                                RoundedRectangle(cornerRadius: 30)
-//                                    .fill(.ultraThinMaterial)
-//                            }
-//                        )
-//                        .clipShape(RoundedRectangle(cornerRadius: 30))
-//                        .overlay(
-//                            RoundedRectangle(cornerRadius: 30)
-//                                .stroke(
-//                                    LinearGradient(
-//                                        colors: [.white.opacity(0.4), .white.opacity(0.05)],
-//                                        startPoint: .topLeading,
-//                                        endPoint: .bottomTrailing
-//                                    ),
-//                                    lineWidth: 1
-//                                )
-//                        )
-                        .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+
 
                         Button(action: {
                             audioManager.playSFX(.click)
@@ -102,9 +94,9 @@ struct ResultView: View {
                                 .background(
                                     LinearGradient(
                                         colors: [
-                                            Color.cyan.opacity(0.6),
-                                            Color(red: 0.24, green: 0.36, blue: 0.82).opacity(0.6),
-                                            Color(red: 0.25, green: 0.08, blue: 0.48).opacity(0.6)
+                                            Color.cyan.opacity(0.7),
+                                            Color(red: 0.24, green: 0.36, blue: 0.82).opacity(0.7),
+                                            Color(red: 0.25, green: 0.08, blue: 0.48).opacity(0.7)
                                         ],
                                         startPoint: .leading,
                                         endPoint: .trailing
@@ -120,9 +112,17 @@ struct ResultView: View {
                         .accessibilityLabel("Return to menu")
                         .accessibilityHint("Go back to main menu.")
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 50)
+                    .background(
+                        RoundedRectangle(cornerRadius: 60)
+                            .fill(Color.black.opacity(0.5))
+                            .blur(radius: 30)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 60))
                     .buttonStyle(ScaleButtonStyle())
                     .frame(maxWidth: 500)
-                    .padding(20)
+                    .padding(30)
                     .scaleEffect(showContent ? 1.0 : 0.95)
                     .opacity(showContent ? 1.0 : 0)
                     .animation(.easeOut(duration: 0.4), value: showContent)
@@ -144,6 +144,10 @@ struct ResultView: View {
                 let totalScore = viewModel.score.score
                 if totalScore > 0 {
                     let duration = 1.5
+                    
+                    let blocksToDrop = min(totalScore / 100, 200)
+                    fallScene.startDropping(totalBlocks: blocksToDrop, duration: duration)
+                    
                     let steps = 30
                     let stepDelay = duration / Double(steps)
                     let stepValue = totalScore / steps
@@ -169,11 +173,13 @@ struct ResultView: View {
     private func detailItem(label: String, value: String) -> some View {
         VStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 30, weight: .semibold, design: .rounded))
-                .tracking(1)
-                .foregroundStyle(.white.opacity(0.7))
+                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .tracking(3)
+                .foregroundStyle(Color.cyan.opacity(0.9))
+                .shadow(color: .white.opacity(0.2), radius: 8)
+
             Text(value)
-                .font(.system(size: 45, weight: .bold, design: .rounded).monospacedDigit())
+                .font(.system(size: 60, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
                 .shadow(color: .white.opacity(0.3), radius: 8)
         }
@@ -182,28 +188,8 @@ struct ResultView: View {
 
 #Preview("リザルト画面 (Rank 1)") {
     ResultView(
-        score: ScoreEntry(score: 5000, problemsSolved: 20),
+        score: ScoreEntry(score:20000, problemsSolved: 20),
         scoreRepository: ScoreRepository(defaults: UserDefaults(suiteName: "Preview_Rank1")!),
-        audioManager: AudioManager(),
-        onPlayAgain: { },
-        onReturnToMenu: { }
-    )
-    .preferredColorScheme(.dark)
-}
-
-#Preview("リザルト画面 (Rank 3)") {
-    let defaults = UserDefaults(suiteName: "Preview_Rank3")!
-    let repo = ScoreRepository(defaults: defaults)
-
-    Task {
-        await repo.clearAllScores()
-        await repo.saveScore(ScoreEntry(score: 6000, problemsSolved: 25))
-        await repo.saveScore(ScoreEntry(score: 5500, problemsSolved: 22))
-    }
-
-    return ResultView(
-        score: ScoreEntry(score: 5000, problemsSolved: 20),
-        scoreRepository: repo,
         audioManager: AudioManager(),
         onPlayAgain: { },
         onReturnToMenu: { }
