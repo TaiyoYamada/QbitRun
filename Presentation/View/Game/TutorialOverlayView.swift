@@ -4,6 +4,7 @@ import UIKit
 
 extension Notification.Name {
     static let tutorialGateTapped = Notification.Name("tutorialGateTapped")
+    static let skipTutorialTyping = Notification.Name("skipTutorialTyping")
 }
 
 struct TypewriterText: View {
@@ -14,7 +15,7 @@ struct TypewriterText: View {
     @State private var typingTask: Task<Void, Never>? = nil
     private let baseFontSize: CGFloat = 23
     private let lineSpacing: CGFloat = 2
-
+    
     init(attributedText: AttributedString, onFinished: (() -> Void)? = nil) {
         self.attributedText = attributedText
         self.plainText = String(attributedText.characters)
@@ -38,6 +39,9 @@ struct TypewriterText: View {
         .onDisappear {
             typingTask?.cancel()
             typingTask = nil
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .skipTutorialTyping)) { _ in
+            completeTypingInstantly()
         }
     }
 
@@ -65,6 +69,15 @@ struct TypewriterText: View {
                 try? await Task.sleep(nanoseconds: randomDelay)
             }
             guard !Task.isCancelled else { return }
+            onFinished?()
+        }
+    }
+
+    private func completeTypingInstantly() {
+        typingTask?.cancel()
+        let totalCount = attributedText.characters.count
+        if revealedCount < totalCount {
+            revealedCount = totalCount
             onFinished?()
         }
     }
@@ -178,10 +191,8 @@ struct TutorialOverlayView: View {
     private var tutorialPanel: some View {
         ZStack(alignment: .topTrailing) {
             tutorialContent
+            reviewExitButton
 
-            if isReviewMode {
-                reviewExitButton
-            }
         }
     }
 

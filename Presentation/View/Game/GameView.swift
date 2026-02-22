@@ -153,6 +153,13 @@ struct GameView: View {
 
                 }
             }
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    if viewModel.isTutorialActive {
+                        NotificationCenter.default.post(name: .skipTutorialTyping, object: nil)
+                    }
+                }
+            )
             .onPreferenceChange(BoundsPreferenceKey.self) { preferences in
                 var newFrames: [QuantumGate: CGRect] = [:]
                 for (gate, anchor) in preferences {
