@@ -1,6 +1,4 @@
-import Foundation
 import SwiftUI
-import simd
 
 public enum TutorialStep: CaseIterable, Equatable, Sendable {
     case intro1

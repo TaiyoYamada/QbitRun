@@ -435,23 +435,32 @@ struct GameView: View {
             VStack() {
 
                 if !viewModel.isTutorialActive {
-                    VStack(alignment: .leading,spacing: 20) {
+                    VStack(alignment: .leading,spacing: 10) {
                         HStack(spacing: 15) {
                             Circle()
-                                .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
-                                .frame(width: 30, height: 30)
+                                .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.9))
+                                .frame(width: 25, height: 25)
                             Text("CURRENT")
-                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .font(.system(size: 25, weight: .bold, design: .rounded))
                                 .tracking(3)
                                 .foregroundStyle(.white.opacity(0.9))
                         }
 
                         HStack(spacing: 15) {
                             Circle()
-                                .fill(Color.white.opacity(0.8))
-                                .frame(width: 30, height: 30)
+                                .fill(Color.white.opacity(0.9))
+                                .frame(width: 25, height: 25)
                             Text("TARGET")
-                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .font(.system(size: 25, weight: .bold, design: .rounded))
+                                .tracking(3)
+                                .foregroundStyle(.white.opacity(0.9))
+                        }
+                        HStack(spacing: 15) {
+                            Circle()
+                                .fill(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.9))
+                                .frame(width: 25, height: 25)
+                            Text("MATCH")
+                                .font(.system(size: 25, weight: .bold, design: .rounded))
                                 .tracking(3)
                                 .foregroundStyle(.white.opacity(0.9))
                         }
@@ -464,7 +473,7 @@ struct GameView: View {
                     )
                     .offset(
                         x: -geometry.size.width * 0.32,
-                        y: geometry.size.height * 0.1
+                        y: geometry.size.height * 0.08
                     )
                 }
 
