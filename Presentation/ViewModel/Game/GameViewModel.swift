@@ -174,7 +174,7 @@ final class GameViewModel {
             }
 
             if shouldAnimateTrajectory {
-                let duration: Double = 1.0
+                let duration: Double = 0.6
                 let fps: Double = 60
                 let totalFrames = Int(duration * fps)
 

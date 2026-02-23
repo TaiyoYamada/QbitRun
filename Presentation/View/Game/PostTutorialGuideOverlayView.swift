@@ -19,7 +19,7 @@ struct PostTutorialGuideOverlayView: View {
             let layout = currentTarget.layout(in: geometry.size)
 
             ZStack {
-                Color.black.opacity(0.50)
+                Color.black.opacity(0.3)
                     .ignoresSafeArea()
 
                 if layout.showsArrow {
