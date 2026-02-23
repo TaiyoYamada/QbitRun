@@ -296,7 +296,7 @@ struct TutorialOverlayView: View {
                 .contentTransition(.identity)
                 .transaction { $0.animation = nil }
                 .scaleEffect(animationScale)
-                .shadow(color: viewModel.showTutorialNextButton ? .cyan : .clear, radius: 7)
+                .shadow(color: viewModel.showTutorialNextButton ? .cyan.opacity(0.7) : .clear, radius: 10)
         }
         .disabled(!viewModel.showTutorialNextButton)
         .buttonStyle(.plain)

@@ -28,13 +28,20 @@ struct GameView: View {
 
     @State private var showExitConfirmation = false
 
-
-
     @State private var showComboEffect = false
     @State private var comboAnimationTask: Task<Void, Never>?
+    @State private var showPostTutorialGuide = false
+    @State private var postTutorialGuideStep: PostTutorialGuideStep = .matchTargetVector
+    @State private var shouldMarkTutorialCompletionOnGameStart = false
+
+
 
     private var isGameModalPresented: Bool {
-        showExitConfirmation
+        showExitConfirmation || showPostTutorialGuide
+    }
+
+    private var isInitialTutorialFlow: Bool {
+        isTutorial && !isReviewMode
     }
 
 
@@ -84,6 +91,17 @@ struct GameView: View {
                     showFailure: $showFailureEffect
                 )
                 .accessibilityHidden(isGameModalPresented)
+
+                if showPostTutorialGuide {
+                    PostTutorialGuideOverlayView(
+                        step: postTutorialGuideStep,
+                        onNextTapped: {
+                            advancePostTutorialGuide()
+                        }
+                    )
+                    .zIndex(250)
+                    .transition(.opacity)
+                }
 
                 if showCountdown {
                     Color.black.opacity(0.3).ignoresSafeArea()
@@ -206,12 +224,13 @@ struct GameView: View {
                 self.highlightedGate = nil
                 updateSpotlightFrames(animated: false)
             } else {
-                hasCompletedTutorial = true
                 highlightedGate = nil
                 updateSpotlightFrames(animated: false)
 
                 if isReviewMode {
                     dismiss()
+                } else if isInitialTutorialFlow {
+                    beginPostTutorialGuide()
                 } else {
                     Task {
                         try? await Task.sleep(for: .milliseconds(500))
@@ -316,6 +335,41 @@ struct GameView: View {
             }
 
             viewModel.startGameLoop()
+
+            if shouldMarkTutorialCompletionOnGameStart {
+                hasCompletedTutorial = true
+                shouldMarkTutorialCompletionOnGameStart = false
+            }
+        }
+    }
+
+    private func beginPostTutorialGuide() {
+        shouldMarkTutorialCompletionOnGameStart = true
+        postTutorialGuideStep = .matchTargetVector
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            showPostTutorialGuide = true
+        }
+    }
+
+    private func advancePostTutorialGuide() {
+        audioManager.playSFX(.button)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        if let next = PostTutorialGuideStep(rawValue: postTutorialGuideStep.rawValue + 1) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                postTutorialGuideStep = next
+            }
+            return
+        }
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            showPostTutorialGuide = false
+        }
+
+        Task {
+            try? await Task.sleep(for: .milliseconds(250))
+            startCountdown()
         }
     }
 
