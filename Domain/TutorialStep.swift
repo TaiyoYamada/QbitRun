@@ -13,7 +13,6 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
     case zGate2
     case hGate1
     case hGate2
-    case hGate3
     case sGate
     case tGate
     case finish
@@ -24,7 +23,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .xGate1, .xGate2: return "X GATE"
         case .yGate1, .yGate2: return "Y GATE"
         case .zGate1, .zGate2: return "Z GATE"
-        case .hGate1, .hGate2, .hGate3: return "H GATE"
+        case .hGate1, .hGate2: return "H GATE"
         case .sGate: return "S GATE"
         case .tGate: return "T GATE"
         case .finish: return isReviewMode ? "COMPLETE" : "NEXT"
@@ -68,9 +67,6 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         return "180° rotation around the (X+Z) axis.\nCreates superposition — an equal mix of 0 and 1.\n|0⟩ becomes |+⟩."
 
         case .hGate2:
-        return "Now try H from a different starting point.\nThe same rotation, but a different result.\n|+i⟩ becomes |−i⟩."
-
-        case .hGate3:
         return "H on a diagonal equatorial state.\nWatch how the state moves to a new position.\nH is a 180° rotation around the (X+Z) axis."
 
         case .sGate:
@@ -94,7 +90,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .xGate1, .xGate2: return .x
         case .yGate1, .yGate2: return .y
         case .zGate1, .zGate2: return .z
-        case .hGate1, .hGate2, .hGate3: return .h
+        case .hGate1, .hGate2: return .h
         case .sGate: return .s
         case .tGate: return .t
         }
@@ -110,8 +106,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .zGate1: return .plus
         case .zGate2: return .plusI
         case .hGate1: return .zero
-        case .hGate2: return .plusI
-        case .hGate3: return BlochVector(x: 1, y: 1, z: 0)
+        case .hGate2: return BlochVector(x: 1, y: 1, z: 0)
         case .sGate: return .plus
         case .tGate: return .plus
         }
