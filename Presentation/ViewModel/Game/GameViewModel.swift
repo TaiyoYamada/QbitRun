@@ -5,6 +5,23 @@ import simd
 @MainActor
 final class GameViewModel {
 
+    private struct VectorAnimationStep {
+        let path: VectorAnimationPath
+        let duration: Double
+    }
+
+    private enum VectorAnimationPath {
+        case axisRotation(start: simd_double3, axis: simd_double3, angle: Double)
+        case slerp(from: simd_double3, to: simd_double3)
+    }
+
+    private enum VectorAnimationConfig {
+        static let fps: Double = 60
+        static let addOrRemoveDuration: Double = 0.18
+        static let clearDuration: Double = 0.24
+        static let minimumDuration: Double = 0.035
+    }
+
     let gameEngine: GameEngine
 
     init(gameEngine: GameEngine = GameEngine()) {
@@ -44,6 +61,7 @@ final class GameViewModel {
     var circuitGates: [QuantumGate] {
         get { gameEngine.currentCircuit.gates }
         set {
+            resetGameplayVectorAnimation()
             gameEngine.clearCircuit()
             for gate in newValue {
                 gameEngine.addGate(gate)
@@ -55,7 +73,14 @@ final class GameViewModel {
 
     var maxGates: Int { gameEngine.currentCircuit.maxGates }
 
+    @ObservationIgnored
+    private var gameplayVectorAnimationQueue: [VectorAnimationStep] = []
+
+    @ObservationIgnored
+    private var gameplayVectorAnimationTask: Task<Void, Never>?
+
     func prepareGame(difficulty: GameDifficulty = .easy) {
+        resetGameplayVectorAnimation()
         gameEngine.start(difficulty: difficulty, startTimer: false)
     }
 
@@ -64,133 +89,50 @@ final class GameViewModel {
     }
 
     func startGame(difficulty: GameDifficulty = .easy) {
+        resetGameplayVectorAnimation()
         gameEngine.start(difficulty: difficulty, startTimer: true)
     }
 
     func addGate(_ gate: QuantumGate) {
         guard canAddGate else { return }
-
-        let startVector = currentVector.vector
-        let (axis, totalAngle) = gate.blochRotation
+        let fromVector = gameEngine.currentVector
+        let (axis, angle) = gate.blochRotation
 
         gameEngine.addGate(gate)
-
-        Task {
-            let duration: Double = 0.4
-            let fps: Double = 60
-            let totalFrames = Int(duration * fps)
-            
-            for frame in 0...totalFrames {
-                let progress = Double(frame) / Double(totalFrames)
-                let t = 1.0 - pow(1.0 - progress, 3.0)
-                let currentAngle = totalAngle * t
-                
-                let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
-                
-                await MainActor.run {
-                    self.tutorialVector = BlochVector(rotated)
-                }
-                
-                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
-            }
-
-            await MainActor.run {
-                self.tutorialVector = nil
-            }
-        }
+        enqueueGameplayVectorAnimation(
+            path: .axisRotation(start: fromVector.vector, axis: axis, angle: angle),
+            baseDuration: VectorAnimationConfig.addOrRemoveDuration
+        )
     }
 
     func removeGate(at index: Int) {
+        guard circuitGates.indices.contains(index) else { return }
+        let fromVector = gameEngine.currentVector
         let gate = circuitGates[index]
-        let startVector = currentVector.vector
+        let (axis, angle) = gate.blochRotation
 
-        var (axis, totalAngle) = gate.blochRotation
-        if gate == .s || gate == .t {
-            totalAngle = -totalAngle
-        } else {
-            totalAngle = -totalAngle
-        }
-        
         gameEngine.removeGate(at: index)
-        
-        Task {
-            let duration: Double = 0.4
-            let fps: Double = 60
-            let totalFrames = Int(duration * fps)
-            
-            for frame in 0...totalFrames {
-                let progress = Double(frame) / Double(totalFrames)
-                let t = 1.0 - pow(1.0 - progress, 3.0)
-                let currentAngle = totalAngle * t
-                
-                let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
-                
-                await MainActor.run {
-                    self.tutorialVector = BlochVector(rotated)
-                }
-                
-                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
-            }
-            
-            await MainActor.run {
-                self.tutorialVector = nil
-            }
-        }
+        enqueueGameplayVectorAnimation(
+            path: .axisRotation(start: fromVector.vector, axis: axis, angle: -angle),
+            baseDuration: VectorAnimationConfig.addOrRemoveDuration
+        )
     }
 
     func clearCircuit() {
-        let startVector = currentVector.vector
-        let targetBlochVector = gameEngine.currentProblem?.startBlochVector ?? .zero
-        let targetVector = targetBlochVector.vector
-        
+        let fromVector = gameEngine.currentVector
         gameEngine.clearCircuit()
-
-        let dot = simd_dot(simd_normalize(startVector), simd_normalize(targetVector))
-
-        if dot > 0.999 { return }
-        
-        var axis = simd_cross(simd_normalize(startVector), simd_normalize(targetVector))
-        let axisLength = simd_length(axis)
-
-        if axisLength < 0.001 && dot < -0.999 {
-            let arbitraryUp = abs(startVector.x) < 0.9 ? simd_double3(1, 0, 0) : simd_double3(0, 1, 0)
-            axis = simd_normalize(simd_cross(startVector, arbitraryUp))
-        } else {
-            axis = simd_normalize(axis)
-        }
-        
-        let totalAngle = acos(max(-1.0, min(1.0, dot)))
-        
-        Task {
-            let duration: Double = 0.5
-            let fps: Double = 60
-            let totalFrames = Int(duration * fps)
-            
-            for frame in 0...totalFrames {
-                let progress = Double(frame) / Double(totalFrames)
-                let t = 1.0 - pow(1.0 - progress, 3.0)
-                let currentAngle = totalAngle * t
-
-                let rotationWrapper = simd_quatd(angle: currentAngle, axis: axis)
-                let rotated = rotationWrapper.act(startVector)
-                
-                await MainActor.run {
-                    self.tutorialVector = BlochVector(rotated)
-                }
-                
-                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
-            }
-            
-            await MainActor.run {
-                self.tutorialVector = nil
-            }
-        }
+        let toVector = gameEngine.currentVector
+        enqueueGameplayVectorAnimation(
+            path: .slerp(from: fromVector.vector, to: toVector.vector),
+            baseDuration: VectorAnimationConfig.clearDuration
+        )
     }
 
     func runCircuit() -> (isCorrect: Bool, isGameOver: Bool) {
         let isCorrect = gameEngine.checkCurrentState()
         if isCorrect {
             gameEngine.handleCorrectAnswer()
+            resetGameplayVectorAnimation()
             return (isCorrect: true, isGameOver: false)
         } else {
             let isGameOver = gameEngine.handleWrongAnswer()
@@ -220,6 +162,7 @@ final class GameViewModel {
     }
 
     func startTutorial() {
+        resetGameplayVectorAnimation()
         isTutorialActive = true
         furthestReachedTutorialIndex = 0
         currentTutorialStep = .intro1
@@ -305,6 +248,121 @@ final class GameViewModel {
 
     func clearTutorialVector() {
         self.tutorialVector = nil
+    }
+
+    private func enqueueGameplayVectorAnimation(path: VectorAnimationPath, baseDuration: Double) {
+        guard !isTutorialActive else { return }
+        if case let .slerp(from, to) = path {
+            guard simd_distance(from, to) > 0.000_1 else { return }
+        }
+
+        let duration = adjustedDuration(for: baseDuration)
+        let step = VectorAnimationStep(path: path, duration: duration)
+        gameplayVectorAnimationQueue.append(step)
+        startGameplayVectorAnimationIfNeeded()
+    }
+
+    private func startGameplayVectorAnimationIfNeeded() {
+        guard gameplayVectorAnimationTask == nil else { return }
+
+        gameplayVectorAnimationTask = Task { @MainActor in
+            await self.processGameplayVectorAnimationQueue()
+        }
+    }
+
+    private func processGameplayVectorAnimationQueue() async {
+        defer {
+            gameplayVectorAnimationTask = nil
+            if !isTutorialActive {
+                tutorialVector = nil
+            }
+        }
+
+        while !gameplayVectorAnimationQueue.isEmpty {
+            if Task.isCancelled { break }
+            let step = gameplayVectorAnimationQueue.removeFirst()
+            await animateGameplayVectorStep(step)
+        }
+    }
+
+    private func animateGameplayVectorStep(_ step: VectorAnimationStep) async {
+        let totalFrames = max(1, Int(step.duration * VectorAnimationConfig.fps))
+        let frameDurationNs = UInt64(1_000_000_000 / VectorAnimationConfig.fps)
+
+        for frame in 0...totalFrames {
+            if Task.isCancelled { return }
+
+            let progress = Double(frame) / Double(totalFrames)
+            let easedProgress = 1.0 - pow(1.0 - progress, 3.0)
+            let interpolated: simd_double3
+            switch step.path {
+            case let .axisRotation(start, axis, angle):
+                let currentAngle = angle * easedProgress
+                interpolated = rotate(vector: start, axis: axis, angle: currentAngle)
+            case let .slerp(from, to):
+                interpolated = slerp(from: from, to: to, t: easedProgress)
+            }
+            tutorialVector = BlochVector(interpolated)
+
+            if frame < totalFrames {
+                do {
+                    try await Task.sleep(nanoseconds: frameDurationNs)
+                } catch {
+                    return
+                }
+            }
+        }
+    }
+
+    private func resetGameplayVectorAnimation() {
+        gameplayVectorAnimationTask?.cancel()
+        gameplayVectorAnimationTask = nil
+        gameplayVectorAnimationQueue.removeAll(keepingCapacity: false)
+        tutorialVector = nil
+    }
+
+    private func adjustedDuration(for baseDuration: Double) -> Double {
+        let backlog = gameplayVectorAnimationQueue.count + (gameplayVectorAnimationTask == nil ? 0 : 1)
+        let factor: Double
+        switch backlog {
+        case 0...1:
+            factor = 1.0
+        case 2...3:
+            factor = 0.65
+        case 4...6:
+            factor = 0.45
+        default:
+            factor = 0.25
+        }
+
+        return max(VectorAnimationConfig.minimumDuration, baseDuration * factor)
+    }
+
+    private func slerp(from source: simd_double3, to destination: simd_double3, t: Double) -> simd_double3 {
+        let clampedT = max(0.0, min(1.0, t))
+        let from = simd_normalize(source)
+        let to = simd_normalize(destination)
+        let dot = max(-1.0, min(1.0, simd_dot(from, to)))
+
+        if dot > 0.9995 {
+            return simd_normalize(from * (1.0 - clampedT) + to * clampedT)
+        }
+
+        if dot < -0.9995 {
+            var orthogonal = simd_cross(from, simd_double3(1, 0, 0))
+            if simd_length_squared(orthogonal) < 0.000001 {
+                orthogonal = simd_cross(from, simd_double3(0, 1, 0))
+            }
+            orthogonal = simd_normalize(orthogonal)
+            let rotation = simd_quatd(angle: .pi * clampedT, axis: orthogonal)
+            return simd_normalize(rotation.act(from))
+        }
+
+        let angle = acos(dot)
+        let sinAngle = sin(angle)
+        let fromWeight = sin((1.0 - clampedT) * angle) / sinAngle
+        let toWeight = sin(clampedT * angle) / sinAngle
+        return simd_normalize(from * fromWeight + to * toWeight)
     }
 
     private func rotate(vector: simd_double3, axis: simd_double3, angle: Double) -> simd_double3 {

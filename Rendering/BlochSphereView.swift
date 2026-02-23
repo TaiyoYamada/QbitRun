@@ -685,7 +685,7 @@ public struct BlochSphereViewRepresentable: UIViewRepresentable {
         view.isInteractive = isInteractive
         view.setTargetVector(targetVector)
 
-        view.setVector(vector, animated: false)
+        view.setVector(vector, animated: animated)
         view.axisOpacity = axisOpacity
     }
 }

@@ -542,7 +542,7 @@ struct GameView: View {
 
                 BlochSphereViewRepresentable(
                     vector: viewModel.currentVector,
-                    animated: !viewModel.isTutorialActive,
+                    animated: false,
                     targetVector: viewModel.isTutorialActive ? nil : viewModel.targetVector,
                     showBackground: false
                 )
