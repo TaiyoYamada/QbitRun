@@ -71,7 +71,6 @@ struct TutorialConfirmationView: View {
                             .frame(maxWidth: .infinity)
                             .background(
                                 LinearGradient(
-//                                    colors: [Color.purple.opacity(0.8), Color.cyan.opacity(0.8)],
                                     colors: [
                                         Color.cyan.opacity(0.9),
                                         Color(red: 0.24, green: 0.36, blue: 0.82),
@@ -99,7 +98,6 @@ struct TutorialConfirmationView: View {
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(
                         LinearGradient(
-//                            colors: [.cyan.opacity(0.5), .purple.opacity(0.5)],
                             colors: [
                                 Color.cyan.opacity(0.9),
                                 Color(red: 0.24, green: 0.36, blue: 0.82),

@@ -1,5 +1,5 @@
 import Foundation
-
+import simd
 public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
     case x
     case y
@@ -46,6 +46,25 @@ public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
         }
     }
 
+    public var blochRotation: (axis: simd_double3, angle: Double) {
+        switch self {
+        case .x:
+            return (simd_double3(1, 0, 0), .pi)
+        case .y:
+            return (simd_double3(0, 1, 0), .pi)
+        case .z:
+            return (simd_double3(0, 0, 1), .pi)
+        case .h:
+            let factor = 1.0 / 2.0.squareRoot()
+            let axis = simd_double3(factor, 0, factor)
+            return (axis, .pi)
+        case .s:
+            return (simd_double3(0, 0, 1), .pi / 2)
+        case .t:
+            return (simd_double3(0, 0, 1), .pi / 4)
+        }
+    }
+
     public func apply(to state: QuantumState) -> QuantumState {
         let m = matrix
         let newAlpha = m[0][0] * state.alpha + m[0][1] * state.beta
@@ -55,23 +74,23 @@ public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
 
     public var name: String {
         switch self {
-        case .x: return "パウリX（NOT）"
-        case .y: return "パウリY"
-        case .z: return "パウリZ"
-        case .h: return "アダマール"
-        case .s: return "Sゲート（√Z）"
-        case .t: return "Tゲート（√S）"
+        case .x: return "Pauli-X"
+        case .y: return "Pauli-Y"
+        case .z: return "Pauli-Z"
+        case .h: return "Hadamard"
+        case .s: return "S Gate"
+        case .t: return "T Gate"
         }
     }
 
     public var description: String {
         switch self {
-        case .x: return "ビット反転: |0⟩ ↔ |1⟩"
-        case .y: return "Y軸周りの180°回転"
-        case .z: return "位相反転: |1⟩ → -|1⟩"
-        case .h: return "重ね合わせ: |0⟩ → |+⟩"
-        case .s: return "90°位相シフト"
-        case .t: return "45°位相シフト"
+        case .x: return "π rotation around the X-axis (Rₓ(π)); maps |0⟩ ↔ |1⟩"
+        case .y: return "π rotation around the Y-axis (Rᵧ(π)); maps |0⟩ → |1⟩ up to a global phase"
+        case .z: return "π rotation around the Z-axis (R_z(π)); applies a phase of −1 to |1⟩"
+        case .h: return "π rotation around the (X+Z)/√2 axis; swaps Z and X bases"
+        case .s: return "π/2 rotation around the Z-axis (R_z(π/2)); phase gate"
+        case .t: return "π/4 rotation around the Z-axis (R_z(π/4)); π/8 phase gate"
         }
     }
 }

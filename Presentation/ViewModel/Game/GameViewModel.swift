@@ -68,15 +68,123 @@ final class GameViewModel {
     }
 
     func addGate(_ gate: QuantumGate) {
+        guard canAddGate else { return }
+
+        let startVector = currentVector.vector
+        let (axis, totalAngle) = gate.blochRotation
+
         gameEngine.addGate(gate)
+
+        Task {
+            let duration: Double = 0.4
+            let fps: Double = 60
+            let totalFrames = Int(duration * fps)
+            
+            for frame in 0...totalFrames {
+                let progress = Double(frame) / Double(totalFrames)
+                let t = 1.0 - pow(1.0 - progress, 3.0)
+                let currentAngle = totalAngle * t
+                
+                let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
+                
+                await MainActor.run {
+                    self.tutorialVector = BlochVector(rotated)
+                }
+                
+                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
+            }
+
+            await MainActor.run {
+                self.tutorialVector = nil
+            }
+        }
     }
 
     func removeGate(at index: Int) {
+        let gate = circuitGates[index]
+        let startVector = currentVector.vector
+
+        var (axis, totalAngle) = gate.blochRotation
+        if gate == .s || gate == .t {
+            totalAngle = -totalAngle
+        } else {
+            totalAngle = -totalAngle
+        }
+        
         gameEngine.removeGate(at: index)
+        
+        Task {
+            let duration: Double = 0.4
+            let fps: Double = 60
+            let totalFrames = Int(duration * fps)
+            
+            for frame in 0...totalFrames {
+                let progress = Double(frame) / Double(totalFrames)
+                let t = 1.0 - pow(1.0 - progress, 3.0)
+                let currentAngle = totalAngle * t
+                
+                let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
+                
+                await MainActor.run {
+                    self.tutorialVector = BlochVector(rotated)
+                }
+                
+                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
+            }
+            
+            await MainActor.run {
+                self.tutorialVector = nil
+            }
+        }
     }
 
     func clearCircuit() {
+        let startVector = currentVector.vector
+        let targetBlochVector = gameEngine.currentProblem?.startBlochVector ?? .zero
+        let targetVector = targetBlochVector.vector
+        
         gameEngine.clearCircuit()
+
+        let dot = simd_dot(simd_normalize(startVector), simd_normalize(targetVector))
+
+        if dot > 0.999 { return }
+        
+        var axis = simd_cross(simd_normalize(startVector), simd_normalize(targetVector))
+        let axisLength = simd_length(axis)
+
+        if axisLength < 0.001 && dot < -0.999 {
+            let arbitraryUp = abs(startVector.x) < 0.9 ? simd_double3(1, 0, 0) : simd_double3(0, 1, 0)
+            axis = simd_normalize(simd_cross(startVector, arbitraryUp))
+        } else {
+            axis = simd_normalize(axis)
+        }
+        
+        let totalAngle = acos(max(-1.0, min(1.0, dot)))
+        
+        Task {
+            let duration: Double = 0.5
+            let fps: Double = 60
+            let totalFrames = Int(duration * fps)
+            
+            for frame in 0...totalFrames {
+                let progress = Double(frame) / Double(totalFrames)
+                let t = 1.0 - pow(1.0 - progress, 3.0)
+                let currentAngle = totalAngle * t
+
+                let rotationWrapper = simd_quatd(angle: currentAngle, axis: axis)
+                let rotated = rotationWrapper.act(startVector)
+                
+                await MainActor.run {
+                    self.tutorialVector = BlochVector(rotated)
+                }
+                
+                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
+            }
+            
+            await MainActor.run {
+                self.tutorialVector = nil
+            }
+        }
     }
 
     func runCircuit() -> (isCorrect: Bool, isGameOver: Bool) {
@@ -165,41 +273,24 @@ final class GameViewModel {
 
         Task {
             let startVector = currentVector.vector
-            let (axis, angle) = rotationParameters(for: gate)
+            let (axis, totalAngle) = gate.blochRotation
 
-            let shouldAnimateTrajectory: Bool
-            switch gate {
-            case .s, .t: shouldAnimateTrajectory = true
-            default: shouldAnimateTrajectory = false
-            }
+            let duration: Double = 0.6
+            let fps: Double = 60
+            let totalFrames = Int(duration * fps)
 
-            if shouldAnimateTrajectory {
-                let duration: Double = 0.6
-                let fps: Double = 60
-                let totalFrames = Int(duration * fps)
+            for frame in 0...totalFrames {
+                let progress = Double(frame) / Double(totalFrames)z
+                let t = 1.0 - pow(1.0 - progress, 3.0)
+                let currentAngle = totalAngle * t
 
-                for frame in 0...totalFrames {
-                    let progress = Double(frame) / Double(totalFrames)
-                    let t = 1.0 - pow(1.0 - progress, 3.0)
-                    let currentAngle = angle * t
+                let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
 
-                    let rotated = rotate(vector: startVector, axis: axis, angle: currentAngle)
-
-                    await MainActor.run {
-                        self.setTutorialVector(BlochVector(rotated))
-                    }
-
-                    try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
+                await MainActor.run {
+                    self.setTutorialVector(BlochVector(rotated))
                 }
-            } else {
-                try? await Task.sleep(for: .milliseconds(200))
 
-                let finalVector = rotate(vector: startVector, axis: axis, angle: angle)
-                 await MainActor.run {
-                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                         self.setTutorialVector(BlochVector(finalVector))
-                     }
-                 }
+                try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 / fps))
             }
 
             await MainActor.run {
@@ -216,20 +307,8 @@ final class GameViewModel {
         self.tutorialVector = nil
     }
 
-    private func rotationParameters(for gate: QuantumGate) -> (axis: simd_double3, angle: Double) {
-        switch gate {
-        case .x: return (simd_double3(1, 0, 0), .pi)
-        case .y: return (simd_double3(0, 1, 0), .pi)
-        case .z: return (simd_double3(0, 0, 1), .pi)
-        case .h:
-            let axis = simd_normalize(simd_double3(1, 0, 1))
-            return (axis, .pi)
-        case .s: return (simd_double3(0, 0, 1), .pi / 2)
-        case .t: return (simd_double3(0, 0, 1), .pi / 4)
-        }
-    }
-
     private func rotate(vector: simd_double3, axis: simd_double3, angle: Double) -> simd_double3 {
+
         let rotationWrapper = simd_quatd(angle: angle, axis: axis)
         return rotationWrapper.act(vector)
     }

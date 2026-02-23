@@ -327,7 +327,6 @@ struct GameView: View {
             }
 
             countdownValue = 0
-//            audioManager.playSFX(.start)
             await animateStartStep()
 
             withAnimation(.easeOut(duration: 0.5)) {

@@ -561,6 +561,7 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
         guard let node = node else { return }
 
         let rawV = vector.float3
+
         let v = simd_float3(rawV.y, rawV.z, rawV.x)
 
         let length = simd_length(v)
@@ -683,8 +684,8 @@ public struct BlochSphereViewRepresentable: UIViewRepresentable {
         view.onOrbitStop = onOrbitStop
         view.isInteractive = isInteractive
         view.setTargetVector(targetVector)
-        view.setTargetVector(targetVector)
-        view.setVector(vector, animated: animated)
+
+        view.setVector(vector, animated: false)
         view.axisOpacity = axisOpacity
     }
 }

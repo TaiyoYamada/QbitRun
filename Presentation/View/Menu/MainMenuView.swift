@@ -142,29 +142,6 @@ struct MainMenuView: View {
             QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
                 .ignoresSafeArea()
                 .opacity(0.5)
-
-//            VStack {
-//                Rectangle()
-//                    .fill(
-//                        LinearGradient(
-//                            colors: [.cyan.opacity(0.18), .clear],
-//                            startPoint: .top,
-//                            endPoint: .bottom
-//                        )
-//                    )
-//                    .frame(height: 200)
-//
-//                Spacer()
-//                Rectangle()
-//                    .fill(
-//                        LinearGradient(
-//                            colors: [.cyan.opacity(0.18), .clear],
-//                            startPoint: .bottom,
-//                            endPoint: .top
-//                        )
-//                    )
-//                    .frame(height: 200)
-//            }
             .ignoresSafeArea()
         }
     }
@@ -198,19 +175,6 @@ struct MainMenuView: View {
                 .font(.system(size: 132, weight: .light, design: .rounded))
                 .tracking(10)
                 .foregroundStyle(.white.opacity(0.9))
-//                .foregroundStyle(
-//                    LinearGradient(
-//                        colors: [
-//                            Color.white.opacity(0.9),
-//                            Color(red: 0.96, green: 0.98, blue: 1.0),
-//                            Color(red: 0.86, green: 0.88, blue: 0.95),
-//                            Color(red: 0.24, green: 0.36, blue: 0.82),
-//                            Color(red: 0.25, green: 0.08, blue: 0.48)
-//                        ],
-//                        startPoint: .leading,
-//                        endPoint: .trailing
-//                    )
-//                )
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Qbit Run")
