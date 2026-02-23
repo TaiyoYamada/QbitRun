@@ -175,7 +175,7 @@ struct GlitchCharacterText: View {
     @MainActor
     private func glitchLoop() async {
         while !Task.isCancelled {
-            let delay = Double.random(in: 1...3)
+            let delay = Double.random(in: 1...4)
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
 
 

@@ -27,7 +27,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         case .hGate1, .hGate2, .hGate3: return "H GATE"
         case .sGate: return "S GATE"
         case .tGate: return "T GATE"
-        case .finish: return isReviewMode ? "COMPLETE" : "LAUNCH"
+        case .finish: return isReviewMode ? "COMPLETE" : "NEXT"
         }
     }
 
@@ -83,7 +83,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
             if isReviewMode {
                 return "That's all the gates!\nHead back anytime to review."
             } else {
-                return "You've learned all the basic gates!\nYou're ready to play!"
+                return "You've learned all the basic gates!\nNext, let's look at the game rules."
             }
         }
     }

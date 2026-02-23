@@ -311,7 +311,7 @@ struct TutorialOverlayView: View {
             Text("NEXT")
                 .opacity(viewModel.currentTutorialStep == .finish ? 0 : 1)
 
-            Text(isReviewMode ? "CLOSE" : "START GAME")
+            Text(isReviewMode ? "CLOSE" : "NEXT")
                 .opacity(viewModel.currentTutorialStep == .finish ? 1 : 0)
         }
     }
