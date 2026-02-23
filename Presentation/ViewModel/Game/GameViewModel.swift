@@ -280,7 +280,7 @@ final class GameViewModel {
             let totalFrames = Int(duration * fps)
 
             for frame in 0...totalFrames {
-                let progress = Double(frame) / Double(totalFrames)z
+                let progress = Double(frame) / Double(totalFrames)
                 let t = 1.0 - pow(1.0 - progress, 3.0)
                 let currentAngle = totalAngle * t
 

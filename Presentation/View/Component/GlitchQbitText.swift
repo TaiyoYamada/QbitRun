@@ -89,38 +89,57 @@ class TextDragState: ObservableObject {
 
 struct GlitchQbitText: View {
     @StateObject private var dragState = TextDragState()
+    @State private var qScale: CGFloat = 1.0
 
     var body: some View {
         HStack(spacing: 0) {
             GlitchCharacterText(character: "Q")
+                .scaleEffect(qScale)
                 .offset(dragState.headOffset)
                 .zIndex(4)
                 .gesture(
                     DragGesture()
-                        .onChanged { value in
-                            dragState.onDragChanged(value)
-                        }
-                        .onEnded { value in
-                            dragState.onDragEnded(value)
-                        }
+                        .onChanged { dragState.onDragChanged($0) }
+                        .onEnded { dragState.onDragEnded($0) }
                 )
-            
+
             GlitchCharacterText(character: "b")
                 .offset(dragState.followerOffsets[0])
                 .zIndex(3)
-            
+
             GlitchCharacterText(character: "i")
                 .offset(dragState.followerOffsets[1])
                 .zIndex(2)
-            
+
             GlitchCharacterText(character: "t")
                 .offset(dragState.followerOffsets[2])
                 .zIndex(1)
         }
         .shadow(color: .cyan.opacity(0.5), radius: 5)
+        .task {
+            await pulseLoop()
+        }
     }
-}
 
+    private func pulseLoop() async {
+        while true {
+            try? await Task.sleep(for: .seconds(2.5))
+
+            await MainActor.run {
+                withAnimation(.linear(duration: 0.03)) {
+                    qScale = 1.03
+                }
+            }
+
+            try? await Task.sleep(nanoseconds: 50_000_000)
+
+            await MainActor.run {
+                withAnimation(.interpolatingSpring(stiffness: 180, damping: 12)) {
+                    qScale = 1.0
+                }
+            }
+        }
+    }}
 struct GlitchCharacterText: View {
     let character: String
     let sliceCount = 15

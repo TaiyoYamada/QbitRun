@@ -31,8 +31,13 @@ struct PostTutorialGuideOverlayView: View {
                 guidePanel
                     .frame(width: min(550, geometry.size.width * 0.75))
                     .position(layout.panelPoint)
+                    .id(step)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .scale(scale: 0.95)),
+                        removal: .opacity.combined(with: .scale(scale: 0.95))
+                    ))
             }
-            .animation(.easeInOut(duration: 0.26), value: currentTarget)
+            .animation(.easeInOut(duration: 0.35), value: currentTarget)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Game guide")
             .accessibilityHint("Read this quick guide and move to the next step.")
