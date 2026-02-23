@@ -42,7 +42,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
         return "|0⟩ and |1⟩ are on the Z-axis (top and bottom).\n|+⟩ and |−⟩ are on the X-axis.\n|+i⟩ and |−i⟩ are on the Y-axis."
 
         case .intro4:
-        return "Apply gates to rotate the state toward the target!"
+        return "Apply gates to change the quantum state."
 
 
         case .xGate1:
