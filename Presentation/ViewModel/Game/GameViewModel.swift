@@ -17,9 +17,9 @@ final class GameViewModel {
 
     private enum VectorAnimationConfig {
         static let fps: Double = 60
-        static let addOrRemoveDuration: Double = 0.18
-        static let clearDuration: Double = 0.24
-        static let minimumDuration: Double = 0.035
+        static let addOrRemoveDuration: Double = 0.16
+        static let clearDuration: Double = 0.22
+        static let minimumDuration: Double = 0.016
     }
 
     let gameEngine: GameEngine
@@ -327,12 +327,16 @@ final class GameViewModel {
         switch backlog {
         case 0...1:
             factor = 1.0
-        case 2...3:
-            factor = 0.65
-        case 4...6:
+        case 2:
             factor = 0.45
-        default:
+        case 3:
+            factor = 0.33
+        case 4:
             factor = 0.25
+        case 5:
+            factor = 0.18
+        default:
+            factor = 0.12
         }
 
         return max(VectorAnimationConfig.minimumDuration, baseDuration * factor)
