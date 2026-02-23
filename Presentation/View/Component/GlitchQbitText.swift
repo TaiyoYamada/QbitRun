@@ -126,8 +126,8 @@ struct GlitchQbitText: View {
             try? await Task.sleep(for: .seconds(2.5))
 
             await MainActor.run {
-                withAnimation(.linear(duration: 0.03)) {
-                    qScale = 1.03
+                withAnimation(.linear(duration: 0.02)) {
+                    qScale = 1.02
                 }
             }
 
@@ -194,7 +194,7 @@ struct GlitchCharacterText: View {
     @MainActor
     private func glitchLoop() async {
         while !Task.isCancelled {
-            let delay = Double.random(in: 1...4)
+            let delay = Double.random(in: 2...4)
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
 
 
