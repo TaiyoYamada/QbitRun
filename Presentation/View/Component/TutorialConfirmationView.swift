@@ -1,5 +1,6 @@
 
 import SwiftUI
+import UIKit
 
 struct TutorialConfirmationView: View {
 
@@ -116,9 +117,15 @@ struct TutorialConfirmationView: View {
             .accessibilityLabel("Tutorial confirmation")
         }
         .onAppear {
+            announceForVoiceOver()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 animateIn = true
             }
         }
+    }
+
+    private func announceForVoiceOver() {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(notification: .screenChanged, argument: "Tutorial confirmation")
     }
 }

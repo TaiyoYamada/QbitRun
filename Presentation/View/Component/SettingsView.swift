@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
 
@@ -92,10 +93,16 @@ struct SettingsView: View {
             .accessibilityLabel("Audio settings")
         }
         .onAppear {
+            announceForVoiceOver()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 animateIn = true
             }
         }
+    }
+
+    private func announceForVoiceOver() {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(notification: .screenChanged, argument: "Audio settings")
     }
 }
 

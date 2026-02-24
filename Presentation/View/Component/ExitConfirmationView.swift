@@ -1,5 +1,6 @@
 
 import SwiftUI
+import UIKit
 
 struct ExitConfirmationView: View {
 
@@ -119,10 +120,16 @@ struct ExitConfirmationView: View {
             .accessibilityLabel("Exit confirmation")
         }
         .onAppear {
+            announceForVoiceOver()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 animateIn = true
             }
         }
+    }
+
+    private func announceForVoiceOver() {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(notification: .screenChanged, argument: "Exit confirmation")
     }
 }
 

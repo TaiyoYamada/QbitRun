@@ -5,6 +5,8 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
+
             ZStack {
                 NavigationStack(path: $coordinator.path) {
                     MainMenuView(
@@ -19,8 +21,10 @@ struct ContentView: View {
                     }
                 }
                 .preferredColorScheme(.dark)
+                .allowsHitTesting(!isLandscape)
+                .accessibilityHidden(isLandscape)
                 
-                if geometry.size.width > geometry.size.height {
+                if isLandscape {
                     LandscapeWarningView()
                 }
             }

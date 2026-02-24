@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct PostTutorialGuideOverlayView: View {
     let step: PostTutorialGuideStep
@@ -55,9 +56,11 @@ struct PostTutorialGuideOverlayView: View {
         }
         .onAppear {
             configureTargetCycle()
+            announceCurrentStepForVoiceOver()
         }
         .onChange(of: step) { _, _ in
             configureTargetCycle()
+            announceCurrentStepForVoiceOver()
         }
         .onDisappear {
             stopTargetCycle()
@@ -99,6 +102,9 @@ struct PostTutorialGuideOverlayView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(step.buttonTitle == "START" ? "Start game" : "Next guide step")
+            .accessibilityHint(step.buttonTitle == "START"
+                ? "Start the timed game."
+                : "Move to the next guide explanation.")
         }
         .padding(.horizontal, 50)
         .padding(.vertical, 40)
@@ -158,6 +164,13 @@ struct PostTutorialGuideOverlayView: View {
     private func stopTargetCycle() {
         targetCycleTask?.cancel()
         targetCycleTask = nil
+    }
+
+    private func announceCurrentStepForVoiceOver() {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+
+        let message = step.message.replacingOccurrences(of: "\n", with: " ")
+        UIAccessibility.post(notification: .screenChanged, argument: message)
     }
 }
 

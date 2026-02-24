@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct LandscapeWarningView: View {
     var body: some View {
@@ -25,8 +26,21 @@ struct LandscapeWarningView: View {
                     .multilineTextAlignment(.center)
             }
             .padding()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Please rotate to portrait mode. Vertical orientation is required to play.")
         }
         .zIndex(9999)
+        .onAppear {
+            announceForVoiceOver()
+        }
+    }
+
+    private func announceForVoiceOver() {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(
+            notification: .screenChanged,
+            argument: "Please rotate to portrait mode. Vertical orientation is required to play."
+        )
     }
 }
 

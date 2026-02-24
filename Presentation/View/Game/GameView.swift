@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct GameView: View {
 
@@ -71,6 +72,21 @@ struct GameView: View {
 
     private var isInitialTutorialFlow: Bool {
         isTutorial && !isReviewMode
+    }
+
+    private var isCurrentVectorMatchingTarget: Bool {
+        viewModel.currentVector.distance(to: viewModel.targetVector) < 0.1
+    }
+
+    private var blochSphereAccessibilityValue: String {
+        let currentState = stateDescription(for: viewModel.currentVector)
+        guard !viewModel.isTutorialActive else {
+            return "Current state: \(currentState)."
+        }
+
+        let targetState = stateDescription(for: viewModel.targetVector)
+        let matchStatus = isCurrentVectorMatchingTarget ? "Matched" : "Not matched"
+        return "Current state: \(currentState). Target state: \(targetState). \(matchStatus)."
     }
 
 
@@ -331,6 +347,11 @@ struct GameView: View {
                 triggerComboAnimation()
             }
         }
+        .onChange(of: viewModel.remainingTime) { _, newValue in
+            if newValue == 10 {
+                announceForVoiceOver("10 seconds remaining.")
+            }
+        }
         .onDisappear {
             comboAnimationTask?.cancel()
             gameEndTask?.cancel()
@@ -399,11 +420,13 @@ struct GameView: View {
             for i in (1...3).reversed() {
                 countdownValue = i
                 countdownPhase = .countdown
+                announceForVoiceOver("\(i)")
                 await animateCountdownStep()
             }
 
             countdownValue = 0
             countdownPhase = .start
+            announceForVoiceOver("Start.")
             await animateStartStep()
 
             withAnimation(.easeOut(duration: 0.5)) {
@@ -510,6 +533,7 @@ struct GameView: View {
     private func animateTimeUpStep() async {
         countdownScale = 0.5
         countdownOpacity = 0.0
+        announceForVoiceOver("Time up.")
 
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             countdownScale = 1.5
@@ -563,6 +587,10 @@ struct GameView: View {
             .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
                 [.timer: anchor]
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Time remaining")
+            .accessibilityValue("\(viewModel.remainingTime) seconds")
+            .accessibilityHint("Counts down while the game is active.")
 
             HStack {
                 Text("\(viewModel.score)")
@@ -586,6 +614,8 @@ struct GameView: View {
                     .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
                         [.score: anchor]
                     }
+                    .accessibilityLabel("Score")
+                    .accessibilityValue("\(viewModel.score) points")
 
                 Spacer()
 
@@ -667,6 +697,10 @@ struct GameView: View {
                 .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
                     [.sphere: anchor]
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Bloch sphere")
+                .accessibilityValue(blochSphereAccessibilityValue)
+                .accessibilityHint("Shows your current and target quantum states.")
             }
 
             ComboEffectView(
@@ -749,6 +783,33 @@ struct GameView: View {
                 showFailureEffect = false
             }
         }
+    }
+
+    private func announceForVoiceOver(_ message: String) {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(notification: .announcement, argument: message)
+    }
+
+    private func stateDescription(for vector: BlochVector) -> String {
+        let knownStates: [(BlochVector, String)] = [
+            (.zero, "ket zero"),
+            (.one, "ket one"),
+            (.plus, "ket plus"),
+            (.minus, "ket minus"),
+            (.plusI, "ket plus i"),
+            (.minusI, "ket minus i")
+        ]
+
+        if let knownState = knownStates.first(where: { vector.distance(to: $0.0) < 0.12 }) {
+            return knownState.1
+        }
+
+        return String(
+            format: "x %.2f, y %.2f, z %.2f",
+            vector.x,
+            vector.y,
+            vector.z
+        )
     }
 
     private func triggerComboAnimation() {
