@@ -120,7 +120,6 @@ struct ResultView: View {
                             .blur(radius: 30)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 60))
-                    .buttonStyle(ScaleButtonStyle())
                     .frame(maxWidth: 500)
                     .padding(30)
                     .scaleEffect(showContent ? 1.0 : 0.95)

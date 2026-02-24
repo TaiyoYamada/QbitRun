@@ -119,8 +119,6 @@ final class TutorialManager {
         showNextButton = true
     }
 
-    // MARK: - Private
-
     private func setStep(_ step: TutorialStep) {
         currentStep = step
         setVector(step.initialVector)

@@ -48,8 +48,6 @@ final class VectorAnimator {
         animatedVector = nil
     }
 
-    // MARK: - Private
-
     private func startIfNeeded() {
         guard animationTask == nil else { return }
 
