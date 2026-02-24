@@ -81,40 +81,42 @@ struct PostTutorialGuideOverlayView: View {
                     .padding(.vertical, 10)
                     .padding(.horizontal, 90)
                     .background(
-                        Capsule(style: .continuous)
-                            .fill(Color.black.opacity(0.72))
-                            .overlay {
-                                Capsule(style: .continuous)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.cyan.opacity(0.65),
-                                                Color(red: 0.35, green: 0.50, blue: 0.95).opacity(0.75)
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .opacity(0.85)
-                            }
+                        LinearGradient(
+                            colors: [
+                                Color.cyan.opacity(0.9),
+                                Color(red: 0.24, green: 0.36, blue: 0.82).opacity(0.9),
+                                Color(red: 0.25, green: 0.08, blue: 0.48).opacity(0.9)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
+                    .clipShape(Capsule())
                     .overlay(
-                        Capsule(style: .continuous)
-                            .stroke(Color.white.opacity(0.75), lineWidth: 3)
+                        Capsule().stroke(.white.opacity(0.6), lineWidth: 3)
                     )
-                    .shadow(color: .cyan.opacity(0.4), radius: 10)
+                    .shadow(color: .cyan.opacity(0.5), radius: 5)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(step.buttonTitle == "START" ? "Start game" : "Next guide step")
         }
         .padding(.horizontal, 50)
         .padding(.vertical, 40)
-        .background(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 30, style: .continuous)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 3)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 30))
+        .overlay(
+            RoundedRectangle(cornerRadius: 30)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.cyan.opacity(0.8),
+                            Color(red: 0.24, green: 0.36, blue: 0.82).opacity(0.8),
+                            Color(red: 0.25, green: 0.08, blue: 0.48).opacity(0.8)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 2
                 )
         )
         .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 8)

@@ -2,6 +2,12 @@ import SwiftUI
 
 struct GameView: View {
 
+    private enum CountdownOverlayPhase {
+        case countdown
+        case start
+        case timeUp
+    }
+
     @State private var viewModel = GameViewModel()
     @Environment(\.dismiss) private var dismiss
 
@@ -14,6 +20,7 @@ struct GameView: View {
     @AppStorage("hasCompletedTutorial") private var hasCompletedTutorial: Bool = false
     @State private var countdownValue: Int = 3
     @State private var showCountdown: Bool = true
+    @State private var countdownPhase: CountdownOverlayPhase = .countdown
 
     @State private var countdownScale: CGFloat = 0.5
     @State private var countdownOpacity: Double = 0.0
@@ -34,11 +41,32 @@ struct GameView: View {
     @State private var postTutorialGuideStep: PostTutorialGuideStep = .matchTargetVector
     @State private var postTutorialGuideFocusFrames: [PostTutorialGuideTarget: CGRect] = [:]
     @State private var shouldMarkTutorialCompletionOnGameStart = false
+    @State private var isTransitioningToResult = false
+    @State private var gameEndTask: Task<Void, Never>?
 
 
 
     private var isGameModalPresented: Bool {
-        showExitConfirmation || showPostTutorialGuide
+        showExitConfirmation || showPostTutorialGuide || isTransitioningToResult
+    }
+
+    private var isInteractionLocked: Bool {
+        showCountdown || showExitConfirmation || showPostTutorialGuide || isTransitioningToResult
+    }
+
+    private var countdownDisplayText: String {
+        switch countdownPhase {
+        case .countdown:
+            return "\(countdownValue)"
+        case .start:
+            return "START!"
+        case .timeUp:
+            return "TIME UP!"
+        }
+    }
+
+    private var usesHighlightCountdownStyle: Bool {
+        countdownPhase != .countdown
     }
 
     private var isInitialTutorialFlow: Bool {
@@ -88,6 +116,7 @@ struct GameView: View {
                         [.gatePalette: anchor]
                     }
                 }
+                .allowsHitTesting(!isInteractionLocked)
                 .accessibilityHidden(isGameModalPresented)
 
                 EffectOverlayView(
@@ -112,13 +141,13 @@ struct GameView: View {
                     Color.black.opacity(0.3).ignoresSafeArea()
                         .accessibilityHidden(isGameModalPresented)
 
-                    Text(countdownValue > 0 ? "\(countdownValue)" : "START！")
+                    Text(countdownDisplayText)
                         .tracking(2)
-                        .font(.system(size: countdownValue > 0 ? 140 : 110,
+                        .font(.system(size: usesHighlightCountdownStyle ? 110 : 140,
                                       weight: .bold,
                                       design: .rounded))
                         .foregroundStyle(
-                            countdownValue > 0
+                            !usesHighlightCountdownStyle
                             ? AnyShapeStyle(.white)
                             : AnyShapeStyle(
                                 LinearGradient(
@@ -178,6 +207,8 @@ struct GameView: View {
             }
             .simultaneousGesture(
                 SpatialTapGesture().onEnded { value in
+                    if isInteractionLocked { return }
+
                     if viewModel.isTutorialActive {
                         if showExitConfirmation { return }
                         
@@ -287,7 +318,11 @@ struct GameView: View {
             }
         }
         .onChange(of: viewModel.finalScore) { _, newScore in
-            if let score = newScore {
+            guard let score = newScore else { return }
+
+            if viewModel.remainingTime <= 0 {
+                startTimeUpTransition(with: score)
+            } else if !isTransitioningToResult {
                 onGameEnd(score)
             }
         }
@@ -295,6 +330,10 @@ struct GameView: View {
             if newCount >= 2 {
                 triggerComboAnimation()
             }
+        }
+        .onDisappear {
+            comboAnimationTask?.cancel()
+            gameEndTask?.cancel()
         }
 
     }
@@ -354,14 +393,17 @@ struct GameView: View {
     private func startCountdown() {
         showCountdown = true
         countdownValue = 3
+        countdownPhase = .countdown
 
         Task {
             for i in (1...3).reversed() {
                 countdownValue = i
+                countdownPhase = .countdown
                 await animateCountdownStep()
             }
 
             countdownValue = 0
+            countdownPhase = .start
             await animateStartStep()
 
             withAnimation(.easeOut(duration: 0.5)) {
@@ -374,6 +416,21 @@ struct GameView: View {
                 hasCompletedTutorial = true
                 shouldMarkTutorialCompletionOnGameStart = false
             }
+        }
+    }
+
+    private func startTimeUpTransition(with score: ScoreEntry) {
+        guard !isTransitioningToResult else { return }
+
+        isTransitioningToResult = true
+        gameEndTask?.cancel()
+        gameEndTask = Task { @MainActor in
+            showCountdown = true
+            countdownPhase = .timeUp
+            await animateTimeUpStep()
+
+            if Task.isCancelled { return }
+            onGameEnd(score)
         }
     }
 
@@ -447,6 +504,21 @@ struct GameView: View {
             countdownScale = 2.0
             countdownOpacity = 0.0
         }
+    }
+
+    @MainActor
+    private func animateTimeUpStep() async {
+        countdownScale = 0.5
+        countdownOpacity = 0.0
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            countdownScale = 1.5
+            countdownOpacity = 1.0
+        }
+
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+
+        try? await Task.sleep(for: .milliseconds(1900))
     }
 
     private var headerSection: some View {
