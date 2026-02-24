@@ -296,7 +296,7 @@ struct TutorialOverlayView: View {
                 .contentTransition(.identity)
                 .transaction { $0.animation = nil }
                 .scaleEffect(animationScale)
-                .shadow(color: viewModel.showTutorialNextButton ? .cyan.opacity(0.5) : .clear, radius: 5)
+                .shadow(color: viewModel.showTutorialNextButton ? .blue.opacity(0.5) : .clear, radius: 5)
         }
         .disabled(!viewModel.showTutorialNextButton)
         .buttonStyle(.plain)
@@ -322,8 +322,15 @@ struct TutorialOverlayView: View {
             .overlay {
                 if viewModel.showTutorialNextButton {
                     Capsule(style: .continuous)
-                        .fill(Color.cyan.opacity(0.6)
-                            
+                        .fill(LinearGradient(
+                                  colors: [
+                                      Color.cyan.opacity(0.9),
+                                      Color(red: 0.24, green: 0.36, blue: 0.82),
+                                      Color(red: 0.25, green: 0.08, blue: 0.48)
+                                  ],
+                                  startPoint: .topLeading,
+                                  endPoint: .bottomTrailing
+                              )
                         )
                 }
             }
