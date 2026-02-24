@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import simd
 
 @Observable
@@ -9,11 +10,14 @@ final class GameViewModel {
     let vectorAnimator = VectorAnimator()
     let tutorialManager = TutorialManager()
 
-    init(gameEngine: GameEngine = GameEngine()) {
+    init(gameEngine: GameEngine) {
         self.gameEngine = gameEngine
     }
 
-    // MARK: - Game engine forwarding
+    convenience init() {
+        self.init(gameEngine: GameEngine())
+    }
+
 
     var remainingTime: Int { gameEngine.remainingTime }
 
@@ -58,7 +62,38 @@ final class GameViewModel {
 
     var maxGates: Int { gameEngine.currentCircuit.maxGates }
 
-    // MARK: - Tutorial forwarding
+
+    var showCountdown: Bool = true
+    var countdownValue: Int = 3
+    var countdownPhase: CountdownOverlayView.Phase = .countdown
+    var countdownScale: CGFloat = 0.5
+    var countdownOpacity: Double = 0.0
+
+    var showSuccessEffect = false
+    var showFailureEffect = false
+    var showComboEffect = false
+    var highlightedGate: QuantumGate?
+    var showExitConfirmation = false
+
+    var showPostTutorialGuide = false
+    var postTutorialGuideStep: PostTutorialGuideStep = .matchTargetVector
+    var shouldMarkTutorialCompletionOnGameStart = false
+    var isTransitioningToResult = false
+
+    @ObservationIgnored
+    var comboAnimationTask: Task<Void, Never>?
+
+    @ObservationIgnored
+    var gameEndTask: Task<Void, Never>?
+
+    var isGameModalPresented: Bool {
+        showExitConfirmation || showPostTutorialGuide || isTransitioningToResult
+    }
+
+    var isInteractionLocked: Bool {
+        showCountdown || showExitConfirmation || showPostTutorialGuide || isTransitioningToResult
+    }
+
 
     var currentTutorialStep: TutorialStep {
         tutorialManager.currentStep
@@ -86,7 +121,6 @@ final class GameViewModel {
         tutorialManager.canGoToNextReachedStep
     }
 
-    // MARK: - Game flow
 
     func prepareGame(difficulty: GameDifficulty = .easy) {
         vectorAnimator.reset()
@@ -143,19 +177,190 @@ final class GameViewModel {
         )
     }
 
-    func runCircuit() -> (isCorrect: Bool, isGameOver: Bool) {
+    func runCircuit(audioManager: AudioManager) {
+        guard !circuitGates.isEmpty else { return }
+
         let isCorrect = gameEngine.checkCurrentState()
+
         if isCorrect {
             gameEngine.handleCorrectAnswer()
             vectorAnimator.reset()
-            return (isCorrect: true, isGameOver: false)
+            audioManager.playSFX(.success)
+            showSuccessEffect = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
+                showSuccessEffect = false
+                withAnimation(.easeOut(duration: 0.2)) {
+                    clearCircuit()
+                }
+            }
         } else {
-            let isGameOver = gameEngine.handleWrongAnswer()
-            return (isCorrect: false, isGameOver: isGameOver)
+            _ = gameEngine.handleWrongAnswer()
+            audioManager.playSFX(.miss)
+            showFailureEffect = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(100))
+                showFailureEffect = false
+            }
         }
     }
 
-    // MARK: - Tutorial delegation
+
+    func startCountdown() {
+        showCountdown = true
+        countdownValue = 3
+        countdownPhase = .countdown
+
+        Task { @MainActor in
+            for i in (1...3).reversed() {
+                countdownValue = i
+                countdownPhase = .countdown
+                announceForVoiceOver("\(i)")
+                await animateCountdownStep()
+            }
+
+            countdownValue = 0
+            countdownPhase = .start
+            announceForVoiceOver("Start.")
+            await animateStartStep()
+
+            withAnimation(.easeOut(duration: 0.5)) {
+                showCountdown = false
+            }
+
+            startGameLoop()
+        }
+    }
+
+    func startTimeUpTransition(with score: ScoreEntry, onGameEnd: @escaping (ScoreEntry) -> Void) {
+        guard !isTransitioningToResult else { return }
+
+        isTransitioningToResult = true
+        gameEndTask?.cancel()
+        gameEndTask = Task { @MainActor in
+            showCountdown = true
+            countdownPhase = .timeUp
+            await animateTimeUpStep()
+
+            if Task.isCancelled { return }
+            onGameEnd(score)
+        }
+    }
+
+    @MainActor
+    private func animateCountdownStep() async {
+        countdownScale = 0.5
+        countdownOpacity = 0.0
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            countdownScale = 1.2
+            countdownOpacity = 1.0
+        }
+
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+
+        try? await Task.sleep(for: .milliseconds(600))
+
+        withAnimation(.easeIn(duration: 0.2)) {
+            countdownScale = 1.5
+            countdownOpacity = 0.0
+        }
+
+        try? await Task.sleep(for: .milliseconds(200))
+    }
+
+    @MainActor
+    private func animateStartStep() async {
+        countdownScale = 0.5
+        countdownOpacity = 0.0
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            countdownScale = 1.5
+            countdownOpacity = 1.0
+        }
+
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+        try? await Task.sleep(for: .milliseconds(800))
+
+        withAnimation(.easeOut(duration: 0.3)) {
+            countdownScale = 2.0
+            countdownOpacity = 0.0
+        }
+    }
+
+    @MainActor
+    private func animateTimeUpStep() async {
+        countdownScale = 0.5
+        countdownOpacity = 0.0
+        announceForVoiceOver("Time up.")
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            countdownScale = 1.5
+            countdownOpacity = 1.0
+        }
+
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+
+        try? await Task.sleep(for: .milliseconds(1900))
+    }
+
+
+    func beginPostTutorialGuide() {
+        shouldMarkTutorialCompletionOnGameStart = true
+        postTutorialGuideStep = .matchTargetVector
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            showPostTutorialGuide = true
+        }
+    }
+
+    func advancePostTutorialGuide(audioManager: AudioManager) {
+        audioManager.playSFX(.button)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        if let next = PostTutorialGuideStep(rawValue: postTutorialGuideStep.rawValue + 1) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                postTutorialGuideStep = next
+            }
+            return
+        }
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            showPostTutorialGuide = false
+        }
+
+        Task {
+            try? await Task.sleep(for: .milliseconds(250))
+            startCountdown()
+        }
+    }
+
+
+    func triggerComboAnimation() {
+        comboAnimationTask?.cancel()
+
+        comboAnimationTask = Task { @MainActor in
+            withAnimation(.none) {
+                showComboEffect = false
+            }
+
+            try? await Task.sleep(for: .milliseconds(50))
+            if Task.isCancelled { return }
+
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                showComboEffect = true
+            }
+
+            try? await Task.sleep(for: .milliseconds(700))
+            if Task.isCancelled { return }
+
+            withAnimation(.easeOut(duration: 0.3)) {
+                showComboEffect = false
+            }
+        }
+    }
+
 
     func startTutorial() {
         vectorAnimator.reset()
@@ -188,5 +393,17 @@ final class GameViewModel {
 
     func clearTutorialVector() {
         tutorialManager.clearVector()
+    }
+
+
+    func announceForVoiceOver(_ message: String) {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        UIAccessibility.post(notification: .announcement, argument: message)
+    }
+
+
+    func cleanup() {
+        comboAnimationTask?.cancel()
+        gameEndTask?.cancel()
     }
 }

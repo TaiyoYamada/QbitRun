@@ -1,6 +1,6 @@
 import Foundation
 
-public actor ScoreRepository {
+public actor ScoreRepository: ScoreRepositoryProtocol {
 
     private let storageKeyBase = "quantum_gate_game_scores"
 

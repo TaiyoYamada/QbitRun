@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 final class ResultViewModel {
 
-    private let scoreRepository: ScoreRepository
+    private let scoreRepository: any ScoreRepositoryProtocol
 
     let score: ScoreEntry
 
@@ -12,7 +12,7 @@ final class ResultViewModel {
 
     private(set) var isLoading: Bool = true
 
-    init(score: ScoreEntry, scoreRepository: ScoreRepository = ScoreRepository()) {
+    init(score: ScoreEntry, scoreRepository: any ScoreRepositoryProtocol = ScoreRepository()) {
         self.score = score
         self.scoreRepository = scoreRepository
     }

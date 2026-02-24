@@ -1,26 +1,21 @@
-
 import UIKit
 import SwiftUI
 import SceneKit
 
 @MainActor
 public final class BlochSphereView: UIView {
-    private typealias AxisDefinition = (direction: SCNVector3, color: UIColor, labelText: String, labelPosition: SCNVector3)
 
     private var scnView: SCNView!
     private var scene: SCNScene!
     private var cameraNode: SCNNode!
-    private var rootNode: SCNNode!
 
     private var sphereNode: SCNNode!
     private var axesNode: SCNNode!
     private var gridNode: SCNNode!
 
     private var coordinator: BlochSphereRenderCoordinator!
-
-    private var cameraYaw: Float = 0.5
-    private var cameraPitch: Float = 0.35
-    private let cameraDistance: Float = 3.5
+    private let sceneBuilder = BlochSphereSceneBuilder()
+    private let gestureHandler = BlochSphereGestureHandler()
 
     public var onOrbitStop: ((BlochVector) -> Void)?
 
@@ -34,7 +29,11 @@ public final class BlochSphereView: UIView {
         }
     }
 
-    public var isInteractive: Bool = true
+    public var isInteractive: Bool = true {
+        didSet {
+            gestureHandler.isInteractive = isInteractive
+        }
+    }
 
     public var showBackground: Bool = true {
         didSet {
@@ -47,9 +46,10 @@ public final class BlochSphereView: UIView {
             updateBackgroundInsets()
         }
     }
+
     public var axisOpacity: CGFloat = 1.0 {
         didSet {
-            updateAxesOpacity()
+            axesNode?.opacity = axisOpacity
         }
     }
 
@@ -69,7 +69,6 @@ public final class BlochSphereView: UIView {
     public override init(frame: CGRect) {
         super.init(frame: frame)
         setupScene()
-        setupGestures()
     }
 
     required init?(coder: NSCoder) {
@@ -98,288 +97,48 @@ public final class BlochSphereView: UIView {
         scene = SCNScene()
         scnView.scene = scene
 
-        rootNode = SCNNode()
-        scene.rootNode.addChildNode(rootNode)
+        let result = sceneBuilder.buildScene(
+            in: scene,
+            backgroundPadding: backgroundPadding,
+            showAxisLabels: showAxisLabels
+        )
+        sphereNode = result.sphereNode
+        gridNode = result.gridNode
+        axesNode = result.axesNode
+        cameraNode = result.cameraNode
 
-        cameraNode = SCNNode()
-        cameraNode.camera = SCNCamera()
-        cameraNode.camera?.zNear = 0.1
-        cameraNode.camera?.zFar = 100
-        rootNode.addChildNode(cameraNode)
-
-        updateCameraPosition()
-
-        let ambientLight = SCNNode()
-        ambientLight.light = SCNLight()
-        ambientLight.light?.type = .ambient
-        ambientLight.light?.intensity = 800
-        scene.rootNode.addChildNode(ambientLight)
-
-        let directionalLight = SCNNode()
-        directionalLight.light = SCNLight()
-        directionalLight.light?.type = .directional
-        directionalLight.light?.intensity = 1000
-        directionalLight.position = SCNVector3(5, 5, 5)
-        scene.rootNode.addChildNode(directionalLight)
-
-        createSphereGeometry()
-        createGridGeometry()
-        createAxesGeometry()
-
-        let stateVectorNode = createArrow(color: UIColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 1.0), opacity: 1.0)
+        let stateVectorNode = sceneBuilder.createArrow(
+            color: UIColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 1.0),
+            opacity: 1.0
+        )
         stateVectorNode.isHidden = true
         scene.rootNode.addChildNode(stateVectorNode)
 
-        let ghostVectorNode = createArrow(color: UIColor.white, opacity: 1.0)
+        let ghostVectorNode = sceneBuilder.createArrow(color: UIColor.white, opacity: 1.0)
         ghostVectorNode.isHidden = true
         scene.rootNode.addChildNode(ghostVectorNode)
 
-        coordinator = BlochSphereRenderCoordinator {
-        }
+        coordinator = BlochSphereRenderCoordinator {}
         coordinator.stateVectorNode = stateVectorNode
         coordinator.ghostVectorNode = ghostVectorNode
-
         scnView.delegate = coordinator
 
+
+        gestureHandler.isInteractive = isInteractive
+        gestureHandler.onCameraUpdated = { [weak self] in
+            self?.updateCameraPosition()
+        }
+        gestureHandler.attachTo(self)
+
+        updateCameraPosition()
         updateBackgroundColor()
     }
 
-    private func createArrow(color: UIColor, opacity: CGFloat) -> SCNNode {
-        let container = SCNNode()
-
-        let material = SCNMaterial()
-        material.lightingModel = .phong
-        material.diffuse.contents = color
-        material.specular.contents = UIColor.white
-        material.shininess = 30
-        material.transparency = opacity
-
-        let headLength: CGFloat = 0.15
-        let shaftLength: CGFloat = 1.0 - headLength
-
-        let cylinder = SCNCylinder(radius: 0.025, height: shaftLength)
-        cylinder.firstMaterial = material
-        let cylNode = SCNNode(geometry: cylinder)
-        cylNode.position = SCNVector3(0, shaftLength / 2, 0)
-        container.addChildNode(cylNode)
-
-        let cone = SCNCone(topRadius: 0, bottomRadius: 0.05, height: headLength)
-        cone.firstMaterial = material
-        let coneNode = SCNNode(geometry: cone)
-        coneNode.position = SCNVector3(0, shaftLength + headLength / 2, 0)
-        container.addChildNode(coneNode)
-
-        return container
-    }
-
     private func updateCameraPosition() {
-        let x = cameraDistance * cos(cameraPitch) * sin(cameraYaw)
-        let y = cameraDistance * sin(cameraPitch)
-        let z = cameraDistance * cos(cameraPitch) * cos(cameraYaw)
-
-        cameraNode.position = SCNVector3(x, y, z)
-
-        let lookAtConstraint = SCNLookAtConstraint(target: scene.rootNode)
-        lookAtConstraint.isGimbalLockEnabled = true
-        cameraNode.constraints = [lookAtConstraint]
-    }
-
-    private func createSphereGeometry() {
-        let sphere = SCNSphere(radius: 1.0)
-        sphere.segmentCount = 96
-
-        let material = SCNMaterial()
-        material.lightingModel = .phong
-        material.diffuse.contents = UIColor(white: 0.95, alpha: 0.1)
-        material.specular.contents = UIColor.white
-        material.shininess = 50
-        material.transparency = 0.15
-        material.isDoubleSided = false
-        material.cullMode = .back
-        material.blendMode = .alpha
-        material.fresnelExponent = 1.2
-
-        let fresnelShader = """
-        float3 view = normalize(_surface.view);
-        float3 normal = normalize(_surface.normal);
-        float fresnel = 1.0 - max(0.0, dot(view, normal));
-        fresnel = pow(fresnel, 2.0);
-        _surface.diffuse.a = _surface.diffuse.a + fresnel * 0.4;
-        """
-        material.shaderModifiers = [.surface: fresnelShader]
-
-        sphere.firstMaterial = material
-
-        sphereNode = SCNNode(geometry: sphere)
-        sphereNode.renderingOrder = 2000
-        scene.rootNode.addChildNode(sphereNode)
-    }
-
-    private func createGridGeometry() {
-        gridNode = SCNNode()
-        let gridColor = UIColor(white: 0.6, alpha: 0.4)
-        let equatorColor = UIColor(white: 0.4, alpha: 0.6)
-        let radius: Float = 1.0
-
-        let pipeRadius: CGFloat = 0.0015
-
-        let latitudeCount = 8
-        for i in 1..<latitudeCount {
-            let theta = Float(i) * .pi / Float(latitudeCount)
-            let r = radius * sin(theta)
-            let y = radius * cos(theta)
-            let color = (i == latitudeCount / 2) ? equatorColor : gridColor
-
-            let circle = SCNTorus(ringRadius: CGFloat(r), pipeRadius: pipeRadius)
-            circle.ringSegmentCount = 72
-            circle.pipeSegmentCount = 8
-
-            let mat = SCNMaterial()
-            mat.lightingModel = .constant
-            mat.diffuse.contents = color
-            circle.firstMaterial = mat
-
-            let node = SCNNode(geometry: circle)
-            node.position = SCNVector3(0, y, 0)
-            gridNode.addChildNode(node)
-        }
-
-        let longitudeCount = 12
-        for i in 0..<longitudeCount {
-            let phi = Float(i) * .pi / Float(longitudeCount / 2)
-
-            let circle = SCNTorus(ringRadius: CGFloat(radius), pipeRadius: pipeRadius)
-            circle.ringSegmentCount = 72
-            circle.pipeSegmentCount = 8
-
-            let mat = SCNMaterial()
-            mat.lightingModel = .constant
-            mat.diffuse.contents = gridColor
-            circle.firstMaterial = mat
-
-            let node = SCNNode(geometry: circle)
-            node.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
-
-            let pivot = SCNNode()
-            pivot.eulerAngles = SCNVector3(0, phi, 0)
-            pivot.addChildNode(node)
-
-            gridNode.addChildNode(pivot)
-        }
-        scene.rootNode.addChildNode(gridNode)
-    }
-
-    private func createAxesGeometry() {
-        axesNode = SCNNode()
-        let axisLength: CGFloat = 1.35
-        let radius: CGFloat = 0.006
-
-        let axes = axisDefinitions()
-
-        for (dir, color, _, _) in axes {
-            let cylinder = SCNCylinder(radius: radius, height: axisLength)
-            let mat = SCNMaterial()
-            mat.lightingModel = .constant
-            mat.diffuse.contents = color
-            cylinder.firstMaterial = mat
-
-            let lineNode = SCNNode(geometry: cylinder)
-            lineNode.position = SCNVector3(0, axisLength / 2.0, 0)
-
-            let shaftContainer = SCNNode()
-            shaftContainer.addChildNode(lineNode)
-
-            if dir.y > 0.9 {
-            } else if dir.y < -0.9 {
-                shaftContainer.eulerAngles = SCNVector3(Float.pi, 0, 0)
-            } else if dir.x > 0.9 {
-                shaftContainer.eulerAngles = SCNVector3(0, 0, -Float.pi / 2)
-            } else if dir.x < -0.9 {
-                shaftContainer.eulerAngles = SCNVector3(0, 0, Float.pi / 2)
-            } else if dir.z > 0.9 {
-                shaftContainer.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
-            } else if dir.z < -0.9 {
-                shaftContainer.eulerAngles = SCNVector3(-Float.pi / 2, 0, 0)
-            }
-
-            if (dir.x + dir.y + dir.z) > 0.5 {
-                let cone = SCNCone(topRadius: 0, bottomRadius: 0.03, height: 0.12)
-                let coneMat = SCNMaterial()
-                coneMat.lightingModel = .constant
-                coneMat.diffuse.contents = color
-                cone.firstMaterial = coneMat
-
-                let coneNode = SCNNode(geometry: cone)
-                coneNode.position = SCNVector3(0, axisLength, 0)
-
-                shaftContainer.addChildNode(coneNode)
-            }
-
-            axesNode.addChildNode(shaftContainer)
-        }
-        if showAxisLabels {
-            addAxisLabelsIfNeeded()
-        }
-        scene.rootNode.addChildNode(axesNode)
-    }
-
-    private func axisDefinitions() -> [AxisDefinition] {
-        let labelDistance: CGFloat = 1.6
-        return [
-            (SCNVector3(0, 1, 0), BlochAxisPalette.zAxisUIColor, "|0⟩", SCNVector3(0, labelDistance, 0)),
-            (SCNVector3(0, -1, 0), BlochAxisPalette.zAxisUIColor, "|1⟩", SCNVector3(0, -labelDistance, 0)),
-            (SCNVector3(0, 0, 1), BlochAxisPalette.xAxisUIColor, "|+⟩", SCNVector3(0, 0, labelDistance)),
-            (SCNVector3(0, 0, -1), BlochAxisPalette.xAxisUIColor, "|-⟩", SCNVector3(0, 0, -labelDistance)),
-            (SCNVector3(1, 0, 0), BlochAxisPalette.yAxisUIColor, "|+i⟩", SCNVector3(labelDistance, 0, 0)),
-            (SCNVector3(-1, 0, 0), BlochAxisPalette.yAxisUIColor, "|-i⟩", SCNVector3(-labelDistance, 0, 0))
-        ]
-    }
-
-    private func addAxisLabelsIfNeeded() {
-        guard let axesNode else { return }
-        if axesNode.childNodes.contains(where: { $0.name == "axisLabel" }) {
-            return
-        }
-
-        for (_, color, labelText, labelPos) in axisDefinitions() {
-            let textNode = createAxisLabelNode(text: labelText, color: color)
-            textNode.position = labelPos
-            axesNode.addChildNode(textNode)
-        }
-    }
-
-    private func createAxisLabelNode(text: String, color: UIColor) -> SCNNode {
-        let textGeometry = SCNText(string: text, extrusionDepth: 0.0)
-        if let descriptor = UIFont.systemFont(ofSize: 11, weight: .bold).fontDescriptor.withDesign(.rounded) {
-             textGeometry.font = UIFont(descriptor: descriptor, size: 11)
-        } else {
-             textGeometry.font = UIFont.systemFont(ofSize: 11, weight: .bold)
-        }
-        textGeometry.flatness = 0.1
-
-        let material = SCNMaterial()
-        material.lightingModel = .constant
-        material.diffuse.contents = color
-        material.isDoubleSided = true
-        textGeometry.firstMaterial = material
-
-        let node = SCNNode(geometry: textGeometry)
-        node.name = "axisLabel"
-
-        let scale: Float = 0.02
-        node.scale = SCNVector3(scale, scale, scale)
-
-        let (min, max) = node.boundingBox
-        let dx = min.x + 0.5 * (max.x - min.x)
-        let dy = min.y + 0.5 * (max.y - min.y)
-        let dz = min.z + 0.5 * (max.z - min.z)
-        node.pivot = SCNMatrix4MakeTranslation(dx, dy, dz)
-
-        let billboard = SCNBillboardConstraint()
-        billboard.freeAxes = .all
-        node.constraints = [billboard]
-
-        return node
+        gestureHandler.updateCameraPosition(
+            cameraNode: cameraNode,
+            rootNode: scene.rootNode
+        )
     }
 
     public func setVector(_ vector: BlochVector, animated: Bool) {
@@ -417,8 +176,8 @@ public final class BlochSphereView: UIView {
     private func updateAxesVisibility() {
         axesNode?.isHidden = !showAxes
 
-        if showAxisLabels {
-            addAxisLabelsIfNeeded()
+        if showAxisLabels, let axesNode {
+            sceneBuilder.addAxisLabelsIfNeeded(to: axesNode)
         }
 
         if let axes = axesNode {
@@ -428,30 +187,6 @@ public final class BlochSphereView: UIView {
                 }
             }
         }
-    }
-
-    private func updateAxesOpacity() {
-        axesNode?.opacity = axisOpacity
-    }
-
-    private func setupGestures() {
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-        addGestureRecognizer(panGesture)
-    }
-
-    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
-        guard isInteractive else { return }
-
-        let translation = gesture.translation(in: self)
-        let sensitivity: Float = 0.01
-
-        cameraYaw -= Float(translation.x) * sensitivity
-        cameraPitch += Float(translation.y) * sensitivity
-
-        cameraPitch = max(-Float.pi / 2 + 0.1, min(Float.pi / 2 - 0.1, cameraPitch))
-
-        updateCameraPosition()
-        gesture.setTranslation(.zero, in: self)
     }
 }
 

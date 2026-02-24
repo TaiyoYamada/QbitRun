@@ -3,7 +3,8 @@ import AVFoundation
 import SwiftUI
 
 @Observable
-final class AudioManager {
+@MainActor
+final class AudioManager: AudioPlayable {
 
     enum BGM: String {
         case menu = "bgm_menu"
@@ -20,20 +21,29 @@ final class AudioManager {
         case button = "sfx_button"
         case cancel = "sfx_cancel"
         case start = "sfx_start"
-        case combo = "sfx_combo"
     }
 
     private var bgmPlayer: AVAudioPlayer?
     private var sfxPlayers: [SFX: [AVAudioPlayer]] = [:]
 
-    var bgmVolume: Float = UserDefaults.standard.float(forKey: "bgmVolume") == 0 ? 0.5 : UserDefaults.standard.float(forKey: "bgmVolume") {
+    var bgmVolume: Float = {
+        if UserDefaults.standard.object(forKey: "bgmVolume") != nil {
+            return UserDefaults.standard.float(forKey: "bgmVolume")
+        }
+        return 0.5
+    }() {
         didSet {
             bgmPlayer?.volume = bgmVolume
             UserDefaults.standard.set(bgmVolume, forKey: "bgmVolume")
         }
     }
 
-    var sfxVolume: Float = UserDefaults.standard.float(forKey: "sfxVolume") == 0 ? 1.0 : UserDefaults.standard.float(forKey: "sfxVolume") {
+    var sfxVolume: Float = {
+        if UserDefaults.standard.object(forKey: "sfxVolume") != nil {
+            return UserDefaults.standard.float(forKey: "sfxVolume")
+        }
+        return 1.0
+    }() {
         didSet {
             UserDefaults.standard.set(sfxVolume, forKey: "sfxVolume")
         }
@@ -84,7 +94,7 @@ final class AudioManager {
     }
 
     private func preloadSFX() {
-        for sfx in [SFX.click, .set, .combo, .miss, .success] {
+        for sfx in [SFX.click, .set, .miss, .success] {
             preparePlayer(for: sfx)
         }
     }

@@ -14,17 +14,6 @@ extension QuantumGate {
         }
     }
 
-    var swiftUIColor: Color {
-        switch self {
-        case .x: return Color(red: 0.9, green: 0.3, blue: 0.3)
-        case .y: return Color(red: 0.3, green: 0.8, blue: 0.3)
-        case .z: return Color(red: 0.3, green: 0.5, blue: 0.9)
-        case .h: return Color(red: 0.9, green: 0.6, blue: 0.2)
-        case .s: return Color(red: 0.7, green: 0.3, blue: 0.8)
-        case .t: return Color(red: 0.2, green: 0.7, blue: 0.7)
-        }
-    }
-
     var color: UIColor {
         switch self {
         case .x: return UIColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 1.0)
@@ -34,5 +23,9 @@ extension QuantumGate {
         case .s: return UIColor(red: 0.7, green: 0.3, blue: 0.8, alpha: 1.0)
         case .t: return UIColor(red: 0.2, green: 0.7, blue: 0.7, alpha: 1.0)
         }
+    }
+
+    var swiftUIColor: Color {
+        Color(uiColor: color)
     }
 }

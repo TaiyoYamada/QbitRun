@@ -10,29 +10,39 @@ public enum GameState: Sendable {
 @Observable
 @MainActor
 public final class GameEngine {
-    private let gameDuration: TimeInterval = 60
 
-    private let baseScorePerProblem = 100
 
-    private let maxMisses = 3
+    private let timerService: GameTimerService
+    private let scoreManager = GameScoreManager()
+    private let problemManager = ProblemManager()
+    private let judgeService = JudgeService()
+
 
     public private(set) var state: GameState = .ready
 
-    public private(set) var remainingTime: Int = 60
+    public var remainingTime: Int { timerService.remainingTime }
 
-    public private(set) var score: Int = 0
+    public var score: Int { scoreManager.score }
 
-    public private(set) var problemsSolved: Int = 0
+    public var problemsSolved: Int { scoreManager.problemsSolved }
 
-    public private(set) var comboCount: Int = 0
+    public var comboCount: Int { scoreManager.comboCount }
 
-    public private(set) var lastComboBonus: Int = 0
+    public var lastComboBonus: Int { scoreManager.lastComboBonus }
 
-    public private(set) var missCount: Int = 0
+    public var missCount: Int { scoreManager.missCount }
 
-    public private(set) var currentProblem: Problem?
+    public var currentProblem: Problem? { problemManager.currentProblem }
 
     public private(set) var currentCircuit = Circuit(maxGates: 4)
+
+    public private(set) var currentVector: BlochVector = .zero
+
+    public private(set) var didSolveLastProblem: Bool = false
+
+    public private(set) var finalScoreEntry: ScoreEntry?
+
+    private var gameDifficulty: GameDifficulty = .easy
 
     private var maxGatesForDifficulty: Int {
         switch gameDifficulty {
@@ -40,8 +50,6 @@ public final class GameEngine {
         case .expert: return 6
         }
     }
-
-    public private(set) var currentVector: BlochVector = .zero
 
     public var targetVector: BlochVector {
         guard let problem = currentProblem else { return .zero }
@@ -51,44 +59,34 @@ public final class GameEngine {
     public var currentDistance: Double {
         guard let problem = currentProblem else { return 1.0 }
         let currentState = currentCircuit.apply(to: problem.startState)
-        let targetState = problem.targetState
-        return currentState.fidelity(with: targetState)
+        return currentState.fidelity(with: problem.targetState)
     }
 
-    public private(set) var didSolveLastProblem: Bool = false
 
-    public private(set) var finalScoreEntry: ScoreEntry?
+    public init(gameDuration: Int = 60) {
+        self.timerService = GameTimerService(duration: gameDuration)
+        self.timerService.onTimeUp = { [weak self] in
+            self?.endGame()
+        }
+    }
 
-    private var gameDifficulty: GameDifficulty = .easy
-
-    private let problemGenerator = ProblemGenerator()
-
-    private var recentProblemKeys: [String] = []
-    private let maxRecentKeys = 4
-
-    private let judgeService = JudgeService()
-
-    private let scoreCalculator = ScoreCalculator()
-
-    private var timerTask: Task<Void, Never>?
 
     public func start(difficulty: GameDifficulty = .easy, startTimer: Bool = true) {
         guard state == .ready else { return }
 
         self.gameDifficulty = difficulty
-
         state = .playing
-        remainingTime = Int(gameDuration)
-        score = 0
-        problemsSolved = 0
-        comboCount = 0
-        lastComboBonus = 0
-        missCount = 0
+
+        scoreManager.reset()
         currentCircuit = Circuit(maxGates: maxGatesForDifficulty)
         didSolveLastProblem = false
         finalScoreEntry = nil
 
-        generateNewProblem()
+        problemManager.reset()
+        problemManager.generateNewProblem(
+            difficulty: gameDifficulty,
+            problemNumber: scoreManager.problemsSolved
+        )
 
         if let problem = currentProblem {
             currentVector = problem.startBlochVector
@@ -97,80 +95,51 @@ public final class GameEngine {
         }
 
         if startTimer {
-            self.startTimer()
+            timerService.start()
+        } else {
+            timerService.reset()
         }
     }
 
     public func startGameLoop() {
-        guard state == .playing, timerTask == nil else { return }
-        startTimer()
+        guard state == .playing else { return }
+        timerService.resume()
     }
 
     public func pause() {
         guard state == .playing else { return }
         state = .paused
-        timerTask?.cancel()
+        timerService.pause()
     }
 
     public func resume() {
         guard state == .paused else { return }
         state = .playing
-        startTimer()
+        timerService.resume()
     }
 
     public func reset() {
-        timerTask?.cancel()
+        timerService.reset()
         state = .ready
-        remainingTime = Int(gameDuration)
-        score = 0
-        problemsSolved = 0
-        comboCount = 0
-        lastComboBonus = 0
-        missCount = 0
-        currentCircuit = Circuit(maxGates: 4)
-        currentProblem = nil
+        scoreManager.reset()
+        currentCircuit = Circuit(maxGates: maxGatesForDifficulty)
+        problemManager.reset()
         currentVector = .zero
         didSolveLastProblem = false
         finalScoreEntry = nil
-        recentProblemKeys = []
     }
 
     private func endGame() {
         state = .finished
-        timerTask?.cancel()
+        timerService.pause()
 
         finalScoreEntry = ScoreEntry(
-            score: score,
-            problemsSolved: problemsSolved,
+            score: scoreManager.score,
+            problemsSolved: scoreManager.problemsSolved,
             difficulty: gameDifficulty
         )
     }
 
-    private func startTimer() {
-        timerTask = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
-
-                guard let self = self, self.state == .playing else { break }
-
-                self.remainingTime -= 1
-
-                if self.remainingTime <= 0 {
-                    self.endGame()
-                    break
-                }
-            }
-        }
-    }
-
-    private func generateNewProblem() {
-        let result = problemGenerator.generateProblem(gameDifficulty: gameDifficulty, problemNumber: problemsSolved, recentProblemKeys: recentProblemKeys)
-        currentProblem = result.problem
-        recentProblemKeys.append(result.problemKey)
-        if recentProblemKeys.count > maxRecentKeys {
-            recentProblemKeys.removeFirst()
-        }
-    }
 
     public func addGate(_ gate: QuantumGate) {
         guard state == .playing else { return }
@@ -200,6 +169,7 @@ public final class GameEngine {
         }
     }
 
+
     public func checkCurrentState() -> Bool {
         guard let problem = currentProblem else { return false }
 
@@ -215,19 +185,14 @@ public final class GameEngine {
     public func handleCorrectAnswer() {
         guard currentProblem != nil else { return }
 
-        comboCount += 1
-
-        let result = scoreCalculator.calculate(difficulty: gameDifficulty, comboCount: comboCount)
-
-        lastComboBonus = result.comboBonus
-
-        score += result.totalGain
-        problemsSolved += 1
-
+        scoreManager.recordCorrectAnswer(difficulty: gameDifficulty)
         didSolveLastProblem = true
 
         currentCircuit.clear()
-        generateNewProblem()
+        problemManager.generateNewProblem(
+            difficulty: gameDifficulty,
+            problemNumber: scoreManager.problemsSolved
+        )
         if let newProblem = currentProblem {
             currentVector = newProblem.startBlochVector
         }
@@ -239,9 +204,7 @@ public final class GameEngine {
     }
 
     public func handleWrongAnswer() -> Bool {
-        comboCount = 0
-        lastComboBonus = 0
-
+        scoreManager.recordWrongAnswer()
         return false
     }
 }

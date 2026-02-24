@@ -21,7 +21,7 @@ struct ResultView: View {
         return scene
     }()
 
-    init(score: ScoreEntry, scoreRepository: ScoreRepository, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
+    init(score: ScoreEntry, scoreRepository: any ScoreRepositoryProtocol, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
         self._viewModel = State(initialValue: ResultViewModel(score: score, scoreRepository: scoreRepository))
         self.audioManager = audioManager
         self.onPlayAgain = onPlayAgain
@@ -184,15 +184,4 @@ struct ResultView: View {
                 .shadow(color: .white.opacity(0.3), radius: 8)
         }
     }
-}
-
-#Preview("リザルト画面 (Rank 1)") {
-    ResultView(
-        score: ScoreEntry(score:20000, problemsSolved: 20),
-        scoreRepository: ScoreRepository(defaults: UserDefaults(suiteName: "Preview_Rank1")!),
-        audioManager: AudioManager(),
-        onPlayAgain: { },
-        onReturnToMenu: { }
-    )
-    .preferredColorScheme(.dark)
 }

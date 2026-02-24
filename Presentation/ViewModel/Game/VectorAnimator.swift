@@ -121,7 +121,6 @@ final class VectorAnimator {
         return max(Config.minimumDuration, baseDuration * factor)
     }
 
-    // MARK: - Math utilities
 
     func slerp(from source: simd_double3, to destination: simd_double3, t: Double) -> simd_double3 {
         let clampedT = max(0.0, min(1.0, t))

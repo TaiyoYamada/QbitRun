@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var coordinator = AppCoordinator()
+    @State private var coordinator = AppCoordinator(scoreRepository: ScoreRepository(), audioManager: AudioManager())
 
     var body: some View {
         GeometryReader { geometry in

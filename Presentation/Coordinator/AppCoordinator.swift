@@ -6,15 +6,16 @@ enum AppRoute: Hashable {
 }
 
 @Observable
+@MainActor
 final class AppCoordinator {
 
     var path = NavigationPath()
 
-    let scoreRepository: ScoreRepository
+    let scoreRepository: any ScoreRepositoryProtocol
 
     let audioManager: AudioManager
 
-    init(scoreRepository: ScoreRepository = ScoreRepository(), audioManager: AudioManager = AudioManager()) {
+    init(scoreRepository: any ScoreRepositoryProtocol, audioManager: AudioManager) {
         self.scoreRepository = scoreRepository
         self.audioManager = audioManager
     }

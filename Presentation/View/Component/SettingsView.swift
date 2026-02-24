@@ -16,7 +16,8 @@ struct SettingsView: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         animateIn = false
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(200))
                         onDismiss()
                     }
                 }
@@ -49,7 +50,8 @@ struct SettingsView: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         animateIn = false
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(200))
                         onDismiss()
                     }
                 }) {
