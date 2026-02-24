@@ -32,6 +32,7 @@ struct GameView: View {
     @State private var comboAnimationTask: Task<Void, Never>?
     @State private var showPostTutorialGuide = false
     @State private var postTutorialGuideStep: PostTutorialGuideStep = .matchTargetVector
+    @State private var postTutorialGuideFocusFrames: [PostTutorialGuideTarget: CGRect] = [:]
     @State private var shouldMarkTutorialCompletionOnGameStart = false
 
 
@@ -83,6 +84,9 @@ struct GameView: View {
 
                     }
                     .padding(.top, 20)
+                    .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
+                        [.gatePalette: anchor]
+                    }
                 }
                 .accessibilityHidden(isGameModalPresented)
 
@@ -95,6 +99,7 @@ struct GameView: View {
                 if showPostTutorialGuide {
                     PostTutorialGuideOverlayView(
                         step: postTutorialGuideStep,
+                        focusFrames: postTutorialGuideFocusFrames,
                         onNextTapped: {
                             advancePostTutorialGuide()
                         }
@@ -200,6 +205,36 @@ struct GameView: View {
                        self.sphereFrame = newFrame
                        updateSpotlightFrames(animated: false)
                    }
+                }
+            }
+            .onPreferenceChange(PostTutorialGuideFocusPreferenceKey.self) { preferences in
+                var resolved: [PostTutorialGuideFocusRegion: CGRect] = [:]
+                for (region, anchor) in preferences {
+                    resolved[region] = geometry[anchor]
+                }
+
+                var newFrames: [PostTutorialGuideTarget: CGRect] = [:]
+
+                if let sphere = resolved[.sphere], !sphere.isEmpty {
+                    newFrames[.sphere] = sphere
+                }
+
+                if let gatePalette = resolved[.gatePalette], !gatePalette.isEmpty {
+                    newFrames[.gatePalette] = gatePalette
+                }
+
+                let scoreAndTimeFrame = [resolved[.score], resolved[.timer]]
+                    .compactMap { $0 }
+                    .reduce(CGRect.null) { partial, frame in
+                        partial.isNull ? frame : partial.union(frame)
+                    }
+
+                if !scoreAndTimeFrame.isNull {
+                    newFrames[.scoreAndTime] = scoreAndTimeFrame
+                }
+
+                if self.postTutorialGuideFocusFrames != newFrames {
+                    self.postTutorialGuideFocusFrames = newFrames
                 }
             }
         }
@@ -453,6 +488,9 @@ struct GameView: View {
                     .fill(.black.opacity(0.2))
             )
             .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
+            .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
+                [.timer: anchor]
+            }
 
             HStack {
                 Text("\(viewModel.score)")
@@ -473,6 +511,9 @@ struct GameView: View {
                             .stroke(Color(red: 0.35, green: 0.50, blue: 0.95).opacity(0.9), lineWidth: 5)
                     )
                     .padding(.leading, 30)
+                    .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
+                        [.score: anchor]
+                    }
 
                 Spacer()
 
@@ -550,6 +591,9 @@ struct GameView: View {
                 .opacity(showCountdown ? 0 : 1)
                 .anchorPreference(key: SphereBoundsPreferenceKey.self, value: .bounds) { anchor in
                     anchor
+                }
+                .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
+                    [.sphere: anchor]
                 }
             }
 

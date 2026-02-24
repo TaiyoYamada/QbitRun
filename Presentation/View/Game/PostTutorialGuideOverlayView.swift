@@ -2,10 +2,21 @@ import SwiftUI
 
 struct PostTutorialGuideOverlayView: View {
     let step: PostTutorialGuideStep
+    let focusFrames: [PostTutorialGuideTarget: CGRect]
     let onNextTapped: () -> Void
 
     @State private var activeTargetIndex = 0
     @State private var targetCycleTask: Task<Void, Never>?
+
+    init(
+        step: PostTutorialGuideStep,
+        focusFrames: [PostTutorialGuideTarget: CGRect] = [:],
+        onNextTapped: @escaping () -> Void
+    ) {
+        self.step = step
+        self.focusFrames = focusFrames
+        self.onNextTapped = onNextTapped
+    }
 
     private var currentTarget: PostTutorialGuideTarget {
         let targets = step.targets
@@ -17,10 +28,10 @@ struct PostTutorialGuideOverlayView: View {
     var body: some View {
         GeometryReader { geometry in
             let layout = currentTarget.layout(in: geometry.size)
+            let cutout = currentTarget.cutout(in: geometry.size, focusFrames: focusFrames)
 
             ZStack {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
+                overlayBackground(cutout: cutout)
 
                 if layout.showsArrow {
                     GuideArrowView(layout: layout)
@@ -107,6 +118,21 @@ struct PostTutorialGuideOverlayView: View {
                 )
         )
         .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 8)
+    }
+
+    private func overlayBackground(cutout: PostTutorialGuideCutout?) -> some View {
+        ZStack {
+            Color.black.opacity(0.75)
+
+            if let cutout {
+                RoundedRectangle(cornerRadius: cutout.cornerRadius, style: .continuous)
+                    .frame(width: cutout.rect.width, height: cutout.rect.height)
+                    .position(x: cutout.rect.midX, y: cutout.rect.midY)
+                    .blendMode(.destinationOut)
+            }
+        }
+        .compositingGroup()
+        .ignoresSafeArea()
     }
 
     private func configureTargetCycle() {
