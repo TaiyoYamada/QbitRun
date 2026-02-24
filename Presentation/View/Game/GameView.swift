@@ -3,12 +3,6 @@ import UIKit
 
 struct GameView: View {
 
-    private enum CountdownOverlayPhase {
-        case countdown
-        case start
-        case timeUp
-    }
-
     @State private var viewModel = GameViewModel()
     @Environment(\.dismiss) private var dismiss
 
@@ -21,7 +15,7 @@ struct GameView: View {
     @AppStorage("hasCompletedTutorial") private var hasCompletedTutorial: Bool = false
     @State private var countdownValue: Int = 3
     @State private var showCountdown: Bool = true
-    @State private var countdownPhase: CountdownOverlayPhase = .countdown
+    @State private var countdownPhase: CountdownOverlayView.Phase = .countdown
 
     @State private var countdownScale: CGFloat = 0.5
     @State private var countdownOpacity: Double = 0.0
@@ -45,8 +39,6 @@ struct GameView: View {
     @State private var isTransitioningToResult = false
     @State private var gameEndTask: Task<Void, Never>?
 
-
-
     private var isGameModalPresented: Bool {
         showExitConfirmation || showPostTutorialGuide || isTransitioningToResult
     }
@@ -55,40 +47,9 @@ struct GameView: View {
         showCountdown || showExitConfirmation || showPostTutorialGuide || isTransitioningToResult
     }
 
-    private var countdownDisplayText: String {
-        switch countdownPhase {
-        case .countdown:
-            return "\(countdownValue)"
-        case .start:
-            return "START!"
-        case .timeUp:
-            return "TIME UP!"
-        }
-    }
-
-    private var usesHighlightCountdownStyle: Bool {
-        countdownPhase != .countdown
-    }
-
     private var isInitialTutorialFlow: Bool {
         isTutorial && !isReviewMode
     }
-
-    private var isCurrentVectorMatchingTarget: Bool {
-        viewModel.currentVector.distance(to: viewModel.targetVector) < 0.1
-    }
-
-    private var blochSphereAccessibilityValue: String {
-        let currentState = stateDescription(for: viewModel.currentVector)
-        guard !viewModel.isTutorialActive else {
-            return "Current state: \(currentState)."
-        }
-
-        let targetState = stateDescription(for: viewModel.targetVector)
-        let matchStatus = isCurrentVectorMatchingTarget ? "Matched" : "Not matched"
-        return "Current state: \(currentState). Target state: \(targetState). \(matchStatus)."
-    }
-
 
     var body: some View {
         GeometryReader { geometry in
@@ -97,19 +58,46 @@ struct GameView: View {
 
                 VStack(spacing: 5) {
                     if !viewModel.isTutorialActive {
-                        headerSection
-                            .padding(.bottom, 10)
-                            .padding(.horizontal, 24)
-                            .animation(.easeIn(duration: 0.5), value: showCountdown)
+                        GameHeaderView(
+                            remainingTime: viewModel.remainingTime,
+                            score: viewModel.score,
+                            isTimeLow: viewModel.isTimeLow,
+                            isTutorialActive: viewModel.isTutorialActive,
+                            onExitTapped: {
+                                audioManager.playSFX(.button)
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                showExitConfirmation = true
+                            }
+                        )
+                        .padding(.bottom, 10)
+                        .padding(.horizontal, 24)
+                        .animation(.easeIn(duration: 0.5), value: showCountdown)
                     } else {
                         Spacer()
                             .frame(height: 170)
                     }
 
-                    spheresSection(geometry: geometry)
+                    GameBlochSphereSection(
+                        currentVector: viewModel.currentVector,
+                        targetVector: viewModel.targetVector,
+                        isTutorialActive: viewModel.isTutorialActive,
+                        showCountdown: showCountdown,
+                        comboCount: viewModel.comboCount,
+                        lastComboBonus: viewModel.lastComboBonus,
+                        showComboEffect: $showComboEffect,
+                        geometry: geometry
+                    )
 
                     if !viewModel.isTutorialActive {
-                        circuitSection
+                        GameCircuitSection(
+                            circuitGates: $viewModel.circuitGates,
+                            maxGates: viewModel.maxGates,
+                            showCountdown: showCountdown,
+                            audioManager: audioManager,
+                            onClear: { viewModel.clearCircuit() },
+                            onRun: { runCircuit() },
+                            onGateRemove: { index in viewModel.removeGate(at: index) }
+                        )
                     }
 
                     HStack(alignment: .center, spacing: 20) {
@@ -125,7 +113,6 @@ struct GameView: View {
                                 viewModel.addGate(gate)
                             }
                         }
-
                     }
                     .padding(.top, 20)
                     .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
@@ -154,33 +141,13 @@ struct GameView: View {
                 }
 
                 if showCountdown {
-                    Color.black.opacity(0.3).ignoresSafeArea()
-                        .accessibilityHidden(isGameModalPresented)
-
-                    Text(countdownDisplayText)
-                        .tracking(2)
-                        .font(.system(size: usesHighlightCountdownStyle ? 110 : 140,
-                                      weight: .bold,
-                                      design: .rounded))
-                        .foregroundStyle(
-                            !usesHighlightCountdownStyle
-                            ? AnyShapeStyle(.white)
-                            : AnyShapeStyle(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 0.65, green: 0.95, blue: 1.0),
-                                        Color(red: 0.35, green: 0.50, blue: 0.95),
-                                        Color(red: 0.45, green: 0.20, blue: 0.70)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                              )
-                        )
-                        .shadow(color: .white.opacity(0.5), radius: 30)
-                        .scaleEffect(countdownScale)
-                        .opacity(countdownOpacity)
-                        .accessibilityHidden(isGameModalPresented)
+                    CountdownOverlayView(
+                        phase: countdownPhase,
+                        value: countdownValue,
+                        scale: countdownScale,
+                        opacity: countdownOpacity
+                    )
+                    .accessibilityHidden(isGameModalPresented)
                 }
 
                 if showExitConfirmation {
@@ -203,8 +170,6 @@ struct GameView: View {
                     .transition(.opacity)
                 }
 
-
-
                 if viewModel.isTutorialActive {
                     TutorialOverlayView(
                         viewModel: viewModel,
@@ -218,7 +183,6 @@ struct GameView: View {
                     .zIndex(200)
                     .transition(.opacity)
                     .accessibilityHidden(isGameModalPresented)
-
                 }
             }
             .simultaneousGesture(
@@ -227,10 +191,10 @@ struct GameView: View {
 
                     if viewModel.isTutorialActive {
                         if showExitConfirmation { return }
-                        
+
                         let isExitButtonArea = value.location.x > geometry.size.width - 120 && value.location.y < 120
                         if isExitButtonArea { return }
-                        
+
                         NotificationCenter.default.post(name: .skipTutorialTyping, object: nil)
                     }
                 }
@@ -356,8 +320,9 @@ struct GameView: View {
             comboAnimationTask?.cancel()
             gameEndTask?.cancel()
         }
-
     }
+
+    // MARK: - Spotlight
 
     private func updateSpotlightFrames(animated: Bool = true) {
         var frames: [CGRect] = []
@@ -383,33 +348,7 @@ struct GameView: View {
         }
     }
 
-    private var scoreColor: AnyShapeStyle {
-        let score = viewModel.score
-        switch score {
-        case 30000...:
-            return AnyShapeStyle(
-                LinearGradient(
-                    colors: [.white, .cyan, .purple],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-        case 10000...:
-            return AnyShapeStyle(
-                LinearGradient(
-                    colors: [.white, .purple],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-        case 5000...:
-            return AnyShapeStyle(.purple)
-        case 1000...:
-            return AnyShapeStyle(.cyan)
-        default:
-            return AnyShapeStyle(.white)
-        }
-    }
+    // MARK: - Countdown
 
     private func startCountdown() {
         showCountdown = true
@@ -454,36 +393,6 @@ struct GameView: View {
 
             if Task.isCancelled { return }
             onGameEnd(score)
-        }
-    }
-
-    private func beginPostTutorialGuide() {
-        shouldMarkTutorialCompletionOnGameStart = true
-        postTutorialGuideStep = .matchTargetVector
-
-        withAnimation(.easeOut(duration: 0.2)) {
-            showPostTutorialGuide = true
-        }
-    }
-
-    private func advancePostTutorialGuide() {
-        audioManager.playSFX(.button)
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-
-        if let next = PostTutorialGuideStep(rawValue: postTutorialGuideStep.rawValue + 1) {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                postTutorialGuideStep = next
-            }
-            return
-        }
-
-        withAnimation(.easeOut(duration: 0.2)) {
-            showPostTutorialGuide = false
-        }
-
-        Task {
-            try? await Task.sleep(for: .milliseconds(250))
-            startCountdown()
         }
     }
 
@@ -545,220 +454,39 @@ struct GameView: View {
         try? await Task.sleep(for: .milliseconds(1900))
     }
 
-    private var headerSection: some View {
-        ZStack {
-            ZStack {
-                Circle()
-                    .stroke(Color.white.opacity(0.3), lineWidth: 8)
+    // MARK: - Post Tutorial Guide
 
-                Circle()
-                    .trim(from: 1.0 - (CGFloat(viewModel.remainingTime) / 60.0), to: 1.0)
-                    .stroke(
-                        LinearGradient(
-                            gradient: Gradient(colors: viewModel.isTimeLow ? [
-                                Color(red: 1.0, green: 0.2, blue: 0.2),
-                                Color(red: 0.8, green: 0.0, blue: 0.0)
-                            ] : [
-                                Color(red: 0.65, green: 0.95, blue: 1.0),
-                                Color(red: 0.35, green: 0.50, blue: 0.95),
-                                Color(red: 0.45, green: 0.20, blue: 0.70)
+    private func beginPostTutorialGuide() {
+        shouldMarkTutorialCompletionOnGameStart = true
+        postTutorialGuideStep = .matchTargetVector
 
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                    )
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1.0), value: viewModel.remainingTime)
-
-                Text(String(format: "%d", viewModel.remainingTime))
-                    .font(.system(size: 53, weight: .heavy, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(viewModel.isTimeLow ? Color(red: 1.0, green: 0.2, blue: 0.2) : .white)
-                    .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
-            }
-            .frame(width: 115, height: 115)
-            .background(
-                Circle()
-                    .fill(.black.opacity(0.2))
-            )
-            .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 4)
-            .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
-                [.timer: anchor]
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Time remaining")
-            .accessibilityValue("\(viewModel.remainingTime) seconds")
-            .accessibilityHint("Counts down while the game is active.")
-
-            HStack {
-                Text("\(viewModel.score)")
-                    .font(.system(size: 45, weight: .bold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(scoreColor)
-                    .frame(width: 170, height: 110, alignment: .trailing)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 5)
-                    .background(
-                        ZStack {
-                            Color.clear
-                            Color.black.opacity(0.2)
-                        }
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 60))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 60)
-                            .stroke(Color(red: 0.35, green: 0.50, blue: 0.95).opacity(0.9), lineWidth: 5)
-                    )
-                    .padding(.leading, 30)
-                    .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
-                        [.score: anchor]
-                    }
-                    .accessibilityLabel("Score")
-                    .accessibilityValue("\(viewModel.score) points")
-
-                Spacer()
-
-                Button(action: {
-                    audioManager.playSFX(.button)
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    showExitConfirmation = true
-                }) {
-                    Image(systemName: "door.left.hand.open")
-                        .font(.system(size: 60, weight: .regular, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.8))
-                }
-                .padding(.trailing, 20)
-                .accessibilityLabel("Exit game")
-                .accessibilityHint("Open exit confirmation.")
-            }
+        withAnimation(.easeOut(duration: 0.2)) {
+            showPostTutorialGuide = true
         }
-        .opacity(viewModel.isTutorialActive ? 0 : 1)
     }
 
-    private func spheresSection(geometry: GeometryProxy) -> some View {
-        let size = min(geometry.size.width, geometry.size.height) * 0.85
+    private func advancePostTutorialGuide() {
+        audioManager.playSFX(.button)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
-        return ZStack(alignment: .topTrailing) {
-            VStack() {
-                if !viewModel.isTutorialActive {
-                    VStack(alignment: .leading,spacing: 10) {
-                        HStack(spacing: 15) {
-                            Circle()
-                                .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
-                                .frame(width: 25, height: 25)
-                            Text("CURRENT")
-                                .font(.system(size: 25, weight: .bold, design: .rounded))
-                                .tracking(3)
-                                .foregroundStyle(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
-                        }
-                        HStack(spacing: 15) {
-                            Circle()
-                                .fill(Color.white.opacity(0.8))
-                                .frame(width: 25, height: 25)
-                            Text("TARGET")
-                                .font(.system(size: 25, weight: .bold, design: .rounded))
-                                .tracking(3)
-                                .foregroundStyle(Color.white.opacity(0.8))
-                        }
-                        HStack(spacing: 15) {
-                            Circle()
-                                .fill(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.8))
-                                .frame(width: 25, height: 25)
-                            Text("MATCH")
-                                .font(.system(size: 25, weight: .bold, design: .rounded))
-                                .tracking(3)
-                                .foregroundStyle(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.8))
-                        }
-                    }
-                    .padding(.vertical, 15)
-                    .padding(.horizontal, 20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(.ultraThinMaterial)
-                    )
-                    .offset(
-                        x: -geometry.size.width * 0.32,
-                        y: geometry.size.height * 0.08
-                    )
-                }
-
-                BlochSphereViewRepresentable(
-                    vector: viewModel.currentVector,
-                    animated: false,
-                    targetVector: viewModel.isTutorialActive ? nil : viewModel.targetVector,
-                    showBackground: false
-                )
-                .frame(width: size, height: size)
-                .opacity(showCountdown ? 0 : 1)
-                .anchorPreference(key: SphereBoundsPreferenceKey.self, value: .bounds) { anchor in
-                    anchor
-                }
-                .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
-                    [.sphere: anchor]
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Bloch sphere")
-                .accessibilityValue(blochSphereAccessibilityValue)
-                .accessibilityHint("Shows your current and target quantum states.")
+        if let next = PostTutorialGuideStep(rawValue: postTutorialGuideStep.rawValue + 1) {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                postTutorialGuideStep = next
             }
-
-            ComboEffectView(
-                comboCount: viewModel.comboCount,
-                bonus: viewModel.lastComboBonus,
-                isVisible: $showComboEffect
-            )
-            .offset(x: 10, y: 110)
+            return
         }
-        .padding(.top, -60)
-        .padding(.bottom, -110)
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            showPostTutorialGuide = false
+        }
+
+        Task {
+            try? await Task.sleep(for: .milliseconds(250))
+            startCountdown()
+        }
     }
 
-    private var circuitSection: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button(action: {
-                    audioManager.playSFX(.clear)
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        viewModel.clearCircuit()
-                    }
-                }) {
-                    Text("CLEAR")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(.ultraThinMaterial)
-                        .clipShape(Capsule())
-                        .overlay(
-                            Capsule()
-                                .stroke(Color(red: 0.35, green: 0.50, blue: 0.95).opacity(0.6), lineWidth: 5)
-                        )
-                }
-                .accessibilityLabel("Clear circuit")
-                .accessibilityHint("Remove all gates from the current circuit.")
-
-                Spacer()
-            }
-            .padding(.leading, 73)
-            .padding(.bottom, 15)
-
-            SwiftUICircuitView(
-                gates: $viewModel.circuitGates,
-                maxSlots: viewModel.maxGates,
-                onRun: { runCircuit() },
-                onGateRemove: { index in
-                    audioManager.playSFX(.clear)
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    viewModel.removeGate(at: index)
-                }
-            )
-            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 0)
-        }
-        .opacity(showCountdown ? 0.5 : 1)
-        .disabled(showCountdown)
-    }
+    // MARK: - Circuit
 
     private func runCircuit() {
         guard !viewModel.circuitGates.isEmpty else { return }
@@ -785,32 +513,14 @@ struct GameView: View {
         }
     }
 
+    // MARK: - Accessibility
+
     private func announceForVoiceOver(_ message: String) {
         guard UIAccessibility.isVoiceOverRunning else { return }
         UIAccessibility.post(notification: .announcement, argument: message)
     }
 
-    private func stateDescription(for vector: BlochVector) -> String {
-        let knownStates: [(BlochVector, String)] = [
-            (.zero, "ket zero"),
-            (.one, "ket one"),
-            (.plus, "ket plus"),
-            (.minus, "ket minus"),
-            (.plusI, "ket plus i"),
-            (.minusI, "ket minus i")
-        ]
-
-        if let knownState = knownStates.first(where: { vector.distance(to: $0.0) < 0.12 }) {
-            return knownState.1
-        }
-
-        return String(
-            format: "x %.2f, y %.2f, z %.2f",
-            vector.x,
-            vector.y,
-            vector.z
-        )
-    }
+    // MARK: - Combo
 
     private func triggerComboAnimation() {
         comboAnimationTask?.cancel()

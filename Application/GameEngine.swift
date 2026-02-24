@@ -68,6 +68,8 @@ public final class GameEngine {
 
     private let judgeService = JudgeService()
 
+    private let scoreCalculator = ScoreCalculator()
+
     private var timerTask: Task<Void, Never>?
 
     public func start(difficulty: GameDifficulty = .easy, startTimer: Bool = true) {
@@ -215,42 +217,11 @@ public final class GameEngine {
 
         comboCount += 1
 
-        let baseScore: Int
-        switch gameDifficulty {
-        case .easy: baseScore = 100
-        case .hard: baseScore = 500
-        case .expert: baseScore = 3000
-        }
+        let result = scoreCalculator.calculate(difficulty: gameDifficulty, comboCount: comboCount)
 
-        let bonus: Int
-        if comboCount >= 2 {
-            let maxBonus: Double
-            switch gameDifficulty {
-            case .easy: maxBonus = 700.0
-            case .hard: maxBonus = 1200.0
-            case .expert: maxBonus = 3500.0
-            }
-            let k: Double = 0.5
+        lastComboBonus = result.comboBonus
 
-            let midpoint: Double
-            switch gameDifficulty {
-            case .easy: midpoint = 8.0
-            case .hard: midpoint = 6.0
-            case .expert: midpoint = 4.0
-            }
-            let x = Double(comboCount)
-
-            let sigmoidValue = 1.0 / (1.0 + exp(-k * (x - midpoint)))
-            bonus = Int(maxBonus * sigmoidValue)
-        } else {
-            bonus = 0
-        }
-
-        let comboBonus = bonus
-
-        lastComboBonus = comboBonus
-
-        score += baseScore + comboBonus
+        score += result.totalGain
         problemsSolved += 1
 
         didSolveLastProblem = true
