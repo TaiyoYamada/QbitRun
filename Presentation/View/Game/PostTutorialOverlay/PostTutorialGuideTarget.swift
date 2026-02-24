@@ -157,11 +157,11 @@ struct PostTutorialGuideCutoutTuning {
         ),
         .scoreAndTime: PostTutorialGuideCutoutTuning(
             frameOutsets: PostTutorialGuideRectOutsets(top: 18, leading: 24, bottom: 18, trailing: 24),
-            frameOffset: CGSize(width: 26, height: 14),
+            frameOffset: CGSize(width: 26, height: 20),
             fallbackAnchorRatio: CGPoint(x: 0.33, y: 0.11),
-            fallbackOffset: CGSize(width: 26, height: 14),
+            fallbackOffset: CGSize(width: 26, height: 40),
             fallbackSizeRatio: CGSize(width: 0.66, height: 0.19),
-            fallbackMaxSize: CGSize(width: 620, height: 220),
+            fallbackMaxSize: CGSize(width: 620, height: 225),
             cornerRadius: 20
         )
     ]

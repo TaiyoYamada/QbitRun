@@ -87,7 +87,7 @@ struct ResultView: View {
                             onReturnToMenu()
                         }) {
                             Text("BACK TO MENU")
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .font(.system(size: 40, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white)
                                 .padding(.vertical, 15)
                                 .padding(.horizontal, 35)
