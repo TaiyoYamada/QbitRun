@@ -191,7 +191,7 @@ public final class BlochSphereView: UIView {
     }
 }
 
-/// ブロッホ球のレンダリングループを管理するコーディネーター。ベクトルのアニメーション補間と色更新を行う。
+/// ブロッホ球のレンダリングループを管理するコーディネーター
 private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
 
     private let lock = NSLock()
@@ -363,7 +363,7 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
     }
 }
 
-/// `BlochSphereView`をSwiftUIで使用するためのUIViewRepresentable。
+/// `BlochSphereView`をSwiftUIで使用するためのUIViewRepresentable
 public struct BlochSphereViewRepresentable: UIViewRepresentable {
     public var vector: BlochVector = .zero
     public var targetVector: BlochVector? = nil
