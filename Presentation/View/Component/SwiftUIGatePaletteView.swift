@@ -7,7 +7,7 @@ struct SwiftUIGatePaletteView: View {
     var allDisabled: Bool
 
     @State private var bouncePhase: Int = 0
-    @State private var bounceTimer: Timer?
+    @State private var bounceTask: Task<Void, Never>?
 
     init(highlightedGate: QuantumGate? = nil, allDisabled: Bool = false, onGateSelected: @escaping (QuantumGate) -> Void) {
         self.highlightedGate = highlightedGate
@@ -88,30 +88,24 @@ struct SwiftUIGatePaletteView: View {
         stopBounceLoop()
         bouncePhase = 0
 
-        let delays: [Double] = [0.0, 0.3, 0.3, 0.8]
+        let delays: [UInt64] = [0, 300_000_000, 300_000_000, 800_000_000]
 
-        func runCycle() {
-            var accumulated: Double = 0
-            for (i, delay) in delays.enumerated() {
-                accumulated += delay
-                let phase = i < 3 ? i + 1 : 0
-                DispatchQueue.main.asyncAfter(deadline: .now() + accumulated) { [self] in
-                    if highlightedGate != nil {
-                        bouncePhase = phase
+        bounceTask = Task {
+            while !Task.isCancelled {
+                for (i, delay) in delays.enumerated() {
+                    if delay > 0 {
+                        try? await Task.sleep(nanoseconds: delay)
                     }
-                }
-            }
-            let totalDuration = delays.reduce(0, +)
-            DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration) { [self] in
-                if highlightedGate != nil {
-                    runCycle()
+                    guard !Task.isCancelled else { return }
+                    bouncePhase = i < 3 ? i + 1 : 0
                 }
             }
         }
-        runCycle()
     }
 
     private func stopBounceLoop() {
+        bounceTask?.cancel()
+        bounceTask = nil
         bouncePhase = 0
     }
 
