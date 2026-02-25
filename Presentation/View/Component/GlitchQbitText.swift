@@ -35,19 +35,20 @@ struct GlitchQbitText: View {
     }
 
     private func pulseLoop() async {
-        while true {
-            try? await Task.sleep(for: .seconds(2.5))
+        while !Task.isCancelled {
+
+            try? await Task.sleep(for: .seconds(3.0))
 
             await MainActor.run {
-                withAnimation(.linear(duration: 0.02)) {
-                    qScale = 1.02
+                withAnimation(.easeOut(duration: 0.15)) {
+                    qScale = 1.018
                 }
             }
 
-            try? await Task.sleep(nanoseconds: 50_000_000)
+            try? await Task.sleep(nanoseconds: 120_000_000)
 
             await MainActor.run {
-                withAnimation(.interpolatingSpring(stiffness: 180, damping: 12)) {
+                withAnimation(.easeInOut(duration: 0.4)) {
                     qScale = 1.0
                 }
             }
