@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var coordinator = AppCoordinator(scoreRepository: ScoreRepository(), audioManager: AudioManager())
+    @State private var coordinator = AppCoordinator(audioManager: AudioManager())
 
     var body: some View {
         GeometryReader { geometry in
@@ -50,7 +50,6 @@ struct ContentView: View {
         case .result(let score):
             ResultView(
                 score: score,
-                scoreRepository: coordinator.scoreRepository,
                 audioManager: coordinator.audioManager,
                 onPlayAgain: {
                     coordinator.popToRoot()

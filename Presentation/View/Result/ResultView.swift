@@ -21,8 +21,8 @@ struct ResultView: View {
         return scene
     }()
 
-    init(score: ScoreEntry, scoreRepository: any ScoreRepositoryProtocol, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
-        self._viewModel = State(initialValue: ResultViewModel(score: score, scoreRepository: scoreRepository))
+    init(score: ScoreEntry, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
+        self._viewModel = State(initialValue: ResultViewModel(score: score))
         self.audioManager = audioManager
         self.onPlayAgain = onPlayAgain
         self.onReturnToMenu = onReturnToMenu
@@ -131,7 +131,6 @@ struct ResultView: View {
             }
             .task {
                 audioManager.playBGM(.result)
-                await viewModel.loadResults()
                 if UIAccessibility.isVoiceOverRunning {
                     UIAccessibility.post(notification: .screenChanged, argument: "Mission complete. Total score \(viewModel.score.score).")
                 }

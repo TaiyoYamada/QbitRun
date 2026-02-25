@@ -11,12 +11,10 @@ final class AppCoordinator {
 
     var path = NavigationPath()
 
-    let scoreRepository: any ScoreRepositoryProtocol
 
     let audioManager: AudioManager
 
-    init(scoreRepository: any ScoreRepositoryProtocol, audioManager: AudioManager) {
-        self.scoreRepository = scoreRepository
+    init(audioManager: AudioManager) {
         self.audioManager = audioManager
     }
 
