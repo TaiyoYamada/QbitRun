@@ -2,7 +2,7 @@ import Foundation
 
 public struct JudgeService: Sendable {
 
-    private let fidelityThreshold: Double = 0.95
+    private let fidelityThreshold: Double = 1.0
 
     public func judge(playerCircuit: Circuit, startState: QuantumState, targetState: QuantumState) -> JudgeResult {
         let resultState = playerCircuit.apply(to: startState)

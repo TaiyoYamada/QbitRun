@@ -11,7 +11,7 @@ public struct ScoreCalculator: Sendable {
     public func calculate(difficulty: GameDifficulty, comboCount: Int) -> Result {
         let baseScore: Int
         switch difficulty {
-        case .easy: baseScore = 100
+        case .easy: baseScore = 200
         case .hard: baseScore = 500
         case .expert: baseScore = 3000
         }
@@ -20,9 +20,9 @@ public struct ScoreCalculator: Sendable {
         if comboCount >= 2 {
             let maxBonus: Double
             switch difficulty {
-            case .easy: maxBonus = 700.0
+            case .easy: maxBonus = 600.0
             case .hard: maxBonus = 1200.0
-            case .expert: maxBonus = 3500.0
+            case .expert: maxBonus = 3000.0
             }
             let k: Double = 0.5
 
