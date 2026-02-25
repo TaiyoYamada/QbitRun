@@ -126,6 +126,8 @@ final class AudioManager: AudioPlayable {
         }
     }
 
+    private static let maxPlayersPerSFX = 4
+
     func playSFX(_ sfx: SFX) {
         var playerToUse: AVAudioPlayer?
 
@@ -133,7 +135,7 @@ final class AudioManager: AudioPlayable {
             playerToUse = players.first(where: { !$0.isPlaying })
         }
 
-        if playerToUse == nil {
+        if playerToUse == nil, (sfxPlayers[sfx]?.count ?? 0) < Self.maxPlayersPerSFX {
             playerToUse = preparePlayer(for: sfx)
         }
 

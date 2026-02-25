@@ -10,6 +10,27 @@ final class GameViewModel {
     let vectorAnimator = VectorAnimator()
     let tutorialManager = TutorialManager()
 
+    @ObservationIgnored
+    let heavyFeedback: UIImpactFeedbackGenerator = {
+        let gen = UIImpactFeedbackGenerator(style: .heavy)
+        gen.prepare()
+        return gen
+    }()
+
+    @ObservationIgnored
+    let mediumFeedback: UIImpactFeedbackGenerator = {
+        let gen = UIImpactFeedbackGenerator(style: .medium)
+        gen.prepare()
+        return gen
+    }()
+
+    @ObservationIgnored
+    let lightFeedback: UIImpactFeedbackGenerator = {
+        let gen = UIImpactFeedbackGenerator(style: .light)
+        gen.prepare()
+        return gen
+    }()
+
     init(gameEngine: GameEngine) {
         self.gameEngine = gameEngine
     }
@@ -257,7 +278,7 @@ final class GameViewModel {
             countdownOpacity = 1.0
         }
 
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        heavyFeedback.impactOccurred()
 
         try? await Task.sleep(for: .milliseconds(600))
 
@@ -317,7 +338,7 @@ final class GameViewModel {
 
     func advancePostTutorialGuide(audioManager: AudioManager) {
         audioManager.playSFX(.button)
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        lightFeedback.impactOccurred()
 
         if let next = PostTutorialGuideStep(rawValue: postTutorialGuideStep.rawValue + 1) {
             withAnimation(.easeInOut(duration: 0.25)) {

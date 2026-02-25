@@ -37,7 +37,7 @@ struct GameView: View {
                             isTutorialActive: viewModel.isTutorialActive,
                             onExitTapped: {
                                 audioManager.playSFX(.button)
-                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                viewModel.mediumFeedback.impactOccurred()
                                 viewModel.showExitConfirmation = true
                             }
                         )

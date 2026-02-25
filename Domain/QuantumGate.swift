@@ -67,10 +67,42 @@ public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
     }
 
     public func apply(to state: QuantumState) -> QuantumState {
-        let m = matrix
-        let newAlpha = m[0][0] * state.alpha + m[0][1] * state.beta
-        let newBeta = m[1][0] * state.alpha + m[1][1] * state.beta
-        return QuantumState(alpha: newAlpha, beta: newBeta)
+        switch self {
+        case .x:
+            return QuantumState(alpha: state.beta, beta: state.alpha)
+        case .y:
+            return QuantumState(
+                alpha: Complex(real: state.beta.imaginary, imaginary: -state.beta.real),
+                beta: Complex(real: -state.alpha.imaginary, imaginary: state.alpha.real)
+            )
+        case .z:
+            return QuantumState(
+                alpha: state.alpha,
+                beta: Complex(real: -state.beta.real, imaginary: -state.beta.imaginary)
+            )
+        case .h:
+            let f = 1.0 / 2.0.squareRoot()
+            return QuantumState(
+                alpha: (state.alpha + state.beta) * f,
+                beta: (state.alpha - state.beta) * f
+            )
+        case .s:
+            // S = [[1, 0], [0, i]]
+            return QuantumState(
+                alpha: state.alpha,
+                beta: Complex(real: -state.beta.imaginary, imaginary: state.beta.real)
+            )
+        case .t: 
+            let c = cos(Double.pi / 4)
+            let s = sin(Double.pi / 4)
+            return QuantumState(
+                alpha: state.alpha,
+                beta: Complex(
+                    real: c * state.beta.real - s * state.beta.imaginary,
+                    imaginary: c * state.beta.imaginary + s * state.beta.real
+                )
+            )
+        }
     }
 
     public var name: String {

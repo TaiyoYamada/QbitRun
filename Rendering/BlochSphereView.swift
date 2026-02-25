@@ -205,6 +205,7 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
     private var animationProgress: Float = 1.0
     private var continuousOrbitAnimation: Bool = false
     private var orbitPhase: Double = 0.0
+    private var lastIsMatching: Bool?
 
     let onDidRender: @Sendable () -> Void
 
@@ -225,7 +226,8 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
             animatingToVector = nil
             animationProgress = 1.0
             updateVectorNode(stateVectorNode, vector: vector)
-            updateVectorColors()
+            lastIsMatching = nil
+            updateVectorColorsIfNeeded()
         }
     }
 
@@ -240,7 +242,8 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
         } else {
             ghostVectorNode?.isHidden = true
         }
-        updateVectorColors()
+        lastIsMatching = nil
+        updateVectorColorsIfNeeded()
     }
 
     func setContinuousOrbit(_ enabled: Bool) {
@@ -271,7 +274,7 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
             let vec = BlochVector(simd_double3(x, y, z))
             currentBlochVector = vec
             updateVectorNode(stateVectorNode, vector: vec)
-            updateVectorColors()
+            updateVectorColorsIfNeeded()
 
         } else if let target = animatingToVector, animationProgress < 1.0 {
             animationProgress += 0.02
@@ -286,7 +289,7 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
                 currentBlochVector = BlochVector(currentV + targetV)
             }
             updateVectorNode(stateVectorNode, vector: currentBlochVector)
-            updateVectorColors()
+            updateVectorColorsIfNeeded()
         }
 
         lock.unlock()
@@ -330,9 +333,7 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
         node.scale = SCNVector3(1, length, 1)
     }
 
-    private func updateVectorColors() {
-        guard let stateNode = stateVectorNode else { return }
-
+    private func updateVectorColorsIfNeeded() {
         let isMatching: Bool
         if let target = currentTargetVector {
             let epsilon: Double = 0.1
@@ -340,6 +341,15 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
         } else {
             isMatching = false
         }
+
+        guard isMatching != lastIsMatching else { return }
+        lastIsMatching = isMatching
+
+        applyVectorColors(isMatching: isMatching)
+    }
+
+    private func applyVectorColors(isMatching: Bool) {
+        guard let stateNode = stateVectorNode else { return }
 
         let stateColor = isMatching ? UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) : UIColor(red: 0.9, green: 0.2, blue: 0.2, alpha: 1.0)
         let targetColor = isMatching ? UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) : UIColor.white

@@ -94,7 +94,7 @@ public final class BlochSphereSceneBuilder {
 
     private func createSphere(in scene: SCNScene) -> SCNNode {
         let sphere = SCNSphere(radius: 1.0)
-        sphere.segmentCount = 96
+        sphere.segmentCount = 48
 
         let material = SCNMaterial()
         material.lightingModel = .phong
@@ -153,19 +153,19 @@ public final class BlochSphereSceneBuilder {
         }
 
         let longitudeCount = 12
+        let sharedLongitudeTorus = SCNTorus(ringRadius: CGFloat(radius), pipeRadius: pipeRadius)
+        sharedLongitudeTorus.ringSegmentCount = 72
+        sharedLongitudeTorus.pipeSegmentCount = 8
+
+        let sharedLongMat = SCNMaterial()
+        sharedLongMat.lightingModel = .constant
+        sharedLongMat.diffuse.contents = gridColor
+        sharedLongitudeTorus.firstMaterial = sharedLongMat
+
         for i in 0..<longitudeCount {
             let phi = Float(i) * .pi / Float(longitudeCount / 2)
 
-            let circle = SCNTorus(ringRadius: CGFloat(radius), pipeRadius: pipeRadius)
-            circle.ringSegmentCount = 72
-            circle.pipeSegmentCount = 8
-
-            let mat = SCNMaterial()
-            mat.lightingModel = .constant
-            mat.diffuse.contents = gridColor
-            circle.firstMaterial = mat
-
-            let node = SCNNode(geometry: circle)
+            let node = SCNNode(geometry: sharedLongitudeTorus)
             node.eulerAngles = SCNVector3(Float.pi / 2, 0, 0)
 
             let pivot = SCNNode()

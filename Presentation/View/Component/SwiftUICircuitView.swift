@@ -10,6 +10,12 @@ struct SwiftUICircuitView: View {
     @State private var runButtonScale: CGFloat = 1.0
     @State private var runPulseTask: Task<Void, Never>?
 
+    private let heavyFeedback: UIImpactFeedbackGenerator = {
+        let gen = UIImpactFeedbackGenerator(style: .heavy)
+        gen.prepare()
+        return gen
+    }()
+
     private var wireWidth: CGFloat {
         maxSlots >= 6 ? 14 : 25
     }
@@ -47,7 +53,7 @@ struct SwiftUICircuitView: View {
             }
 
             Button(action: {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                heavyFeedback.impactOccurred()
                 onRun()
             }) {
                 Text("▶ Run")
