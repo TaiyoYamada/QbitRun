@@ -1,17 +1,23 @@
 import SwiftUI
 
+enum CardSymbolEffect {
+    case none
+    case bounce
+    case rotate
+}
+
 struct QuantumModeCard: View {
     let title: String
     let subtitle: String
     let icon: String
     let accentColor: Color
     let isRandomStart: Bool
+    let symbolEffectType: CardSymbolEffect
     let action: () -> Void
 
     @State private var isHovered = false
     @State private var isPressed = false
-    @State private var iconBackgroundPhase = Double.random(in: 0...(2 * .pi))
-    @State private var iconBackgroundSpeed = 1.0
+    @State private var effectTrigger = 0
 
     var body: some View {
         Button(action: {
@@ -36,10 +42,7 @@ struct QuantumModeCard: View {
                             lineWidth: 3
                         )
 
-                    Image(systemName: icon)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(accentColor)
-                        .symbolEffect(.pulse, options: .repeating)
+                    iconView
                 }
                 .frame(width: 60, height: 60)
                 .shadow(color: accentColor.opacity(isHovered ? 0.8 : 0.4), radius: 5)
@@ -54,8 +57,6 @@ struct QuantumModeCard: View {
                         Text(title)
                             .font(.system(size: 30, weight: .bold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.9))
-
-
                     }
                     Text(subtitle)
                         .font(.system(size: 17, weight: .medium, design: .rounded))
@@ -92,6 +93,29 @@ struct QuantumModeCard: View {
         .accessibilityHint("Double tap to start this mode.")
         .onHover { hovering in
             isHovered = hovering
+        }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(Double.random(in: 3...6)))
+                effectTrigger += 1
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var iconView: some View {
+        let image = Image(systemName: icon)
+            .font(.system(size: 28, weight: .bold, design: .rounded))
+            .foregroundStyle(accentColor)
+            .symbolEffect(.breathe, options: .repeating)
+
+        switch symbolEffectType {
+        case .none:
+            image
+        case .bounce:
+            image.symbolEffect(.bounce, value: effectTrigger)
+        case .rotate:
+            image.symbolEffect(.rotate, value: effectTrigger)
         }
     }
 }

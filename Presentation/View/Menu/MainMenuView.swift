@@ -189,6 +189,7 @@ struct MainMenuView: View {
                 icon: "arrow.up",
                 accentColor: Color(red: 0.0, green: 0.85, blue: 1.0),
                 isRandomStart: false,
+                symbolEffectType: .none,
                 action: {
                     if hasCompletedTutorial {
                         triggerTransition(difficulty: .easy)
@@ -204,6 +205,7 @@ struct MainMenuView: View {
                 icon: "shuffle",
                 accentColor: Color(red: 0.20, green: 0.45, blue: 1.0),
                 isRandomStart: true,
+                symbolEffectType: .none,
                 action: {
                     if hasCompletedTutorial {
                         triggerTransition(difficulty: .hard)
@@ -219,6 +221,7 @@ struct MainMenuView: View {
                 icon: "atom",
                 accentColor: Color(red: 0.65, green: 0.05, blue: 0.95),
                 isRandomStart: true,
+                symbolEffectType: .rotate,
                 action: {
                     if hasCompletedTutorial {
                         triggerTransition(difficulty: .expert)
