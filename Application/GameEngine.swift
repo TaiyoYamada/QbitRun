@@ -1,5 +1,6 @@
 import Foundation
 
+/// ゲームの進行状態を表す列挙型
 public enum GameState: Sendable {
     case ready
     case playing
@@ -7,6 +8,7 @@ public enum GameState: Sendable {
     case finished
 }
 
+/// 問題生成・回路操作・正誤判定・スコア管理・タイマーを統括
 @Observable
 @MainActor
 public final class GameEngine {

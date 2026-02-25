@@ -1,6 +1,7 @@
 import Foundation
 import simd
 
+/// ブロッホ球上の単位ベクトル．量子状態を3次元空間上の点として視覚化するために使用
 public struct BlochVector: Sendable, Equatable {
     public let vector: simd_double3
 

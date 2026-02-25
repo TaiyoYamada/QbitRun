@@ -1,6 +1,7 @@
 
 import Foundation
 
+/// ゲームの難易度を表す列挙型
 public enum GameDifficulty: String, CaseIterable, Sendable, Codable {
     case easy
     case hard

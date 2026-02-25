@@ -1,7 +1,9 @@
 import Foundation
 
+/// 難易度とコンボ数に基づきスコアを計算するユーティリティ
 public struct ScoreCalculator: Sendable {
 
+    /// スコア計算の結果
     public struct Result: Sendable {
         public let baseScore: Int
         public let comboBonus: Int

@@ -1,5 +1,6 @@
 import Foundation
 
+/// 複素数を表す値型
 public struct Complex: Sendable, Equatable {
     public let real: Double
 

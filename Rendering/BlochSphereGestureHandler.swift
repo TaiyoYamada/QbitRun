@@ -1,6 +1,7 @@
 import UIKit
 import SceneKit
 
+/// ブロッホ球のパンジェスチャーを処理し，カメラの回転角を制御するハンドラー
 @MainActor
 public final class BlochSphereGestureHandler: NSObject {
 

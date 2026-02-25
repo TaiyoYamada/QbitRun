@@ -1,5 +1,6 @@
 import UIKit
 
+/// 正解・不正解時のパーティクルやシェイクなどのエフェクトを生成するユーティリティ
 @MainActor
 public final class CircuitAnimator {
 

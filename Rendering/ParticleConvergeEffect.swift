@@ -1,5 +1,6 @@
 import UIKit
 
+/// パーティクルが一点に収束してリングが拡散するエフェクトを再生するUIView
 @MainActor
 public final class ParticleConvergeEffectView: UIView {
 
@@ -19,7 +20,7 @@ public final class ParticleConvergeEffectView: UIView {
     }
 
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) は未実装です")
+        fatalError("init(coder:) は未実装")
     }
 
     public func startEffect(sourcePoints: [CGPoint], targetCenter: CGPoint) {

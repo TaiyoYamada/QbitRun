@@ -1,5 +1,6 @@
 import Foundation
 
+/// スコア・正解数・コンボ数・ミス数を一元管理するマネージャー
 @Observable
 @MainActor
 public final class GameScoreManager {

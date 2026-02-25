@@ -1,10 +1,12 @@
 import SwiftUI
 
+/// アプリのナビゲーション先を表す列挙型
 enum AppRoute: Hashable {
     case game(difficulty: GameDifficulty, isTutorial: Bool, isReview: Bool)
     case result(score: ScoreEntry)
 }
 
+/// 画面遷移を一元管理するコーディネーター
 @Observable
 @MainActor
 final class AppCoordinator {

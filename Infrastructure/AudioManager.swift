@@ -2,16 +2,19 @@
 import AVFoundation
 import SwiftUI
 
+/// BGMとSEの再生・停止・音量制御を担うオーディオマネージャー
 @Observable
 @MainActor
 final class AudioManager: AudioPlayable {
 
+    /// BGMの種類
     enum BGM: String {
         case menu = "bgm_menu"
         case game = "bgm_game"
         case result = "bgm_result"
     }
 
+    /// 効果音の種類
     enum SFX: String {
         case click = "sfx_click"
         case success = "sfx_success"

@@ -1,6 +1,7 @@
 import UIKit
 import SceneKit
 
+/// ブロッホ球の3Dシーン（球体・グリッド・軸・カメラ・ライティング）を構築するビルダー
 @MainActor
 public final class BlochSphereSceneBuilder {
 

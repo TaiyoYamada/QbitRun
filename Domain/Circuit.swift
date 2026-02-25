@@ -1,5 +1,6 @@
 import Foundation
 
+/// 量子回路を表す値型
 public struct Circuit: Sendable {
     public private(set) var gates: [QuantumGate]
 

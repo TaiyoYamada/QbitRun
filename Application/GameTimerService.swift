@@ -1,5 +1,6 @@
 import Foundation
 
+/// ゲームの残り時間を管理するタイマーサービス
 @Observable
 @MainActor
 public final class GameTimerService {

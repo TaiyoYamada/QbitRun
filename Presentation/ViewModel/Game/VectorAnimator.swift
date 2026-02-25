@@ -1,20 +1,24 @@
 import SwiftUI
 import simd
 
+/// ブロッホ球上のベクトルアニメーションをキュー制御し，フレーム単位で補間再生するアニメーター
 @Observable
 @MainActor
 final class VectorAnimator {
 
+    /// アニメーションの1ステップ．パスと所要時間を保持
     struct AnimationStep {
         let path: AnimationPath
         let duration: Double
     }
 
+    /// アニメーションの補間方法．軸回転または球面線形補間を選択．
     enum AnimationPath {
         case axisRotation(start: simd_double3, axis: simd_double3, angle: Double)
         case slerp(from: simd_double3, to: simd_double3)
     }
 
+    /// アニメーションの定数設定
     enum Config {
         static let fps: Double = 60
         static let addOrRemoveDuration: Double = 0.16

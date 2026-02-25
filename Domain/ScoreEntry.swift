@@ -1,5 +1,6 @@
 import Foundation
 
+/// ゲーム終了時のスコア記録
 public struct ScoreEntry: Sendable, Codable, Identifiable, Hashable, Equatable {
     public let id: UUID
 

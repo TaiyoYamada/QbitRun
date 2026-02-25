@@ -1,5 +1,6 @@
 import Foundation
 
+/// チュートリアルの各ステップを表す列挙型
 public enum TutorialStep: CaseIterable, Equatable, Sendable {
     case intro1
     case intro2

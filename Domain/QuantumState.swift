@@ -1,5 +1,6 @@
 import Foundation
 
+/// 1量子ビットの状態を表す値型．α|0⟩ + β|1⟩ の形式で正規化された振幅を保持
 public struct QuantumState: Sendable, Equatable {
     public let alpha: Complex
 

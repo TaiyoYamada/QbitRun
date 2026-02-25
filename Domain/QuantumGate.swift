@@ -1,5 +1,6 @@
 import Foundation
 import simd
+/// 量子ゲートを表す列挙型．各ゲートはユニタリ行列とブロッホ球上の回転として定義
 public enum QuantumGate: String, CaseIterable, Sendable, Codable, Hashable {
     case x
     case y

@@ -1,5 +1,6 @@
 import Foundation
 
+/// 難易度に応じた量子回路の問題をランダム生成するジェネレーター
 public struct ProblemGenerator: Sendable {
 
     private let availableStates: [QuantumState] = [

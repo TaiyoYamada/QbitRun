@@ -1,5 +1,6 @@
 import Foundation
 
+/// 現在の問題と最近の出題履歴を管理し，重複を避けた新問題の生成を制御する
 @Observable
 @MainActor
 public final class ProblemManager {

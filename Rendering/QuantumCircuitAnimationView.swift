@@ -1,5 +1,6 @@
 import UIKit
 
+/// メニュー画面の背景で量子回路がスクロールするアニメーションを描画するUIView
 @MainActor
 public final class QuantumCircuitAnimationView: UIView {
 

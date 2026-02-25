@@ -1,5 +1,6 @@
 import Foundation
 
+/// 1問分の出題データ
 public struct Problem: Sendable {
     public let startState: QuantumState
 
