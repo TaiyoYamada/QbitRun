@@ -145,7 +145,7 @@ public final class QuantumCircuitAnimationView: UIView {
     }
 
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) は未実装です")
+        fatalError("init(coder:) is not supported.")
     }
 
     public func startLoopingAnimation(duration: TimeInterval = 20.0, opacity: Float = 0.3) {

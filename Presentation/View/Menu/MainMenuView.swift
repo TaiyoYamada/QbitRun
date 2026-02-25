@@ -141,7 +141,7 @@ struct MainMenuView: View {
 
             QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
                 .ignoresSafeArea()
-                .opacity(0.5)
+                .opacity(0.45)
             .ignoresSafeArea()
         }
     }

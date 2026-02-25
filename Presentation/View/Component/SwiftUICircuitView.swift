@@ -145,7 +145,7 @@ struct CircuitSlot: View {
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(gate.circuitAccessibilityName) gate")
+            .accessibilityLabel("\(gate.symbol) gate")
             .accessibilityHint("Double tap to remove this gate from the circuit.")
         } else {
             RoundedRectangle(cornerRadius: 8)
@@ -156,19 +156,6 @@ struct CircuitSlot: View {
                         .stroke(.white.opacity(0.2), lineWidth: 2)
                 )
                 .accessibilityHidden(true)
-        }
-    }
-}
-
-private extension QuantumGate {
-    var circuitAccessibilityName: String {
-        switch self {
-        case .x: return "X"
-        case .y: return "Y"
-        case .z: return "Z"
-        case .h: return "H"
-        case .s: return "S"
-        case .t: return "T"
         }
     }
 }

@@ -198,7 +198,7 @@ struct TutorialOverlayView: View {
     private var nextButtonAccessibilityHint: String {
         if !viewModel.showTutorialNextButton {
             if let gate = viewModel.currentTutorialStep.targetGate {
-                return "Apply the \(gate.voiceOverName) gate to continue."
+                return "Apply the \(gate.symbol) gate to continue."
             }
             return "Wait for the tutorial text to finish."
         }
@@ -240,31 +240,5 @@ struct TutorialOverlayView: View {
         .disabled(!isEnabled)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(accessibilityHint)
-    }
-}
-
-private extension QuantumGate {
-    var voiceOverName: String {
-        switch self {
-        case .x: return "X"
-        case .y: return "Y"
-        case .z: return "Z"
-        case .h: return "H"
-        case .s: return "S"
-        case .t: return "T"
-        }
-    }
-}
-
-private extension String {
-    var voiceOverFriendlyTutorialText: String {
-        self
-            .replacingOccurrences(of: "|0⟩", with: "ket zero")
-            .replacingOccurrences(of: "|1⟩", with: "ket one")
-            .replacingOccurrences(of: "|+⟩", with: "ket plus")
-            .replacingOccurrences(of: "|−⟩", with: "ket minus")
-            .replacingOccurrences(of: "|+i⟩", with: "ket plus i")
-            .replacingOccurrences(of: "|−i⟩", with: "ket minus i")
-            .replacingOccurrences(of: "↔", with: "to")
     }
 }

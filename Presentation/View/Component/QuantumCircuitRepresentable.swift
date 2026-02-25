@@ -19,7 +19,7 @@ struct QuantumCircuitRepresentable: UIViewRepresentable {
         uiView.frame = CGRect(origin: .zero, size: size)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            uiView.startLoopingAnimation(duration: 30.0, opacity: 0.25)
+            uiView.startLoopingAnimation(duration: 60.0, opacity: 0.25)
         }
     }
 

@@ -21,7 +21,7 @@ struct UnifiedBackgroundView: View {
 
             QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
                 .ignoresSafeArea()
-                .opacity(0.4)
+                .opacity(0.2)
 
                 VStack {
                     Rectangle()
