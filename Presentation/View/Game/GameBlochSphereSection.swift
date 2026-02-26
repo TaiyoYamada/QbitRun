@@ -47,15 +47,6 @@ struct GameBlochSphereSection: View {
                     [.sphere: anchor]
                 }
                 .accessibilityHidden(true)
-                .overlay(
-                    Color.clear
-                        .frame(width: 44, height: 44)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("Bloch sphere")
-                        .accessibilityValue(blochSphereAccessibilityValue)
-                        .accessibilityHint("Shows your current and target quantum states.")
-                        .accessibilitySortPriority(0)
-                )
             }
 
             ComboEffectView(
