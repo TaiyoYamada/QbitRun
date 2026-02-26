@@ -61,6 +61,8 @@ struct ResultView: View {
                             Text("\(scoreCount)")
                                 .font(.system(size: 100, weight: .black, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
                                 .shadow(color: .cyan.opacity(0.3), radius: 15)
                                 .contentTransition(.numericText())
                                 .scaleEffect(showContent ? 1.0 : 0.8)

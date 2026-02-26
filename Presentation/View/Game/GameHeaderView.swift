@@ -86,6 +86,8 @@ struct GameHeaderView: View {
                 Text("\(score)")
                     .font(.system(size: 45, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(scoreColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                     .frame(width: 170, height: 110, alignment: .trailing)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 5)
