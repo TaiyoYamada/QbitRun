@@ -89,7 +89,7 @@ struct QuantumModeCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel(title)
-        .accessibilityValue(subtitle)
+        .accessibilityValue(subtitle.voiceOverFriendlyTutorialText)
         .accessibilityHint("Double tap to start this mode.")
         .onHover { hovering in
             isHovered = hovering
