@@ -44,6 +44,7 @@ struct GameView: View {
                         .padding(.bottom, 10)
                         .padding(.horizontal, 24)
                         .animation(.easeIn(duration: 0.5), value: viewModel.showCountdown)
+                        .accessibilitySortPriority(90)
                     } else {
                         Spacer()
                             .frame(height: 170)
@@ -59,6 +60,7 @@ struct GameView: View {
                         showComboEffect: $viewModel.showComboEffect,
                         geometry: geometry
                     )
+                    .accessibilitySortPriority(50)
 
                     if !viewModel.isTutorialActive {
                         GameCircuitSection(
@@ -70,6 +72,7 @@ struct GameView: View {
                             onRun: { viewModel.runCircuit(audioManager: audioManager) },
                             onGateRemove: { index in viewModel.removeGate(at: index) }
                         )
+                        .accessibilitySortPriority(30)
                     }
 
                     HStack(alignment: .center, spacing: 20) {
@@ -87,6 +90,7 @@ struct GameView: View {
                         }
                     }
                     .padding(.top, 20)
+                    .accessibilitySortPriority(20)
                     .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
                         [.gatePalette: anchor]
                     }

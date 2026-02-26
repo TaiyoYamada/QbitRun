@@ -60,6 +60,8 @@ struct MainMenuView: View {
                                     .foregroundStyle(.white.opacity(0.8))
                             }
                             .padding(.top, 40)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityAddTraits(.isButton)
                             .accessibilityLabel("Tutorial review")
                             .accessibilityHint("Open tutorial review confirmation.")
                         }
@@ -77,9 +79,12 @@ struct MainMenuView: View {
                         }
                         .padding(.top, 40)
                         .padding(.trailing, 40)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityAddTraits(.isButton)
                         .accessibilityLabel("Settings")
                         .accessibilityHint("Open audio settings.")
                     }
+                    .accessibilityElement(children: .contain)
                     Spacer()
                 }
                 .accessibilityHidden(isMenuModalPresented)

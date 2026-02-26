@@ -29,6 +29,7 @@ struct GameBlochSphereSection: View {
             VStack() {
                 if !isTutorialActive {
                     legendView
+                        .accessibilitySortPriority(100)
                 }
 
                 BlochSphereViewRepresentable(
@@ -49,6 +50,7 @@ struct GameBlochSphereSection: View {
                 .accessibilityLabel("Bloch sphere")
                 .accessibilityValue(blochSphereAccessibilityValue)
                 .accessibilityHint("Shows your current and target quantum states.")
+                .accessibilitySortPriority(0)
             }
 
             ComboEffectView(
