@@ -46,11 +46,16 @@ struct GameBlochSphereSection: View {
                 .anchorPreference(key: PostTutorialGuideFocusPreferenceKey.self, value: .bounds) { anchor in
                     [.sphere: anchor]
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Bloch sphere")
-                .accessibilityValue(blochSphereAccessibilityValue)
-                .accessibilityHint("Shows your current and target quantum states.")
-                .accessibilitySortPriority(0)
+                .accessibilityHidden(true)
+                .overlay(
+                    Color.clear
+                        .frame(width: 44, height: 44)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Bloch sphere")
+                        .accessibilityValue(blochSphereAccessibilityValue)
+                        .accessibilityHint("Shows your current and target quantum states.")
+                        .accessibilitySortPriority(0)
+                )
             }
 
             ComboEffectView(
@@ -59,6 +64,7 @@ struct GameBlochSphereSection: View {
                 isVisible: $showComboEffect
             )
             .offset(x: 10, y: 110)
+            .accessibilityHidden(true)
         }
         .padding(.top, -60)
         .padding(.bottom, -110)

@@ -88,6 +88,11 @@ public final class BlochSphereView: UIView {
         scnView.isPlaying = true
         addSubview(scnView)
 
+        isAccessibilityElement = false
+        accessibilityElementsHidden = true
+        scnView.isAccessibilityElement = false
+        scnView.accessibilityElementsHidden = true
+
         NSLayoutConstraint.activate([
             scnView.topAnchor.constraint(equalTo: topAnchor, constant: backgroundPadding),
             scnView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -backgroundPadding),
