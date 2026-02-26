@@ -11,6 +11,7 @@ public final class ProblemManager {
 
     private var recentProblemKeys: [String] = []
 
+    /// 重複回避対象とする履歴数
     private let maxRecentKeys = 4
 
     public func generateNewProblem(difficulty: GameDifficulty, problemNumber: Int) {
