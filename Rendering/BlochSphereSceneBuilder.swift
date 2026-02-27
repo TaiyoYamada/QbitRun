@@ -5,6 +5,16 @@ import SceneKit
 @MainActor
 public final class BlochSphereSceneBuilder {
 
+    public enum ArrowTipShape {
+        case cone
+        case sphere
+        case diamond
+    }
+
+    private static let tipNameCone = "tip_cone"
+    private static let tipNameSphere = "tip_sphere"
+    private static let tipNameDiamond = "tip_diamond"
+
     private typealias AxisDefinition = (
         direction: SCNVector3, color: UIColor,
         labelText: String, labelPosition: SCNVector3
@@ -27,7 +37,8 @@ public final class BlochSphereSceneBuilder {
         return (sphereNode, gridNode, axesNode, cameraNode)
     }
 
-    public func createArrow(color: UIColor, opacity: CGFloat) -> SCNNode {
+    /// 矢印ノードを生成する．全3種類の先端形状をプリビルドし，defaultTipのみ表示
+    public func createArrow(color: UIColor, opacity: CGFloat, defaultTip: ArrowTipShape = .cone) -> SCNNode {
         let container = SCNNode()
 
         let material = SCNMaterial()
@@ -38,7 +49,8 @@ public final class BlochSphereSceneBuilder {
         material.transparency = opacity
 
         let headLength: CGFloat = 0.15
-        let shaftLength: CGFloat = 1.0 - headLength
+
+        let shaftLength: CGFloat = 0.95
 
         let cylinder = SCNCylinder(radius: 0.025, height: shaftLength)
         cylinder.firstMaterial = material
@@ -49,10 +61,60 @@ public final class BlochSphereSceneBuilder {
         let cone = SCNCone(topRadius: 0, bottomRadius: 0.05, height: headLength)
         cone.firstMaterial = material
         let coneNode = SCNNode(geometry: cone)
+        coneNode.name = Self.tipNameCone
         coneNode.position = SCNVector3(0, shaftLength + headLength / 2, 0)
+        coneNode.isHidden = (defaultTip != .cone)
         container.addChildNode(coneNode)
 
+        let sphereRadius: CGFloat = 0.06
+        let sphere = SCNSphere(radius: sphereRadius)
+        sphere.firstMaterial = material
+        let sphereNode = SCNNode(geometry: sphere)
+        sphereNode.name = Self.tipNameSphere
+
+        sphereNode.position = SCNVector3(0, 1.0 - sphereRadius, 0)
+        sphereNode.isHidden = (defaultTip != .sphere)
+        container.addChildNode(sphereNode)
+
+        let diamondHalfHeight: CGFloat = 0.08
+        let diamondRadius: CGFloat = 0.06
+        let diamondNode = SCNNode()
+        diamondNode.name = Self.tipNameDiamond
+
+        diamondNode.position = SCNVector3(0, 1.0 - diamondHalfHeight, 0)
+
+        let topCone = SCNCone(topRadius: 0, bottomRadius: diamondRadius, height: diamondHalfHeight)
+        topCone.firstMaterial = material
+        let topConeNode = SCNNode(geometry: topCone)
+        topConeNode.position = SCNVector3(0, diamondHalfHeight / 2, 0)
+
+        let bottomCone = SCNCone(topRadius: 0, bottomRadius: diamondRadius, height: diamondHalfHeight)
+        bottomCone.firstMaterial = material
+        let bottomConeNode = SCNNode(geometry: bottomCone)
+        bottomConeNode.position = SCNVector3(0, -diamondHalfHeight / 2, 0)
+        bottomConeNode.eulerAngles = SCNVector3(Float.pi, 0, 0)
+
+        diamondNode.addChildNode(topConeNode)
+        diamondNode.addChildNode(bottomConeNode)
+        diamondNode.isHidden = (defaultTip != .diamond)
+        container.addChildNode(diamondNode)
+
         return container
+    }
+
+    public nonisolated static func setTipShape(_ shape: ArrowTipShape, on arrowNode: SCNNode) {
+        for child in arrowNode.childNodes {
+            switch child.name {
+            case tipNameCone:
+                child.isHidden = (shape != .cone)
+            case tipNameSphere:
+                child.isHidden = (shape != .sphere)
+            case tipNameDiamond:
+                child.isHidden = (shape != .diamond)
+            default:
+                break
+            }
+        }
     }
 
     public func addAxisLabelsIfNeeded(to axesNode: SCNNode) {

@@ -63,9 +63,23 @@ struct GameBlochSphereSection: View {
 
     private var legendView: some View {
         VStack(alignment: .leading, spacing: 10) {
-            legendItem(color: Color(red: 0.9, green: 0.2, blue: 0.2), label: "CURRENT")
-            legendItem(color: Color.white, label: "TARGET")
-            legendItem(color: Color(red: 1.0, green: 0.84, blue: 0.0), label: "MATCH")
+            legendItem(color: Color(red: 0.9, green: 0.2, blue: 0.2), label: "CURRENT") {
+                Triangle()
+                    .fill(Color(red: 0.9, green: 0.2, blue: 0.2).opacity(0.8))
+                    .frame(width: 25, height: 25)
+            }
+            legendItem(color: Color.white, label: "TARGET") {
+                Circle()
+                    .fill(Color.white.opacity(0.8))
+                    .frame(width: 25, height: 25)
+            }
+            legendItem(color: Color(red: 1.0, green: 0.84, blue: 0.0), label: "MATCH") {
+                Rectangle()
+                    .fill(Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.8))
+                    .frame(width: 20, height: 20)
+                    .rotationEffect(.degrees(45))
+                    .frame(width: 25, height: 25)
+            }
         }
         .padding(.vertical, 15)
         .padding(.horizontal, 20)
@@ -79,11 +93,9 @@ struct GameBlochSphereSection: View {
         )
     }
 
-    private func legendItem(color: Color, label: String) -> some View {
+    private func legendItem<S: View>(color: Color, label: String, @ViewBuilder shape: () -> S) -> some View {
         HStack(spacing: 15) {
-            Circle()
-                .fill(color.opacity(0.8))
-                .frame(width: 25, height: 25)
+            shape()
             Text(label)
                 .font(.system(size: 25, weight: .bold, design: .rounded))
                 .tracking(3)
@@ -111,5 +123,17 @@ struct GameBlochSphereSection: View {
             vector.y,
             vector.z
         )
+    }
+}
+
+/// 凡例用の三角形シェイプ（状態ベクトルの円錐先端を2Dで表現）
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }

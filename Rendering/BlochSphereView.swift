@@ -120,7 +120,7 @@ public final class BlochSphereView: UIView {
         stateVectorNode.isHidden = true
         scene.rootNode.addChildNode(stateVectorNode)
 
-        let ghostVectorNode = sceneBuilder.createArrow(color: UIColor.white, opacity: 1.0)
+        let ghostVectorNode = sceneBuilder.createArrow(color: UIColor.white, opacity: 1.0, defaultTip: .sphere)
         ghostVectorNode.isHidden = true
         scene.rootNode.addChildNode(ghostVectorNode)
 
@@ -374,6 +374,11 @@ private class BlochSphereRenderCoordinator: NSObject, SCNSceneRendererDelegate {
                     material.emission.contents = emissionColor
                 }
             }
+        }
+
+        BlochSphereSceneBuilder.setTipShape(isMatching ? .diamond : .cone, on: stateNode)
+        if let ghostNode = ghostVectorNode {
+            BlochSphereSceneBuilder.setTipShape(isMatching ? .diamond : .sphere, on: ghostNode)
         }
     }
 }
