@@ -181,9 +181,15 @@ struct MainMenuView: View {
                 .tracking(10)
                 .foregroundStyle(.white.opacity(0.9))
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("Qbit Run"))
-        // .accessibilityAddTraits(.isHeader)
+        .accessibilityElement(children: .ignore)
+        /*
+        [Playgrounds固有の仕様への対策]
+        Playgrounds上のプレビューでは，.accessibilityLabel や .accessibilityHint に
+        タイトルと同一の文字列（"Qbit Run"）を設定すると，強制的に "Playgrounds" と
+        読み上げられてしまう．スペースを挟んだ "Q bit Run" にすることで，
+        本来の読み上げを維持しつつ上書きを回避する．
+        */
+        .accessibilityLabel("Q bit Run")
     }
 
     private var menuButtons: some View {
