@@ -34,7 +34,7 @@ public enum TutorialStep: CaseIterable, Equatable, Sendable {
     func instruction(isReviewMode: Bool) -> String {
         switch self {
         case .intro1:
-        return "This Bloch sphere represents a quantum bit (qubit) — the basic unit of quantum computing.\n\nThe arrow shows your current quantum state."
+        return "This Bloch sphere represents a quantum bit (qubit)\n— the basic unit of quantum computing.\n\nThe arrow shows your current quantum state."
 
         case .intro2:
         return "You can swipe the sphere to view it from any angle.\n\nTry it now!"

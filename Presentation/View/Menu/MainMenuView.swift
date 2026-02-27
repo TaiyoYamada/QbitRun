@@ -181,8 +181,8 @@ struct MainMenuView: View {
                 .tracking(10)
                 .foregroundStyle(.white.opacity(0.9))
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Qbit Run")
+        .accessibilityElement()
+        .accessibilityLabel(Text("Qbit Run"))
         .accessibilityAddTraits(.isHeader)
     }
 
