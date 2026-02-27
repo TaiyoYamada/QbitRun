@@ -78,8 +78,7 @@ struct GameView: View {
                     HStack(alignment: .center, spacing: 20) {
                         SwiftUIGatePaletteView(
                             highlightedGate: viewModel.highlightedGate,
-                            allDisabled: viewModel.isTutorialActive && (viewModel.currentTutorialStep.targetGate == nil || !viewModel.tutorialGateEnabled),
-                            showcaseMode: viewModel.isTutorialActive && viewModel.currentTutorialStep == .intro4
+                            allDisabled: viewModel.isTutorialActive && (viewModel.currentTutorialStep.targetGate == nil || !viewModel.tutorialGateEnabled)
                         ) { gate in
                             if viewModel.isTutorialActive {
                                 audioManager.playSFX(.set)
