@@ -2,6 +2,7 @@ import SwiftUI
 
 enum CardSymbolEffect {
     case none
+    case wiggle
     case bounce
     case rotate
 }
@@ -105,13 +106,15 @@ struct QuantumModeCard: View {
     @ViewBuilder
     private var iconView: some View {
         let image = Image(systemName: icon)
-            .font(.system(size: 28, weight: .bold, design: .rounded))
+            .font(.system(size: 25, weight: .bold, design: .rounded))
             .foregroundStyle(accentColor)
             .symbolEffect(.breathe, options: .repeating)
 
         switch symbolEffectType {
         case .none:
             image
+        case .wiggle:
+            image.symbolEffect(.wiggle, value: effectTrigger)
         case .bounce:
             image.symbolEffect(.bounce, value: effectTrigger)
         case .rotate:

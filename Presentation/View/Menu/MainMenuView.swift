@@ -193,7 +193,7 @@ struct MainMenuView: View {
                 icon: "arrow.up",
                 accentColor: Color(red: 0.0, green: 0.85, blue: 1.0),
                 isRandomStart: false,
-                symbolEffectType: .none,
+                symbolEffectType: .wiggle,
                 action: {
                     if hasCompletedTutorial {
                         triggerTransition(difficulty: .easy)
@@ -209,7 +209,7 @@ struct MainMenuView: View {
                 icon: "shuffle",
                 accentColor: Color(red: 0.20, green: 0.45, blue: 1.0),
                 isRandomStart: true,
-                symbolEffectType: .none,
+                symbolEffectType: .wiggle,
                 action: {
                     if hasCompletedTutorial {
                         triggerTransition(difficulty: .hard)
