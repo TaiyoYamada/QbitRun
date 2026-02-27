@@ -181,9 +181,9 @@ struct MainMenuView: View {
                 .tracking(10)
                 .foregroundStyle(.white.opacity(0.9))
         }
-        .accessibilityElement()
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Qbit Run"))
-        .accessibilityAddTraits(.isHeader)
+        // .accessibilityAddTraits(.isHeader)
     }
 
     private var menuButtons: some View {
