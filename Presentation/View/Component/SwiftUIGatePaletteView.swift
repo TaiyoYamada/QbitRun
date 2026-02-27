@@ -5,13 +5,15 @@ struct SwiftUIGatePaletteView: View {
     let onGateSelected: (QuantumGate) -> Void
     var highlightedGate: QuantumGate?
     var allDisabled: Bool
+    var showcaseMode: Bool
 
     @State private var bouncePhase: Int = 0
     @State private var bounceTask: Task<Void, Never>?
 
-    init(highlightedGate: QuantumGate? = nil, allDisabled: Bool = false, onGateSelected: @escaping (QuantumGate) -> Void) {
+    init(highlightedGate: QuantumGate? = nil, allDisabled: Bool = false, showcaseMode: Bool = false, onGateSelected: @escaping (QuantumGate) -> Void) {
         self.highlightedGate = highlightedGate
         self.allDisabled = allDisabled
+        self.showcaseMode = showcaseMode
         self.onGateSelected = onGateSelected
     }
 
@@ -52,10 +54,10 @@ struct SwiftUIGatePaletteView: View {
                         )
                 }
                 .buttonStyle(GateButtonStyle())
-                .scaleEffect(allDisabled ? 1.0 : bounceScale(for: gate))
-                .opacity(allDisabled ? 0.4 : (highlightedGate == nil || highlightedGate == gate ? 1.0 : 0.4))
-                .grayscale(allDisabled ? 1.0 : (highlightedGate == nil || highlightedGate == gate ? 0.0 : 1.0))
-                .disabled(allDisabled || (highlightedGate != nil && highlightedGate != gate))
+                .scaleEffect(allDisabled && !showcaseMode ? 1.0 : bounceScale(for: gate))
+                .opacity(allDisabled && !showcaseMode ? 0.4 : (highlightedGate == nil || highlightedGate == gate ? 1.0 : 0.4))
+                .grayscale(allDisabled && !showcaseMode ? 1.0 : (highlightedGate == nil || highlightedGate == gate ? 0.0 : 1.0))
+                .disabled(allDisabled || showcaseMode || (highlightedGate != nil && highlightedGate != gate))
                 .animation(.spring(response: 0.4, dampingFraction: 0.6), value: bouncePhase)
                 .animation(nil, value: allDisabled)
                 .accessibilityLabel("\(gate.symbol) gate")
@@ -110,7 +112,7 @@ struct SwiftUIGatePaletteView: View {
     }
 
     private func gateAccessibilityHint(for gate: QuantumGate) -> String {
-        if allDisabled {
+        if allDisabled || showcaseMode {
             return "This step does not require gate input."
         }
         if let highlightedGate, highlightedGate != gate {
@@ -120,7 +122,7 @@ struct SwiftUIGatePaletteView: View {
     }
 
     private func gateAccessibilityValue(for gate: QuantumGate) -> String {
-        if allDisabled {
+        if allDisabled || showcaseMode {
             return "Disabled"
         }
         if let highlightedGate, highlightedGate != gate {
