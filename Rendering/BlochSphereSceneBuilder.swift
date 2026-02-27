@@ -80,7 +80,7 @@ public final class BlochSphereSceneBuilder {
         coneNode.isHidden = (defaultTip != .cone)
         container.addChildNode(coneNode)
 
-        let sphereRadius: CGFloat = 0.06
+        let sphereRadius: CGFloat = 0.05
         let sphere = SCNSphere(radius: sphereRadius)
         sphere.firstMaterial = material
         let sphereNode = SCNNode(geometry: sphere)
