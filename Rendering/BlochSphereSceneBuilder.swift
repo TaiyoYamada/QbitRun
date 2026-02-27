@@ -14,6 +14,8 @@ public final class BlochSphereSceneBuilder {
     private static let tipNameCone = "tip_cone"
     private static let tipNameSphere = "tip_sphere"
     private static let tipNameDiamond = "tip_diamond"
+    private static let shaftNameShort = "shaft_short"
+    private static let shaftNameLong = "shaft_long"
 
     private typealias AxisDefinition = (
         direction: SCNVector3, color: UIColor,
@@ -49,20 +51,32 @@ public final class BlochSphereSceneBuilder {
         material.transparency = opacity
 
         let headLength: CGFloat = 0.15
+        let baseShaftLength: CGFloat = 1.0 - headLength
+        let extendedShaftLength: CGFloat = 0.95
 
-        let shaftLength: CGFloat = 0.95
+        let shortCylinder = SCNCylinder(radius: 0.025, height: baseShaftLength)
+        shortCylinder.firstMaterial = material
+        let shortCylNode = SCNNode(geometry: shortCylinder)
+        shortCylNode.name = Self.shaftNameShort
+        shortCylNode.position = SCNVector3(0, baseShaftLength / 2, 0)
+        shortCylNode.isHidden = (defaultTip != .cone)
+        container.addChildNode(shortCylNode)
 
-        let cylinder = SCNCylinder(radius: 0.025, height: shaftLength)
-        cylinder.firstMaterial = material
-        let cylNode = SCNNode(geometry: cylinder)
-        cylNode.position = SCNVector3(0, shaftLength / 2, 0)
-        container.addChildNode(cylNode)
+        let longCylinder = SCNCylinder(radius: 0.025, height: extendedShaftLength)
+        longCylinder.firstMaterial = material
+        let longCylNode = SCNNode(geometry: longCylinder)
+        longCylNode.name = Self.shaftNameLong
+        longCylNode.position = SCNVector3(0, extendedShaftLength / 2, 0)
+        longCylNode.isHidden = (defaultTip == .cone)
+        container.addChildNode(longCylNode)
+
 
         let cone = SCNCone(topRadius: 0, bottomRadius: 0.05, height: headLength)
         cone.firstMaterial = material
         let coneNode = SCNNode(geometry: cone)
         coneNode.name = Self.tipNameCone
-        coneNode.position = SCNVector3(0, shaftLength + headLength / 2, 0)
+
+        coneNode.position = SCNVector3(0, baseShaftLength + headLength / 2, 0)
         coneNode.isHidden = (defaultTip != .cone)
         container.addChildNode(coneNode)
 
@@ -111,6 +125,10 @@ public final class BlochSphereSceneBuilder {
                 child.isHidden = (shape != .sphere)
             case tipNameDiamond:
                 child.isHidden = (shape != .diamond)
+            case shaftNameShort:
+                child.isHidden = (shape != .cone)
+            case shaftNameLong:
+                child.isHidden = (shape == .cone)
             default:
                 break
             }
