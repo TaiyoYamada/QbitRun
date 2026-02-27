@@ -149,7 +149,7 @@ public final class QuantumCircuitAnimationView: UIView {
         fatalError("init(coder:) is not supported.")
     }
 
-    public func startLoopingAnimation(duration: TimeInterval = 20.0, opacity: Float = 0.3) {
+    public func startLoopingAnimation(duration: TimeInterval = 20.0, opacity: Float = 0.3, isAnimated: Bool = true) {
         containerLayer?.removeFromSuperlayer()
         wireLayers.removeAll()
         gateLayers.removeAll()
@@ -174,15 +174,17 @@ public final class QuantumCircuitAnimationView: UIView {
         mainContainer.addSublayer(layer1)
         mainContainer.addSublayer(layer2)
 
-        let moveLeft = CABasicAnimation(keyPath: "position.x")
-        moveLeft.byValue = -circuitWidth
-        moveLeft.duration = duration
-        moveLeft.repeatCount = .infinity
-        moveLeft.timingFunction = CAMediaTimingFunction(name: .linear)
-        moveLeft.isRemovedOnCompletion = false
+        if isAnimated {
+            let moveLeft = CABasicAnimation(keyPath: "position.x")
+            moveLeft.byValue = -circuitWidth
+            moveLeft.duration = duration
+            moveLeft.repeatCount = .infinity
+            moveLeft.timingFunction = CAMediaTimingFunction(name: .linear)
+            moveLeft.isRemovedOnCompletion = false
 
-        layer1.add(moveLeft, forKey: "loop")
-        layer2.add(moveLeft, forKey: "loop")
+            layer1.add(moveLeft, forKey: "loop")
+            layer2.add(moveLeft, forKey: "loop")
+        }
     }
 
     private func makeSingleCircuitLayer(width: CGFloat) -> CALayer {

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct UnifiedBackgroundView: View {
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     var body: some View {
         ZStack {
@@ -17,9 +18,7 @@ struct UnifiedBackgroundView: View {
             )
             .ignoresSafeArea()
 
-
-
-            QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
+            QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000), isAnimated: !reduceMotion)
                 .ignoresSafeArea()
                 .opacity(0.2)
 

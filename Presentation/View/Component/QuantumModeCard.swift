@@ -19,6 +19,7 @@ struct QuantumModeCard: View {
     @State private var isHovered = false
     @State private var isPressed = false
     @State private var effectTrigger = 0
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     var body: some View {
         Button(action: {
@@ -105,20 +106,23 @@ struct QuantumModeCard: View {
 
     @ViewBuilder
     private var iconView: some View {
-        let image = Image(systemName: icon)
+        let baseImage = Image(systemName: icon)
             .font(.system(size: 25, weight: .bold, design: .rounded))
             .foregroundStyle(accentColor)
-            .symbolEffect(.breathe, options: .repeating)
 
-        switch symbolEffectType {
-        case .none:
-            image
-        case .wiggle:
-            image.symbolEffect(.wiggle, value: effectTrigger)
-        case .bounce:
-            image.symbolEffect(.bounce, value: effectTrigger)
-        case .rotate:
-            image.symbolEffect(.rotate, value: effectTrigger)
+        if reduceMotion {
+            baseImage
+        } else {
+            switch symbolEffectType {
+            case .none:
+                baseImage.symbolEffect(.breathe, options: .repeating)
+            case .wiggle:
+                baseImage.symbolEffect(.breathe, options: .repeating).symbolEffect(.wiggle, value: effectTrigger)
+            case .bounce:
+                baseImage.symbolEffect(.breathe, options: .repeating).symbolEffect(.bounce, value: effectTrigger)
+            case .rotate:
+                baseImage.symbolEffect(.breathe, options: .repeating).symbolEffect(.rotate, value: effectTrigger)
+            }
         }
     }
 }

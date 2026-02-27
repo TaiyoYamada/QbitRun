@@ -10,6 +10,7 @@ struct MainMenuView: View {
     @State private var showTutorialConfirmation = false
     @State private var showSettings = false
     @State private var isNavigating = false
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     private var isMenuModalPresented: Bool {
         showSettings || showTutorialConfirmation
@@ -143,7 +144,7 @@ struct MainMenuView: View {
                 .ignoresSafeArea()
 
 
-            QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000))
+            QuantumCircuitRepresentable(size: CGSize(width: 1000, height: 1000), isAnimated: !reduceMotion)
                 .ignoresSafeArea()
                 .opacity(0.45)
             .ignoresSafeArea()
@@ -154,12 +155,12 @@ struct MainMenuView: View {
         let size = min(geometry.size.width, geometry.size.height) * 1.5
 
         return BlochSphereViewRepresentable(
-            vector: BlochVector.plus,
-            animated: false,
+            vector: reduceMotion ? BlochVector.zero : BlochVector.plus,
+            animated: !reduceMotion,
             showBackground: false,
             showAxes: true,
             showAxisLabels: false,
-            continuousOrbitAnimation: true,
+            continuousOrbitAnimation: !reduceMotion,
             axisOpacity: 0.3
         )
         .frame(width: size, height: size)
