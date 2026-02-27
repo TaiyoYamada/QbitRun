@@ -19,6 +19,7 @@ struct ResultView: View {
         scene.scaleMode = .resizeFill
         return scene
     }()
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     init(score: ScoreEntry, audioManager: AudioManager, onPlayAgain: @escaping () -> Void, onReturnToMenu: @escaping () -> Void) {
         self._viewModel = State(initialValue: ResultViewModel(score: score))
@@ -144,8 +145,10 @@ struct ResultView: View {
                 if totalScore > 0 {
                     let duration = 1.5
                     
-                    let blocksToDrop = min(totalScore / 100, 200)
-                    fallScene.startDropping(totalBlocks: blocksToDrop, duration: duration)
+                    if !reduceMotion {
+                        let blocksToDrop = min(totalScore / 100, 200)
+                        fallScene.startDropping(totalBlocks: blocksToDrop, duration: duration)
+                    }
                     
                     let steps = 30
                     let stepDelay = duration / Double(steps)
