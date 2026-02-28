@@ -3,7 +3,6 @@ import UIKit
 
 struct OutlinedInstructionTextView: UIViewRepresentable {
     let attributedText: AttributedString
-    let baseFontSize: CGFloat
     let lineSpacing: CGFloat
     private let highlightedFontSizeDelta: CGFloat = 2
     private let highlightedStrokeWidth: CGFloat = -1.0
@@ -16,11 +15,13 @@ struct OutlinedInstructionTextView: UIViewRepresentable {
         label.textAlignment = .center
         label.setContentHuggingPriority(.required, for: .vertical)
         label.setContentCompressionResistancePriority(.required, for: .vertical)
+        label.adjustsFontForContentSizeCategory = true
         return label
     }
 
     func updateUIView(_ uiView: UILabel, context: Context) {
-        uiView.attributedText = makeAttributedString()
+        let uiFont = UIFont.preferredFont(forTextStyle: .title2)
+        uiView.attributedText = makeAttributedString(baseFont: uiFont)
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UILabel, context: Context) -> CGSize? {
@@ -34,7 +35,7 @@ struct OutlinedInstructionTextView: UIViewRepresentable {
         return CGSize(width: width, height: ceil(fittingSize.height))
     }
 
-    private func makeAttributedString() -> NSAttributedString {
+    private func makeAttributedString(baseFont: UIFont) -> NSAttributedString {
         let text = String(attributedText.characters)
         let result = NSMutableAttributedString(string: text)
         let fullRange = NSRange(location: 0, length: (text as NSString).length)
@@ -50,7 +51,7 @@ struct OutlinedInstructionTextView: UIViewRepresentable {
         shadow.shadowOffset = CGSize(width: 0, height: 1)
 
         result.addAttributes([
-            .font: UIFont.monospacedSystemFont(ofSize: baseFontSize, weight: .medium),
+            .font: UIFont.monospacedSystemFont(ofSize: baseFont.pointSize, weight: .medium),
             .foregroundColor: UIColor.white,
             .paragraphStyle: paragraphStyle,
             .shadow: shadow
@@ -67,7 +68,7 @@ struct OutlinedInstructionTextView: UIViewRepresentable {
 
             result.addAttributes([
                 .font: UIFont.monospacedSystemFont(
-                    ofSize: baseFontSize + highlightedFontSizeDelta,
+                    ofSize: baseFont.pointSize + highlightedFontSizeDelta,
                     weight: .medium
                 ),
                 .foregroundColor: UIColor(TutorialInstructionStylePalette.frontColor(for: style)),

@@ -6,8 +6,7 @@ struct TypewriterText: View {
     var onFinished: (() -> Void)? = nil
     @State private var revealedCount: Int = 0
     @State private var typingTask: Task<Void, Never>? = nil
-    
-    @ScaledMetric(relativeTo: .title3) private var scaledBaseFontSize: CGFloat = 23
+
     private let lineSpacing: CGFloat = 2
 
     init(attributedText: AttributedString, onFinished: (() -> Void)? = nil) {
@@ -19,9 +18,9 @@ struct TypewriterText: View {
     var body: some View {
         OutlinedInstructionTextView(
             attributedText: revealedAttributedText,
-            baseFontSize: min(scaledBaseFontSize, 23),
             lineSpacing: lineSpacing
-        )
+        )        
+        .dynamicTypeSize(.small ... .large)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(plainText.voiceOverFriendlyTutorialText)
         .onChange(of: plainText) { _, _ in
