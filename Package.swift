@@ -16,7 +16,7 @@ let package = Package(
         .iOSApplication(
             name: "QbitRun",
             targets: ["AppModule"],
-            bundleIdentifier: "----.QuantumGateGame",
+            bundleIdentifier: "----.QbitRun",
             teamIdentifier: "HJC5DQ3PVM",
             displayVersion: "1.0",
             bundleVersion: "1",
